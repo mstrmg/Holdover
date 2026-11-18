@@ -1,6 +1,6 @@
 # Holdover plan (summary)
 
-The full, living plan is the project doc: https://claude.ai/artifact/WnGBCzQrguHhMrC7VW5WbT
+The full plan and working rules are in `CLAUDE.md`. The living plan doc: https://claude.ai/artifact/WnGBCzQrguHhMrC7VW5WbT
 
 - Engine: Unreal Engine 5 (Lumen, Nanite), first-person C++ template.
 - Art: scanned assets from Fab/Megascans for the environment; Blender for targets, props and weapons.
