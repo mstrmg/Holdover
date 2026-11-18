@@ -1,6 +1,6 @@
 # Holdover
 
-A single-player, photorealistic shooting range game in Unreal Engine 5. No enemies or bots, only targets, seen through a body-worn camera. Personal project, not for sale.
+A single-player, photorealistic shooting range game in Unreal Engine 5, seen through the player's own eyes. No enemies or bots, only targets. Personal project, not for sale.
 
 ## Working rules (from Miles)
 
@@ -19,7 +19,7 @@ Miles does not code. Claude writes all code and scripts; Miles builds, plays and
 - Controls and input
 - Targets, drills, scoring, rules
 - Level layout, environment look, lighting, art direction
-- Camera and the bodycam effect
+- Camera and the eye view
 - UI, menus and anything the player sees or feels
 - Adding or removing any feature
 
@@ -29,55 +29,58 @@ Explain everything to Miles in plain language. When he must do something on his 
 
 ## Technical conventions
 
-- Engine: Unreal Engine 5, C++ First Person template, project name `Holdover`.
+- Engine: Unreal Engine 5.7 or newer (needed for Megaplants and production-ready PCG), C++ project named `Holdover`.
+- Camera: true first person through the player's eyes, using Unreal's First Person Rendering with the full-body ("advanced") setup. No bodycam effects, no HUD.
 - Core logic lives in C++ (`Source/Holdover/`), with Blueprints only as thin wrappers, because Claude cannot read or edit binary Blueprint assets.
-- Expose tuning values (recoil, spread, casing ejection speed, etc.) as `UPROPERTY(EditAnywhere)` so they can be tweaked without code changes.
-- Large binary files go through Git LFS (see `.gitattributes`).
-- Free assets only: Poly Haven, ambientCG, Fab free listings, Sketchfab (check license), Freesound, Sonniss GDC bundles. Record each asset's source and license in `docs/ASSETS.md`.
-- Target hardware (Miles's PC): Radeon RX 9070 XT, Ryzen 5 3600, 16 GB DDR4 (32 GB recommended before the photoreal pass), NVMe SSD. The CPU and RAM are the bottlenecks: watch foliage density, shader count and editor memory.
+- Guns: a C++ state machine (chamber, magazine, slide/bolt, safety, malfunctions) configured by one data asset per gun.
+- Hand and gun motion: procedural (code-driven) with IK via Control Rig, so no paid animations are needed.
+- Bullets: simulated projectiles with velocity and drop for every gun (no hitscan).
+- Input: Enhanced Input, with separate mapping contexts for full manual and assisted modes.
+- Casings and dropped mags: Chaos physics with pooling and a cap.
+- Audio: MetaSounds, surface-dependent impacts and forest reverb.
+- Lighting: Lumen, Virtual Shadow Maps, volumetric fog. Upscaling: TSR or FSR, target 60 fps at 1440p.
+- Expose tuning values (recoil, sway, casing ejection speed, etc.) as `UPROPERTY(EditAnywhere)` so they can be tweaked without code changes.
+- Large binary files go through Git LFS (see `.gitattributes`). Claude's cloud session cannot upload LFS files; Miles adds binaries from his PC.
+- Free assets only: Quixel Megascans and Megaplants on Fab (free again since Nov 2026), Poly Haven, ambientCG, Sketchfab (check license), Freesound, Sonniss GDC bundles. Record each asset's source and license in `docs/ASSETS.md`.
+- Target hardware (Miles's PC): Radeon RX 9070 XT, Ryzen 5 3600, 16 GB DDR4 (upgrade to 32 GB before M5), NVMe SSD. CPU and RAM are the bottlenecks: watch foliage density, shader count and editor memory.
 
 ## Plan
 
 The living plan doc: https://claude.ai/artifact/WnGBCzQrguHhMrC7VW5WbT
 
 ### Vision
-First-person target practice that looks and feels like real body-worn camera footage. Three pillars: a photoreal environment, a camera that moves like it is strapped to a body, and guns that behave like real ones.
+First-person target practice through the player's own eyes, in a photoreal forest, with guns operated by hand one step at a time. Realism comes from how eyes, hands, breathing and hearing behave, not from camera effects.
+
+### The eye view
+- Full body visible (arms, chest, feet, shadow). Natural FOV, 90 by default, adjustable.
+- Steady head with only slight walking sway. No crosshair, no ammo counter.
+- Light adaptation when moving between shade and sun.
+- Proposed, awaiting Miles's yes: sight focus (front sight sharp, target soft), breathing sway with hold breath, ear protection (muffled vs. ringing).
 
 ### Gun mechanics (core identity)
-- Chamber state tracked separately from the magazine; a full mag with an empty chamber doesn't fire until racked.
-- Racking the slide, charging handle or bolt is its own input; racking a loaded chamber ejects a live round.
-- Bolt-action cycling in four steps (lift, back, forward, down).
-- Physical shell ejection: per-weapon direction and speed, bounce sounds by surface (dirt, gravel, wood), casings stay on the ground up to a limit.
+- Chamber tracked separately from the magazine; a full mag with an empty chamber doesn't fire until racked.
+- Racking is its own input; racking a loaded chamber ejects a live round.
+- Bolt-action cycling in four steps (later).
+- Physical shell ejection with per-surface bounce sounds; casings stay on the ground up to a limit.
 - Slide or bolt locks back on the last round.
-- Each magazine keeps its own round count; dropped mags stay on the ground; mags are loaded round by round.
+- Each magazine keeps its own round count; dropped mags stay; mags loaded round by round.
 - Malfunctions: stovepipe, double feed, failure to fire, each cleared with the correct drill.
-- Safety and fire selector; press check and mag check instead of an ammo counter.
-- Muzzle flash, lingering smoke, heat shimmer; mechanical sounds for every action.
-- Controls: **full manual** (each step its own key) is built first; an **assisted** mode (one reload key, manual racking and malfunction clearing) is added later as a setting.
-- Recoil: per-weapon pattern plus randomness, camera kick and settle; no crosshair by default.
-- Ballistics: travel time and drop for rifles; hitscan is fine for pistols up to 25 m.
+- Safety; press check and mag check.
+- Per-gun recoil pattern plus randomness; gun moves in the hands and settles.
+- Controls: full manual first; assisted mode (one reload key, manual racking and jam clearing) added later as a setting.
 
-### Ranges and targets
-- First range: a lane cut through a dense summer hardwood forest (eastern US style): tall dark trunks, saplings, ferns, sunlight breaking through, light haze. 5 to 50 m. A reference image Miles shared is in the project files (forest-vibe.png); add it under `docs/reference/` from his PC.
-- Later: more forest ranges, a long range field or power line cut, a shoot house.
-- Targets: paper (real holes, inspectable), steel plates and poppers (ring and swing or fall), moving and turning targets, no-shoot targets.
+### Range, targets, scoring
+- Forest lane through a dense summer hardwood forest (reference: forest-vibe.png in project files; add under `docs/reference/` from Miles's PC). 5 to 50 m.
+- Paper (real holes, inspectable), steel plates and poppers, no-shoots.
+- Time plus accuracy with hit zones; shot timer with splits; local personal bests.
+- Version 1 guns: one original pistol, one carbine. Later: bolt-action rifle, optics, more ranges.
+- Out: enemies or bots, multiplayer, real gun brands, consoles, selling the game.
 
-### Scoring
-Drills scored on time plus accuracy with hit zones; misses and no-shoots cost time. Shot timer with start beep and split times. Personal bests saved locally.
-
-### Bodycam look
-Wide lens with barrel distortion, vignette, chromatic aberration, motion blur, compression artifacts, timestamp overlay, head-mounted sway driven by movement.
-
-### Version 1 scope
-In: the forest range, pistol and carbine (original, unbranded), paper and steel targets, 6 to 8 drills, the bodycam camera, local scores.
-Later: bolt-action rifle, optics and attachments, moving targets, drill editor, replay viewer, more ranges.
-Out: bots or AI enemies, multiplayer, real gun brands, consoles, Steam release.
-
-### Milestones
-1. Setup: install UE5, Visual Studio 2022, Git LFS, GitHub Desktop, Blender; create the project.
-2. Gray box range: untextured lane, movement, a placeholder gun that fires, paper targets that register hits.
-3. Weapon feel: chamber, racking, shell ejection, reloads, recoil, malfunctions, sound.
-4. Photoreal forest: free scanned assets, PCG tree scattering, Lumen lighting, fog (needs 32 GB RAM).
-5. Bodycam camera.
-6. Drills and scoring.
-7. Polish: menus, settings, performance tuning.
+### Milestones (also GitHub milestones)
+0. M0 Setup: tools installed on Miles's PC, C++ project skeleton builds.
+1. M1 First shot: gray box, full-body character, pistol with chamber/mag/rack/slide lock, simulated bullets, paper targets.
+2. M2 Gun feel: procedural hands, recoil, ADS, shell ejection, safety, checks, malfunctions; add carbine.
+3. M3 Eyes, body and ears: camera tuning, light adaptation, footsteps, approved proposals.
+4. M4 Targets and drills: steel, poppers, no-shoots, shot timer, 6-8 drills, scoring, menu.
+5. M5 The forest (needs 32 GB RAM): Megaplants/Megascans via PCG, lighting, haze, audio, 60 fps.
+6. M6 Assisted mode and polish: assisted setting, rebinding, graphics settings, performance.
