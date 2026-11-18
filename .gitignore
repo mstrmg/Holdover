@@ -1,0 +1,33 @@
+# Unreal Engine 5 generated folders
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+.vs/
+.vscode/
+.idea/
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Plugin build output
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+
+# Packaged builds
+Packaged/
+*.pak
+
+# Blender autosaves and backups
+*.blend1
+*.blend2
+*.blend@
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini
