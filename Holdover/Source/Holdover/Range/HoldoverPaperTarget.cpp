@@ -144,7 +144,7 @@ bool AHoldoverPaperTarget::ReceiveBulletHit(const FHoldoverBulletImpact& Impact,
 	OutExitVelocityScale = 0.97f;
 
 	const FHitResult& Hit = Impact.Hit;
-	if (Hit.GetComponent() != Board)
+	if (Hit.GetComponent() != Board.Get())
 	{
 		return false; // legs stop the bullet (and keep no holes for now)
 	}

@@ -7,10 +7,10 @@ using namespace HoldoverAnim;
 
 TMap<FName, TSharedPtr<FGunAnimSet>> UHoldoverGunAnimator::Cache;
 
-static const FName NAME_Fire(TEXT("Fire"));
-static const FName NAME_FireDA(TEXT("FireDA"));
-static const FName NAME_DryFire(TEXT("DryFire"));
-static const FName NAME_MagFromPouch(TEXT("MagFromPouch"));
+static const FName AnimFire(TEXT("Fire"));
+static const FName AnimFireDA(TEXT("FireDA"));
+static const FName AnimDryFire(TEXT("DryFire"));
+static const FName AnimMagFromPouch(TEXT("MagFromPouch"));
 
 UHoldoverGunAnimator::UHoldoverGunAnimator()
 {
@@ -82,7 +82,7 @@ bool UHoldoverGunAnimator::IsBusy() const
 	{
 		return false;
 	}
-	return Current->Name != NAME_Fire && Current->Name != NAME_FireDA && Current->Name != NAME_DryFire;
+	return Current->Name != AnimFire && Current->Name != AnimFireDA && Current->Name != AnimDryFire;
 }
 
 bool UHoldoverGunAnimator::Play(FName Action, bool bInHoldable)
@@ -436,7 +436,7 @@ void UHoldoverGunAnimator::ApplyAttachments(float T, const FHoldoverAnimFrame& F
 	{
 		// A fresh mag from the pouch is held so that it lands exactly seated when it is let go;
 		// a mag taken out of the gun keeps the grip it had when the hand took it.
-		const bool bFromPouch = Current->HasEvent(NAME_MagFromPouch, PickTime, 0.05f);
+		const bool bFromPouch = Current->HasEvent(AnimMagFromPouch, PickTime, 0.05f);
 		const float RefTime = (bFromPouch && LetGoTime >= 0.f) ? LetGoTime : PickTime;
 
 		FVector TrackLoc = FVector::ZeroVector;

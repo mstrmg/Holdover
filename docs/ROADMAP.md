@@ -2,7 +2,7 @@
 
 The ordered task list the coding thread works down. Miles asked on 2026-11-19 for a big plan executed without waiting for him; gameplay choices made along the way are logged in [DECISIONS.md](DECISIONS.md) so he can review and overturn any of them.
 
-Legend: [x] done, [~] in progress, [ ] not started. Each item names the files it lives in once written.
+Legend: [x] done and tested in the game, [~] code written but not yet built or tried on Miles's PC, [ ] not started. See also [CONTROLS.md](CONTROLS.md) and [SETUP.md](SETUP.md). Each item names the files it lives in once written.
 
 ## Phase A: playable gray box (milestone M1)
 
@@ -24,23 +24,23 @@ Legend: [x] done, [~] in progress, [ ] not started. Each item names the files it
 
 ## Phase B: hands and animation (M2)
 
-16. [ ] Manny full body from the Third Person content pack, driven by its locomotion animation; arms re-posed every frame by code.
-17. [ ] Two-bone arm IK to hand targets, finger curl poses (grip, support wrap, pinch rack, thumb safety, palm mag, trigger finger, relaxed).
-18. [ ] Animation timeline player: reads `Holdover/Data/GunAnims/<Gun>.json` (format by the guns thread in `docs/animation/gun_anim_format.md`), plays gun bone tracks, hand targets, finger poses, whole-gun offsets and timed events.
-19. [ ] Timeline events drive the state machine (SlideToRear, InBattery, MagDetach, MagAttach, SlideLock, SlideRelease, EjectCasing...). The timeline says when; the gun state says what.
-20. [ ] Hold points for manual inputs (hold the slide at the rear, hold a mag in view).
-21. [ ] Actions for the M9: fire, rack, reload with retention, empty reload, mag check, press check, safety on and off (decocker), slide release, tap-rack, stovepipe and double-feed clearing.
-22. [ ] Recoil per gun: pattern plus randomness, gun moves in the hands and settles; muzzle flip from grip height.
-23. [ ] Aiming: bring the gun up to the eye, sight alignment from the gun's real sight sockets, adjustable eye relief.
-24. [ ] Malfunctions: stovepipe, double feed, failure to fire (dud), each with a chance per gun and per magazine and cleared only with the correct drill.
-25. [ ] Mag check and press check show the real round count and chamber state (no counter on screen).
-26. [ ] Safety and decocker on the M9; selector on the AK, FAL and AR.
+16. [~] Manny full body from the Third Person content pack, driven by its locomotion animation; arms re-posed every frame by code.
+17. [~] Two-bone arm IK (in C++ on the body mesh, no Control Rig asset needed) to hand targets, finger curl poses (grip, support wrap, pinch rack, thumb safety, palm mag, trigger finger, relaxed).
+18. [~] Animation timeline player: reads `Holdover/Data/GunAnims/<Gun>.json` (format by the guns thread in `docs/animation/gun_anim_format.md`), plays gun bone tracks, hand targets, finger poses, whole-gun offsets and timed events.
+19. [~] Timeline events drive the state machine (SlideToRear, InBattery, MagDetach, MagAttach, SlideLock, SlideRelease, EjectCasing...). The timeline says when; the gun state says what.
+20. [~] Hold points for manual inputs (hold the slide at the rear, hold a mag in view).
+21. [~] Actions for the M9: fire, rack, reload with retention, empty reload, mag check, press check, safety on and off (decocker), slide release, tap-rack, stovepipe and double-feed clearing.
+22. [~] Recoil per gun: pattern plus randomness, gun moves in the hands and settles; muzzle flip from grip height.
+23. [~] Aiming: bring the gun up to the eye, sight alignment from the gun's real sight sockets, adjustable eye relief.
+24. [~] Malfunctions: stovepipe, double feed, failure to fire (dud), each with a chance per gun and per magazine and cleared only with the correct drill. (built, chances set to 0 for now)
+25. [~] Mag check and press check show the real round count and chamber state (no counter on screen).
+26. [~] Safety and decocker on the M9; selector on the AK, FAL and AR.
 27. [ ] Sounds: shot, mechanical clicks, casing bounces per surface (Paper, Steel, Wood, Dirt, Gravel, Grass, Concrete, Brass), from free sound packs.
 28. [ ] Muzzle flash and smoke (Niagara), short and realistic.
 
 ## Phase C: the other guns (M2)
 
-29. [ ] AK: rotating bolt, no hold-open, rock-in magazine, selector safety blocks the charging handle, full auto.
+29. [~] AK: rotating bolt, no hold-open, rock-in magazine, selector safety blocks the charging handle, full auto. (AK preset and controls written; no model yet)
 30. [ ] AR-15-style carbine: bolt catch, forward assist, charging handle, 5.56 ballistics.
 31. [ ] FAL: bolt hold-open, folding charging handle, 7.62x51.
 32. [ ] 1911: single action, thumb safety, grip safety, slide stop, 7-round mag.

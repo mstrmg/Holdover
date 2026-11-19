@@ -34,7 +34,9 @@ Explain everything to Miles in plain language. When he must do something on his 
 - Repo layout: the UE project lives in the `Holdover/` subfolder (`Holdover/Holdover.uproject`); on Miles's PC the repo is cloned at `D:\Claude area\Holdover\repo`, next to the Blender files in `D:\Claude area\Holdover\art`.
 - Core logic lives in C++ (`Holdover/Source/Holdover/`), with Blueprints only as thin wrappers, because Claude cannot read or edit binary Blueprint assets.
 - Guns: a C++ state machine (chamber, magazine, slide/bolt, safety, malfunctions) configured by one data asset per gun.
-- Hand and gun motion: procedural (code-driven) with IK via Control Rig, so no paid animations are needed.
+- Hand and gun motion: procedural (code-driven), so no paid animations are needed. Gun/hand timelines are JSON files in `Holdover/Data/GunAnims/` (format: `docs/animation/gun_anim_format.md`, written by the guns thread). Arm IK and finger curls are done in C++ (`Player/HoldoverBodyRig`) on poseable copies of the Manny body, not with a Control Rig asset, because Claude can't edit binary assets.
+- Gameplay timing lives in the timelines (when), the gun state machine decides what happens (what).
+- With no assets at all, the game builds a gray test range and a gray-box gun from engine shapes, so it is always playable.
 - Bullets: simulated projectiles with velocity and drop for every gun (no hitscan).
 - Input: Enhanced Input, with separate mapping contexts for full manual and assisted modes.
 - Casings and dropped mags: Chaos physics with pooling and a cap.
@@ -46,6 +48,13 @@ Explain everything to Miles in plain language. When he must do something on his 
 - Large binary files go through Git LFS (see `.gitattributes`). Claude's cloud session cannot upload LFS files; Miles adds binaries from his PC.
 - Free assets only: Quixel Megascans and Megaplants on Fab (free again since Nov 2026), Poly Haven, ambientCG, Sketchfab (check license), Freesound, Sonniss GDC bundles. Record each asset's source and license in `docs/ASSETS.md`.
 - Target hardware (Miles's PC): Radeon RX 9070 XT, Ryzen 5 3600, 16 GB DDR4 (upgrade to 32 GB before M5), NVMe SSD. CPU and RAM are the bottlenecks: watch foliage density, shader count and editor memory.
+
+## Docs
+
+- `docs/SETUP.md`: Miles's install and first-run steps.
+- `docs/CONTROLS.md`: the key layout.
+- `docs/ROADMAP.md`: the ordered coding backlog with status.
+- `docs/DECISIONS.md`: gameplay choices made without Miles's yes, for him to review.
 
 ## Plan
 
