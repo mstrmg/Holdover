@@ -29,7 +29,7 @@ Explain everything to Miles in plain language. When he must do something on his 
 
 ## Technical conventions
 
-- Engine: Unreal Engine 5.7 or newer (needed for Megaplants and production-ready PCG), C++ project named `Holdover`.
+- Engine: Unreal Engine 5.8 (5.7 minimum, needed for Megaplants and production-ready PCG), C++ project named `Holdover`. Compiler: Visual Studio 2026 Community (Epic's recommendation for 5.8; VS 2022 17.14+ if on 5.7).
 - Camera: true first person through the player's eyes, using Unreal's First Person Rendering with the full-body ("advanced") setup. No bodycam effects, no HUD.
 - Repo layout: the UE project lives in the `Holdover/` subfolder (`Holdover/Holdover.uproject`); on Miles's PC the repo is cloned at `D:\Claude area\Holdover\repo`, next to the Blender files in `D:\Claude area\Holdover\art`.
 - Core logic lives in C++ (`Holdover/Source/Holdover/`), with Blueprints only as thin wrappers, because Claude cannot read or edit binary Blueprint assets.
@@ -39,7 +39,9 @@ Explain everything to Miles in plain language. When he must do something on his 
 - Input: Enhanced Input, with separate mapping contexts for full manual and assisted modes.
 - Casings and dropped mags: Chaos physics with pooling and a cap.
 - Audio: MetaSounds, surface-dependent impacts and forest reverb.
-- Lighting: Lumen, Virtual Shadow Maps, volumetric fog. Upscaling: TSR or FSR, target 60 fps at 1440p.
+- Lighting: Lumen, Virtual Shadow Maps, volumetric fog. Target resolution: 1080p at 60 fps (TSR or FSR upscaling only if needed).
+- Textures: 2K (2048 px) maximum for every asset, including Megascans and Blender bakes.
+- Preview renders: 1920x1080.
 - Expose tuning values (recoil, sway, casing ejection speed, etc.) as `UPROPERTY(EditAnywhere)` so they can be tweaked without code changes.
 - Large binary files go through Git LFS (see `.gitattributes`). Claude's cloud session cannot upload LFS files; Miles adds binaries from his PC.
 - Free assets only: Quixel Megascans and Megaplants on Fab (free again since Nov 2026), Poly Haven, ambientCG, Sketchfab (check license), Freesound, Sonniss GDC bundles. Record each asset's source and license in `docs/ASSETS.md`.
@@ -83,5 +85,5 @@ First-person target practice through the player's own eyes, in a photoreal fores
 2. M2 Gun feel: procedural hands, recoil, ADS, shell ejection, safety, checks, malfunctions; add carbine.
 3. M3 Eyes, body and ears: camera tuning, light adaptation, footsteps, approved proposals.
 4. M4 Targets and drills: steel, poppers, no-shoots, shot timer, 6-8 drills, scoring, menu.
-5. M5 The forest (needs 32 GB RAM): Megaplants/Megascans via PCG, lighting, haze, audio, 60 fps.
+5. M5 The forest (needs 32 GB RAM): Megaplants/Megascans via PCG, lighting, haze, audio, 60 fps at 1080p.
 6. M6 Assisted mode and polish: assisted setting, rebinding, graphics settings, performance.
