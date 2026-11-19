@@ -57,9 +57,75 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	/** Arms follow the gun (false = arms keep the locomotion pose, e.g. no gun in hand). */
+	/**
+	 * First-person arms ("viewmodel"): InArmsDriver plays a ready-made idle hold animation (hidden),
+	 * InArms is the copy you see. Each frame the arms are moved as one piece so their grip bone sits on
+	 * the gun's GripHand socket; the left hand can be bent onto the gun with IK.
+	 */
+	void SetupArms(USkeletalMeshComponent* InArmsDriver, UPoseableMeshComponent* InArms);
+
+	/** Arms follow the gun (false = arms keep the locomotion pose, e.g. no gun in hand). Used on the shadow body. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
 	bool bArmsOnGun = true;
+
+	/** Hide the arms of the full body you see (the first-person arms replace them). The shadow body keeps its arms. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bHideBodyArms = true;
+
+	/** Bones scaled to nothing on the full body you see when Hide Body Arms is on. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	TArray<FName> BodyArmBones = { TEXT("clavicle_l"), TEXT("clavicle_r") };
+
+	/** Bones scaled to nothing on the first-person arms (head, legs). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	TArray<FName> ArmsHiddenBones = { TEXT("neck_01"), TEXT("thigh_l"), TEXT("thigh_r") };
+
+	/** Bone (or socket) on the arms that is placed on the gun's grip. weapon_r is where the idle animations hold the gun. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	FName ArmsGripBone = TEXT("hand_r");
+
+	/** Where the idle animation holds the gun (its weapon_r bone) relative to the grip bone, pistol. Measured from MF_Pistol_Idle_ADS. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	FTransform PistolWeaponInHand = FTransform(FRotator(-5.781f, 176.373f, 3.239f), FVector(-7.312f, 3.645f, -1.429f));
+
+	/** Same for the rifle, measured from MF_Rifle_Idle_ADS. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	FTransform RifleWeaponInHand = FTransform(FRotator(-8.935f, 171.404f, 14.858f), FVector(-7.218f, 3.418f, -0.947f));
+
+	/** Fine adjustment of the grip, in the gun's frame (X along the barrel, Z up), pistol. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	FTransform PistolArmsGripOffset = FTransform::Identity;
+
+	/** Fine adjustment of the grip, in the gun's frame, rifle. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	FTransform RifleArmsGripOffset = FTransform::Identity;
+
+	/**
+	 * Where the arms' head bone sits relative to the eyes (cm, X forward, Y right, Z up). The arms' shoulders hang
+	 * from here and both hands are bent onto the gun; if the gun is out of reach the arms slide forward just enough.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	FVector ArmsHeadInCamera = FVector(-14.f, 0.f, -22.f);
+
+	/** Arms reach at most this fraction of their full length (1 = arm locked straight). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms", meta = (ClampMin = "0.8", ClampMax = "1"))
+	float ArmsMaxReach = 0.97f;
+
+	/** Bend the left arm onto the gun's support-hand target with IK (pistol / rifle). Always on during gun actions.
+	 *  When off, the left hand keeps the place on the gun the idle animation gives it. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bPistolLeftHandIK = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bRifleLeftHandIK = false;
+
+	/** Rifle without left-hand IK: slide the animation's support hand along the barrel to this gun's SupportHand socket. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bLeftHandSlideToSupport = true;
+
+	/** Also curl the left fingers from the gun timelines when the left hand IK is on. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bLeftHandCurlFromTimeline = true;
 
 	/** Bone hidden on the body you see (hides the head and everything above it). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
@@ -103,10 +169,17 @@ private:
 	void CacheBones();
 	void PoseCopy(UPoseableMeshComponent* Mesh, bool bHideHead);
 	void SolveArm(UPoseableMeshComponent* Mesh, const FArmBones& Arm, const FTransform& TargetWorld, bool bLeft);
+	/** Two-bone IK putting the hand bone at Wrist with rotation HandRot (world). */
+	void SolveArmTo(UPoseableMeshComponent* Mesh, const FArmBones& Arm, const FVector& Wrist, const FQuat& HandRot, bool bLeft,
+		const FTransform& DebugTarget);
 	void CurlFingers(UPoseableMeshComponent* Mesh, const FArmBones& Arm, const TMap<FName, float>& Weights, bool bLeft);
 	void ComputeComponentSpace(UPoseableMeshComponent* Mesh, TArray<FTransform>& Out) const;
 	void InitDefaultPoses();
+	void UpdateArms(const FTransform& CamTM);
+	void ScaleBonesToNothing(UPoseableMeshComponent* Mesh, const TArray<FName>& Bones) const;
 
+	TWeakObjectPtr<USkeletalMeshComponent> ArmsDriver;
+	TWeakObjectPtr<UPoseableMeshComponent> Arms;
 	TWeakObjectPtr<USkeletalMeshComponent> Driver;
 	TWeakObjectPtr<UPoseableMeshComponent> Visible;
 	TWeakObjectPtr<UPoseableMeshComponent> Shadow;

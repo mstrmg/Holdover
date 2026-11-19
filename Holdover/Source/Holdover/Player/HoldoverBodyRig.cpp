@@ -10,6 +10,9 @@
 #include "Engine/SkinnedAsset.h"
 #include "GameFramework/Actor.h"
 #include "ReferenceSkeleton.h"
+#include "Player/HoldoverCharacter.h"
+#include "Weapons/HoldoverGun.h"
+#include "Weapons/HoldoverGunData.h"
 
 static const TCHAR* GFingerNames[5] = { TEXT("thumb"), TEXT("index"), TEXT("middle"), TEXT("ring"), TEXT("pinky") };
 
@@ -51,6 +54,118 @@ void UHoldoverBodyRig::Setup(USkeletalMeshComponent* InDriver, UPoseableMeshComp
 	Animator = InAnimator;
 	Camera = InCamera;
 	CachedFor = nullptr;
+}
+
+void UHoldoverBodyRig::SetupArms(USkeletalMeshComponent* InArmsDriver, UPoseableMeshComponent* InArms)
+{
+	ArmsDriver = InArmsDriver;
+	Arms = InArms;
+}
+
+void UHoldoverBodyRig::ScaleBonesToNothing(UPoseableMeshComponent* Mesh, const TArray<FName>& Bones) const
+{
+	const USkinnedAsset* Asset = Mesh ? Mesh->GetSkinnedAsset() : nullptr;
+	if (!Asset)
+	{
+		return;
+	}
+	for (const FName& Name : Bones)
+	{
+		const int32 Index = Asset->GetRefSkeleton().FindBoneIndex(Name);
+		if (Mesh->BoneSpaceTransforms.IsValidIndex(Index))
+		{
+			Mesh->BoneSpaceTransforms[Index].SetScale3D(FVector(0.001f));
+		}
+	}
+}
+
+void UHoldoverBodyRig::UpdateArms(const FTransform& CamTM)
+{
+	UPoseableMeshComponent* ArmsMesh = Arms.Get();
+	USkeletalMeshComponent* Src = ArmsDriver.Get();
+	const AHoldoverCharacter* Character = Cast<AHoldoverCharacter>(GetOwner());
+	const AHoldoverGun* Gun = Character ? Character->GetGun() : nullptr;
+	const UHoldoverGunData* Data = Gun ? Gun->GetData() : nullptr;
+	if (!ArmsMesh || !Src || !Data || !ArmsMesh->GetSkinnedAsset() || !Src->GetSkeletalMeshAsset()
+		|| ArmsMesh->BoneSpaceTransforms.Num() == 0 || ArmsMesh->GetSkinnedAsset() != CachedFor)
+	{
+		return;
+	}
+
+	ArmsMesh->CopyPoseFromSkeletalComponent(Src);
+	ScaleBonesToNothing(ArmsMesh, ArmsHiddenBones);
+
+	const FReferenceSkeleton& Ref = ArmsMesh->GetSkinnedAsset()->GetRefSkeleton();
+	const int32 GripIndex = Ref.FindBoneIndex(ArmsGripBone);
+	const int32 HeadIndex = Ref.FindBoneIndex(TEXT("head"));
+	TArray<FTransform> CS;
+	ComputeComponentSpace(ArmsMesh, CS);
+	if (!CS.IsValidIndex(GripIndex) || !RightArm.bValid)
+	{
+		return;
+	}
+	// The Manny mesh has no weapon_r bone; the gun frame is the animation's weapon_r measured in hand_r.
+	const FTransform& WeaponInHand = Data->bIsPistol ? PistolWeaponInHand : RifleWeaponInHand;
+	const FTransform WeaponInArms = WeaponInHand * CS[GripIndex];
+	const FTransform LeftInWeapon = LeftArm.bValid ? CS[LeftArm.Hand].GetRelativeTransform(WeaponInArms) : FTransform::Identity;
+
+	// Where the shooting hand must be: the animation's gun frame on the gun's grip frame
+	// (at the GripHand socket, turned like the gun: X along the barrel, Z up).
+	const FTransform GunTM = Gun->GetActorTransform();
+	const FTransform GunGrip(GunTM.GetRotation(), Gun->GetSocketWorldTransform(Data->GripHandSocket).GetLocation());
+	const FTransform& Offset = Data->bIsPistol ? PistolArmsGripOffset : RifleArmsGripOffset;
+	const FTransform WeaponWorld = Offset * GunGrip;
+	FTransform HandRWorld = WeaponInHand.Inverse() * WeaponWorld;
+	HandRWorld.SetScale3D(FVector::OneVector);
+
+	// Body of the arms: facing where the eyes look (mesh forward is +Y), head bone just behind the eyes.
+	const FQuat ArmsRot = CamTM.GetRotation() * FRotator(0.f, -90.f, 0.f).Quaternion();
+	const FVector HeadLocal = CS.IsValidIndex(HeadIndex) ? CS[HeadIndex].GetLocation() : FVector(0.f, 0.f, 160.f);
+	FVector ArmsLoc = CamTM.TransformPosition(ArmsHeadInCamera) - ArmsRot.RotateVector(HeadLocal);
+
+	// If the grip is out of reach, slide the arms toward it just enough.
+	const float Upper = FVector::Dist(CS[RightArm.Upper].GetLocation(), CS[RightArm.Lower].GetLocation());
+	const float Lower = FVector::Dist(CS[RightArm.Lower].GetLocation(), CS[RightArm.Hand].GetLocation());
+	const float Reach = (Upper + Lower) * ArmsMaxReach;
+	const FVector Shoulder = ArmsLoc + ArmsRot.RotateVector(CS[RightArm.Upper].GetLocation());
+	const FVector ToHand = HandRWorld.GetLocation() - Shoulder;
+	if (ToHand.Size() > Reach)
+	{
+		ArmsLoc += ToHand.GetSafeNormal() * (ToHand.Size() - Reach);
+	}
+	ArmsMesh->SetWorldTransform(FTransform(ArmsRot, ArmsLoc));
+
+	SolveArmTo(ArmsMesh, RightArm, HandRWorld.GetLocation(), HandRWorld.GetRotation(), false, WeaponWorld);
+
+	// Support hand: onto the gun's support-hand target (and wherever the gun timelines take it), or where the
+	// idle animation holds it relative to the gun.
+	UHoldoverGunAnimator* Anim = Animator.Get();
+	const bool bLeftIK = Anim && LeftArm.bValid
+		&& ((Data->bIsPistol ? bPistolLeftHandIK : bRifleLeftHandIK) || Anim->IsBusy());
+	if (!bLeftIK && LeftArm.bValid)
+	{
+		FTransform LeftOnGun = LeftInWeapon;
+		if (bLeftHandSlideToSupport && !Data->bIsPistol)
+		{
+			// Same hand shape as the animation, slid along the barrel to this gun's handguard.
+			const FVector GripLocal = Gun->GetSocketLocal(Data->GripHandSocket);
+			const FVector SupportLocal = Gun->GetSocketLocal(Data->SupportHandSocket);
+			FVector L = LeftOnGun.GetLocation();
+			L.X = SupportLocal.X - GripLocal.X;
+			LeftOnGun.SetLocation(L);
+		}
+		const FTransform HandLWorld = LeftOnGun * WeaponWorld;
+		SolveArmTo(ArmsMesh, LeftArm, HandLWorld.GetLocation(), HandLWorld.GetRotation(), true, HandLWorld);
+	}
+	if (bLeftIK)
+	{
+		SolveArm(ArmsMesh, LeftArm, Anim->GetHandInCamera(true) * CamTM, true);
+		if (bLeftHandCurlFromTimeline)
+		{
+			CurlFingers(ArmsMesh, LeftArm, Anim->GetFingerWeights(true), true);
+		}
+	}
+	ArmsMesh->MarkRefreshTransformDirty();
 }
 
 void UHoldoverBodyRig::CacheBones()
@@ -170,6 +285,32 @@ void UHoldoverBodyRig::SolveArm(UPoseableMeshComponent* Mesh, const FArmBones& A
 	const FVector FingersW = TargetBasis.GetAxisX();
 	const FVector PalmW = TargetBasis.GetAxisZ();
 	const FVector Wrist = TargetWorld.GetLocation() - FingersW * PalmToWrist - PalmW * PalmDepth;
+	SolveArmTo(Mesh, Arm, Wrist, HandRot, bLeft, TargetWorld);
+}
+
+void UHoldoverBodyRig::SolveArmTo(UPoseableMeshComponent* Mesh, const FArmBones& Arm, const FVector& Wrist, const FQuat& HandRot, bool bLeft,
+	const FTransform& DebugTarget)
+{
+	TArray<FTransform> CS;
+	ComputeComponentSpace(Mesh, CS);
+	if (!CS.IsValidIndex(Arm.Upper) || !CS.IsValidIndex(Arm.Lower) || !CS.IsValidIndex(Arm.Hand))
+	{
+		return;
+	}
+	const FTransform CompTM = Mesh->GetComponentTransform();
+	const FTransform UpperW = CS[Arm.Upper] * CompTM;
+	const FTransform LowerW = CS[Arm.Lower] * CompTM;
+	const FTransform HandW = CS[Arm.Hand] * CompTM;
+	const FVector A = UpperW.GetLocation();
+	const FVector B = LowerW.GetLocation();
+	const FVector C = HandW.GetLocation();
+	const float L1 = FVector::Dist(A, B);
+	const float L2 = FVector::Dist(B, C);
+	if (L1 < KINDA_SMALL_NUMBER || L2 < KINDA_SMALL_NUMBER)
+	{
+		return;
+	}
+	const FTransform TargetWorld = DebugTarget;
 
 	// Two-bone IK by the law of cosines.
 	FVector ToWrist = Wrist - A;
@@ -341,7 +482,13 @@ void UHoldoverBodyRig::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			continue;
 		}
 		PoseCopy(Mesh, Mesh == Vis);
-		if (bIK)
+		const bool bHiddenArms = (Mesh == Vis) && bHideBodyArms && Arms.IsValid();
+		if (bHiddenArms)
+		{
+			// The first-person arms replace these; the arm IK code stays for the shadow body.
+			ScaleBonesToNothing(Mesh, BodyArmBones);
+		}
+		if (bIK && !bHiddenArms)
 		{
 			if (LeftArm.bValid)
 			{
@@ -356,4 +503,6 @@ void UHoldoverBodyRig::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		}
 		Mesh->MarkRefreshTransformDirty();
 	}
+
+	UpdateArms(CamTM);
 }
