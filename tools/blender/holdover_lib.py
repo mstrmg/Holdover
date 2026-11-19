@@ -296,6 +296,36 @@ def unwrap(obs, margin=0.003):
         bpy.ops.uv.pack_islands(udim_source="CLOSEST_UDIM", rotate=True, margin_method="FRACTION", margin=margin)
         bpy.ops.object.mode_set(mode="OBJECT")
 
+def unwrap_regions(groups, margin=0.004):
+    """unwrap groups of objects into separate vertical bands of the atlas so very different materials (wood vs steel)
+    never bleed into each other. groups: [(objs, u0, width)]. islands keep their proportions (no stretching)."""
+    area = next(a for w in bpy.context.window_manager.windows for a in w.screen.areas if a.type == "VIEW_3D")
+    win = next(w for w in bpy.context.window_manager.windows if area in w.screen.areas[:])
+    region = next(r for r in area.regions if r.type == "WINDOW")
+    def scale_u(obs, k, off):
+        for o in obs:
+            for d in o.data.uv_layers.active.data: d.uv = (d.uv[0]*k + off, d.uv[1])
+    for obs, u0, wdt in groups:
+        for o in bpy.context.view_layer.objects: o.select_set(False)
+        for o in obs:
+            o.hide_set(False); o.select_set(True)
+            if not o.data.uv_layers: o.data.uv_layers.new(name="UVMap")
+        with bpy.context.temp_override(window=win, area=area, region=region, active_object=obs[0], selected_objects=obs, selected_editable_objects=obs):
+            bpy.context.view_layer.objects.active = obs[0]
+            bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
+            bpy.ops.uv.smart_project(angle_limit=math.radians(50), island_margin=0.0, area_weight=0.0, correct_aspect=True, scale_to_bounds=False)
+            bpy.ops.uv.select_all(action="SELECT"); bpy.ops.uv.average_islands_scale()
+            bpy.ops.object.mode_set(mode="OBJECT")
+        scale_u(obs, 1.0/wdt, 0.0)
+        with bpy.context.temp_override(window=win, area=area, region=region, active_object=obs[0], selected_objects=obs, selected_editable_objects=obs):
+            bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT"); bpy.ops.uv.select_all(action="SELECT")
+            bpy.ops.uv.pack_islands(udim_source="CLOSEST_UDIM", rotate=False, margin_method="FRACTION", margin=margin)
+            bpy.ops.object.mode_set(mode="OBJECT")
+        scale_u(obs, wdt, u0)
+
+def surface_area(obs):
+    return sum(p.area for o in obs for p in o.data.polygons) * 1.0
+
 def set_flat(obs, flat):
     st = bpy.app.driver_namespace.setdefault("smooth_state", {})
     for o in obs:
