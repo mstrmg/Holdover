@@ -95,6 +95,23 @@ def make_hand(name, rgba, right):
     ob.data.materials.append(color_mat(name + "_mat", rgba)); ob.color = rgba
     return ob
 
+VIEWS = {   # check cameras, camera-space mm relative to the gun's hold origin: (camera position, look-at point)
+    "eye": None,
+    "right": ((-80, -520, 160), (90, 0, -40)),
+    "left": ((-80, 520, 160), (90, 0, -40)),
+    "top": ((60, -60, 600), (80, 0, -40)),
+}
+
+def aim_camera(cam, gun, view):
+    if VIEWS.get(view) is None:
+        cam.location = (0, 0, 0); cam.rotation_euler = (math.radians(90), 0, math.radians(-90)); cam.data.angle = math.radians(90)
+        return
+    o = Vector(HOLD_ORIGIN[gun]); pos, look = VIEWS[view]
+    cam.location = (o + Vector(pos)) * MM
+    d = (o + Vector(look)) * MM - cam.location
+    cam.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+    cam.data.angle = math.radians(55)
+
 def setup_view(arm):
     sc = bpy.context.scene
     for ob in sc.objects:
@@ -104,6 +121,8 @@ def setup_view(arm):
         o.hide_render = False; o.hide_viewport = False; o.hide_set(False)
         for c in o.users_collection:
             c.hide_render = False
+    for n in ("AnimCheckCam", "AnimCheckHandR", "AnimCheckHandL"):
+        if n in bpy.data.objects: bpy.data.objects.remove(bpy.data.objects[n])
     cam_data = bpy.data.cameras.new("AnimCheckCam"); cam_data.lens_unit = "FOV"; cam_data.sensor_fit = "HORIZONTAL"
     cam_data.angle = math.radians(90); cam_data.clip_start = 0.01
     cam = bpy.data.objects.new("AnimCheckCam", cam_data); sc.collection.objects.link(cam)
@@ -190,20 +209,15 @@ def pose_frame(data, act, arm, hands, t, start):
     G = gun_world(data, act, t)
     deltas = bone_deltas(data, act, arm, t, start)
     H = {s: hand_at(data, act, s, t, G) for s in ("L", "R")}
-    # carried bones: keep the offset to the hand they had at pickup
+    # carried bones: follow the hand with the offset given by the attach entry's grip (hand pose with the part at rest)
     carried = {}
-    att = act.get("attach", [])
     for side in ("L", "R"):
-        held, t0 = None, None
-        for a in att:
-            if a["hand"] != "hand" + side or a["t"] > t: continue
-            held, t0 = a["bone"], a["t"]
-        if held and held in arm.data.bones:
-            G0 = gun_world(data, act, t0)
-            d0 = bone_deltas(data, act, arm, t0, start)
-            bone_world0 = G0 @ chain(arm, held, d0)
-            H0 = hand_at(data, act, side, t0, G0)
-            carried[held] = G.inverted() @ H[side] @ H0.inverted() @ bone_world0
+        cur = None
+        for a in act.get("attach", []):
+            if a["hand"] == "hand" + side and a["t"] <= t: cur = a
+        if cur and cur["bone"] and cur["bone"] in arm.data.bones:
+            g = cur["grip"]
+            carried[cur["bone"]] = G.inverted() @ H[side] @ hand_matrix(g["pos"], g["fingersDir"], g["palmNormal"]).inverted()
     arm.matrix_world = Matrix.Diagonal((MM, MM, MM, 1)) @ G @ Matrix.Diagonal((1 / MM, 1 / MM, 1 / MM, 1))
     for pb in arm.pose.bones:
         pb.matrix_basis = Matrix()
@@ -226,15 +240,12 @@ def pose_frame(data, act, arm, hands, t, start):
         hands[s].color = tuple(c * (0.5 + 0.5 * w) + (1 - 0.5 - 0.5 * w) * 0.9 for c in base) + (1,)
 
 def pick_times(act, n=9):
+    """evenly spread, with the holdAt moment swapped in for the nearest frame"""
     d = act["duration"]
-    ts = {round(d * i / (n - 1), 3) for i in range(n)}
-    if "holdAt" in act: ts.add(act["holdAt"])
-    for e in act.get("events", []):
-        if not e["name"].startswith("Sound:"): ts.add(e["t"])
-    ts = sorted(ts)
-    while len(ts) > n:   # thin evenly, keep the ends
-        ts.pop(len(ts) // 2 if len(ts) % 2 else len(ts) // 2 - 1)
-    return ts
+    ts = [round(d * i / (n - 1), 3) for i in range(n)]
+    if "holdAt" in act:
+        i = min(range(n), key=lambda i: abs(ts[i] - act["holdAt"])); ts[i] = act["holdAt"]
+    return sorted(ts)
 
 def contact_sheet(paths, out_path, cols=3):
     import numpy as np
@@ -251,7 +262,7 @@ def contact_sheet(paths, out_path, cols=3):
     for im in imgs: bpy.data.images.remove(im)
     bpy.data.images.remove(out)
 
-def preview(gun, action, times=None, out_dir=None, repo=None):
+def preview(gun, action, times=None, out_dir=None, repo=None, view="right"):
     repo = repo or REPO
     data = json.load(open(os.path.join(repo, "Holdover", "Data", "GunAnims", gun + ".json")))
     act = data["actions"][action]
@@ -260,6 +271,7 @@ def preview(gun, action, times=None, out_dir=None, repo=None):
     for b in arm.data.bones:
         SOCKETS_CACHE[b.name] = b.head_local / MM
     cam = setup_view(arm)
+    aim_camera(cam, gun, view)
     hands = {"R": make_hand("AnimCheckHandR", (0.85, 0.15, 0.1, 1), True), "L": make_hand("AnimCheckHandL", (0.1, 0.3, 0.9, 1), False)}
     start = start_pose(data)
     times = times or pick_times(act)
@@ -268,10 +280,10 @@ def preview(gun, action, times=None, out_dir=None, repo=None):
     paths = []
     for t in times:
         pose_frame(data, act, arm, hands, t, start)
-        p = os.path.join(out_dir, "%s_%s_%05.3f.png" % (gun, action, t))
+        p = os.path.join(out_dir, "%s_%s_%s_%05.3f.png" % (gun, action, view, t))
         bpy.context.scene.render.filepath = p
         bpy.ops.render.render(write_still=True)
         paths.append(p)
-    sheet = os.path.join(out_dir, "%s_%s_sheet.png" % (gun, action))
+    sheet = os.path.join(out_dir, "%s_%s_%s_sheet.png" % (gun, action, view))
     contact_sheet(paths, sheet)
     return {"sheet": sheet, "frames": paths, "times": times}

@@ -273,7 +273,7 @@ def pistol_actions(g):
     def rack(lock_open=False, from_locked=False):
         a = Action(0.85 if lock_open else 0.78)
         tr, lk = g["slide_travel"], g["slide_lock"]
-        top = [g["rear_serrations"][0], 0, g["slide_top_z"] + 14]          # palm centre over the rear of the slide
+        top = [g["rear_serrations"][0], 0, g["slide_top_z"] + 4]          # palm centre over the rear of the slide
         a.gun("tX", [K(0, 0), K(0.16, -90), K(0.58, -90), K(0.75, 0)], pivot=g["grip_socket"])
         a.gun("tZ", [K(0, 0), K(0.16, -35), K(0.58, -35), K(0.75, 0)])
         a.gun("rotX", [K(0, 0), K(0.16, -18), K(0.58, -18), K(0.75, 0)])
@@ -402,7 +402,7 @@ def pistol_actions(g):
     # in view: mag upright in the palm, top tipped 20 degrees toward the eye, turned by mag_view_yaw to show the holes
     yaw = math.radians(g["mag_view_yaw"])
     vf = norm([math.cos(yaw) * 0.94, math.sin(yaw) * 0.94, 0.34]); vp = [-0.34 * math.cos(yaw), -0.34 * math.sin(yaw), 0.94]
-    view = [330, 30, -230]
+    view = [300, 90, -170]
     a.hand("L", [hold(0), hand_on_mag(0.25, g, 0, interp="easeOut"), hand_on_mag(0.42, g, clear),
                  hand(0.70, "camera", view, vf, vp), hand(0.90, "camera", view, vf, vp),
                  hand_on_mag(1.12, g, clear, interp="lin"), hand_on_mag(1.24, g, 20, interp="lin"), hand_on_mag(1.30, g, 0),
@@ -420,9 +420,9 @@ def pistol_actions(g):
     a.gun("tX", [K(0, 0), K(0.2, -70), K(0.8, -70), K(1.0, 0)])
     pinch = [g["rear_serrations"][0] + 10, 0, g["slide_top_z"] - 4]
     pf, pp = [0, -1, -0.4], [0, 0, -1]
-    a.hand("L", [hold(0), hand(0.22, "gun", add(pinch, [0, 0, 18]), pf, pp, interp="easeOut"),
-                 hand(0.36, "gun", add(pinch, [-open_mm, 0, 18]), pf, pp), hand(0.70, "gun", add(pinch, [-open_mm, 0, 18]), pf, pp),
-                 hand(0.78, "gun", add(pinch, [0, 0, 18]), pf, pp), hold(1.0)])
+    a.hand("L", [hold(0), hand(0.22, "gun", add(pinch, [0, 0, 10]), pf, pp, interp="easeOut"),
+                 hand(0.36, "gun", add(pinch, [-open_mm, 0, 10]), pf, pp), hand(0.70, "gun", add(pinch, [-open_mm, 0, 10]), pf, pp),
+                 hand(0.78, "gun", add(pinch, [0, 0, 10]), pf, pp), hold(1.0)])
     a.fingers("L", "SupportWrap", [K(0, 1), K(0.12, 0), K(0.85, 0), K(1.0, 1)]).fingers("L", "PinchRack", [K(0.12, 0), K(0.22, 1), K(0.78, 1), K(0.88, 0)])
     a.bone(g["slide"], "tX", [K(0.24, 0), K(0.36, -open_mm), K(0.70, -open_mm), K(0.78, 0)])
     b = g["barrel"]
@@ -1018,10 +1018,11 @@ def strip_attached(a):
     spans = {}
     open_ = {}
     for t, side, what in a.get("attach", []):
+        if side in open_:   # picking something else up (or letting go) ends what that hand carried
+            w, t0 = open_.pop(side); spans.setdefault(w, []).append((t0, t))
         if what is not None:
             open_[side] = (what, t)
-        elif side in open_:
-            w, t0 = open_.pop(side); spans.setdefault(w, []).append((t0, t))
+            continue
     for side, (w, t0) in open_.items():
         spans.setdefault(w, []).append((t0, 1e9))
     for bone, sp in spans.items():
@@ -1047,7 +1048,14 @@ def export_action(a, gun):
     for side in ("L", "R"):
         if a.get("hand" + side): o["hand" + side] = [export_hand_key(k, gun) for k in a["hand" + side]]
         if a.get("fingers" + side): o["fingers" + side] = export_fingers(a["fingers" + side])
-    if a.get("attach"): o["attach"] = [{"t": t, "hand": side, "bone": w} for t, side, w in a["attach"]]
+    if a.get("attach"):
+        o["attach"] = []
+        for t, side, w in a["attach"]:
+            e = {"t": t, "hand": side, "bone": w}
+            if w is not None:   # where this hand holds the part when the part sits at its rest (seated) pose
+                k = hand_on_mag(0, GUNS[gun], 0)
+                e["grip"] = {"pos": k["pos"], "fingersDir": k["fwd"], "palmNormal": k["palm"]}
+            o["attach"].append(e)
     if a.get("events"): o["events"] = [{"t": t, "name": n} for t, n in a["events"]]
     return o
 
