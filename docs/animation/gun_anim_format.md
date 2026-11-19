@@ -73,7 +73,8 @@ Bone poses for each mechanical state, so the game can put the gun straight into 
   "handL":  [ {"t": 0, "hold": true, "ease": "smooth"},
               {"t": 0.22, "space": "gun", "pos": [18, 0, 29], "fingersDir": [0, -0.99, -0.15], "palmNormal": [0, 0.15, -0.99], "ease": "smooth"} ],
   "fingersL": [ {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}, {"t": 0.1, "pose": "SupportWrap", "weight": 0, "ease": "smooth"} ],
-  "attach": [ {"t": 0.25, "hand": "handL", "bone": "Magazine"}, {"t": 1.3, "hand": "handL", "bone": null} ],
+  "attach": [ {"t": 0.25, "hand": "handL", "bone": "Magazine", "grip": {"pos": [7.3, 0, -147.4], "fingersDir": [0.97, 0, -0.26], "palmNormal": [0.26, 0, 0.97]}},
+              {"t": 1.3, "hand": "handL", "bone": null} ],
   "events": [ {"t": 0.33, "name": "SlideToRear"}, {"t": 0.38, "name": "InBattery"} ]
 }
 ```
@@ -84,7 +85,7 @@ Bone poses for each mechanical state, so the game can put the gun straight into 
 - `gun`: offset of the whole gun from the hold, in **camera space**, rotating about the `pivot` socket. `loc` keys move it; `rot` keys turn it (an axis along X rolls it, along Y tips the muzzle, along Z turns it left or right). Every action starts and ends with this offset at zero. The shooting hand follows the gun.
 - `handL`, `handR`: hand keys. Each key has `t` and `ease`, then either `"hold": true` (the resting grip) or a full target: `space` (`gun`, `camera` or `body`), `pos`, `fingersDir`, `palmNormal`. Between keys the player converts both keys to camera space, then interpolates position (with the key's ease) and rotation (slerp). A hand with no list stays on its hold.
 - `fingersL`, `fingersR`: finger pose weight keys `{"t", "pose", "weight", "ease"}`. Each pose is its own track (a key interpolates toward the next key **of the same pose**); a pose with no keys keeps its hold weight.
-- `attach`: what a hand is carrying. From the moment a bone is attached until it is let go (`"bone": null`) it follows the hand, keeping the offset it had to the hand when it was picked up, and the bone's own keys are ignored (the generator leaves them out). When it is let go it goes back to its own track, which for a magazine is the seated position. A mag picked up at `MagFromPouch` is a fresh one from the pouch; a mag still in the hand at `MagStow` goes into the pouch.
+- `attach`: what a hand is carrying: `{"t", "hand", "bone", "grip"}`, with `"bone": null` to let go. `grip` (gun space: `pos`, `fingersDir`, `palmNormal`) is where that hand holds the part when the part sits at its rest pose (a magazine seated in the gun). From the moment a bone is attached until it is let go it follows the hand with that fixed offset (offset = inverse(grip hand transform) x bone rest transform), and the bone's own keys are ignored (the generator leaves them out). When it is let go it goes back to its own track, which for a magazine is the seated position. A mag picked up at `MagFromPouch` is a fresh one from the pouch; a mag still in the hand at `MagStow` goes into the pouch.
 - `events`: the gun state machine listens for these and decides what actually happens (for example what comes out of the chamber). Names:
   - `ShotBreak` (the round fires: bullet, muzzle flash, recoil impulse), `HammerDrop`, `HammerCock`, `TriggerReset`
   - `SlideToRear` (the slide or bolt reaches the rear: extraction and ejection point), `InBattery` (the slide or bolt closes: feed point)
