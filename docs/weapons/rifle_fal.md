@@ -27,7 +27,7 @@ Millimetres in gun space (X forward, Y left, Z up, bore axis at Z = 0, bolt face
 | `RearSightAperture` | -180, 0, 28 | Slides along the sight base for range (cosmetic in v1). |
 | `GasRegulator` | 398, 0, 20 | Rotates about the bore axis to change gas setting (cosmetic in v1). |
 
-Socket bones: `Muzzle` (590, 0, 0), `Chamber` (25, 0, 0), `EjectionPort` (-58, -16, 4), `SightRear` (-180, 0, 47, centre of the aperture), `SightFront` (379, 0, 47, top of the post), `MagWell` (-40, 0, -22), `ChargingHandle` (14, 30, 2), `GripHand` (-195, 0, -90), `SupportHand` (190, 0, -10), `Shoulder` (-508, 0, -80). Casings eject to the right (-Y) and slightly forward.
+Socket bones: `Muzzle` (590, 0, 0), `Chamber` (25, 0, 0), `EjectionPort` (-58, -16, 4), `SightRear` (-180, 0, 47, centre of the aperture), `SightFront` (379, 0, 47, top of the post), `MagWell` (-40, 0, -22), `ChargingHandleKnob` (14, 30, 2, where the hand grabs the handle; the `ChargingHandle` bone above is the part itself), `GripHand` (-195, 0, -90), `SupportHand` (190, 0, -10), `Shoulder` (-508, 0, -80). Casings eject to the right (-Y) and slightly forward.
 
 ## Unreal import
 
