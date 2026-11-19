@@ -117,7 +117,7 @@ public:
 	bool bPistolLeftHandIK = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
-	bool bRifleLeftHandIK = false;
+	bool bRifleLeftHandIK = true;
 
 	/** Rifle without left-hand IK: slide the animation's support hand along the barrel to this gun's SupportHand socket. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
