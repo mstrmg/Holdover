@@ -15,6 +15,8 @@ On 2026-11-19 Miles asked for a big plan worked through without waiting for him.
 8. Walking moves the head up and down by only 0.35 cm. Jogging is 380 cm/s, walking 150, walking while aiming 90.
 9. Aiming brings the gun's real sights to the eye (no zoom, no crosshair).
 10. Your own head is hidden from your view, but your shadow still has one.
+10b. Gun lag (Miles asked for it; the amounts are my picks): turning at a normal pace (about a quarter turn per second) makes the barrel trail about 4 degrees behind your view, never more than 6, and it settles in about a fifth of a second with a tiny swing past. The rifle feels 1.6 times heavier than the pistol. While aiming the lag is 60% of that. Starting, stopping and strafing shift the gun up to 2.5 cm. One strength slider (0 to 2) will go in the settings menu.
+10c. Aiming in eases in and out (95% there in 0.25 s for the pistol, 0.32 s for the rifle), the gun pushes out about 3 to 5 cm along the way, and the muzzle lines up slightly before the gun arrives. Letting go half-way reverses smoothly.
 
 ## Guns
 11. Pistol slot: M9-style, 15-round mags, 9 mm at 360 m/s, sights zeroed at 25 m, safety/decocker.

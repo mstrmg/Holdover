@@ -301,6 +301,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Handling", meta = (ClampMin = "0.05"))
 	float AimTime = 0.25f;
 
+	/** While coming up to the eye the gun also travels this far out of the straight line, at mid-way (cm, X forward, Z up). Gives the push-out arc of a real presentation. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Handling")
+	FVector AimArc = FVector(3.f, 0.f, -1.f);
+
+	/** How far ahead the gun's angle is of its position while aiming in (1 = together, higher = the muzzle lines up first). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Handling", meta = (ClampMin = "1", ClampMax = "3"))
+	float AimRotationLead = 1.5f;
+
+	/** How heavy the gun feels when you turn or move: 1 = pistol, higher lags more and settles slower. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Handling", meta = (ClampMin = "0.2", ClampMax = "4"))
+	float SwayWeight = 1.f;
+
 	// ---------- Recoil (procedural; M2 adds per-gun patterns) ----------
 
 	/** Upward muzzle flip, degrees per second added at the shot. */
