@@ -31,7 +31,8 @@ Explain everything to Miles in plain language. When he must do something on his 
 
 - Engine: Unreal Engine 5.7 or newer (needed for Megaplants and production-ready PCG), C++ project named `Holdover`.
 - Camera: true first person through the player's eyes, using Unreal's First Person Rendering with the full-body ("advanced") setup. No bodycam effects, no HUD.
-- Core logic lives in C++ (`Source/Holdover/`), with Blueprints only as thin wrappers, because Claude cannot read or edit binary Blueprint assets.
+- Repo layout: the UE project lives in the `Holdover/` subfolder (`Holdover/Holdover.uproject`); on Miles's PC the repo is cloned at `D:\Claude area\Holdover\repo`, next to the Blender files in `D:\Claude area\Holdover\art`.
+- Core logic lives in C++ (`Holdover/Source/Holdover/`), with Blueprints only as thin wrappers, because Claude cannot read or edit binary Blueprint assets.
 - Guns: a C++ state machine (chamber, magazine, slide/bolt, safety, malfunctions) configured by one data asset per gun.
 - Hand and gun motion: procedural (code-driven) with IK via Control Rig, so no paid animations are needed.
 - Bullets: simulated projectiles with velocity and drop for every gun (no hitscan).
