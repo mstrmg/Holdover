@@ -29,7 +29,7 @@ Explain everything to Miles in plain language. When he must do something on his 
 
 ## Technical conventions
 
-- Engine: Unreal Engine 5.7 or newer (needed for Megaplants and production-ready PCG), C++ project named `Holdover`.
+- Engine: Unreal Engine 5.8 (5.7 minimum, needed for Megaplants and production-ready PCG), C++ project named `Holdover`. Compiler: Visual Studio 2026 Community (Epic's recommendation for 5.8; VS 2022 17.14+ if on 5.7).
 - Camera: true first person through the player's eyes, using Unreal's First Person Rendering with the full-body ("advanced") setup. No bodycam effects, no HUD.
 - Repo layout: the UE project lives in the `Holdover/` subfolder (`Holdover/Holdover.uproject`); on Miles's PC the repo is cloned at `D:\Claude area\Holdover\repo`, next to the Blender files in `D:\Claude area\Holdover\art`.
 - Core logic lives in C++ (`Holdover/Source/Holdover/`), with Blueprints only as thin wrappers, because Claude cannot read or edit binary Blueprint assets.
