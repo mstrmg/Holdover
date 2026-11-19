@@ -35,3 +35,19 @@ The game builds the range itself in an empty map, so there's nothing to save. If
 ## Letting Claude build on your PC
 
 When Claude asks to build, accept the prompt on your PC. Claude then runs the build, reads the errors and fixes them. Your PC needs to stay on while that happens.
+
+## Re-importing the gun models (Claude does this)
+
+The Blender exports in `D:\Claude area\Holdover\art\weapons\<gun>\export\` are imported into `/Game/Guns/<GunId>/` by `tools/unreal/import_guns.py` (close the editor first):
+
+```
+"C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "D:\Claude area\Holdover\Holdover\Holdover\Holdover.uproject" -run=pythonscript -script="D:\Claude area\Holdover\Holdover\tools\unreal\import_guns.py Pistol_M9" -unattended -nop4 -nosplash -NullRHI
+```
+
+Leave out the gun id to import all five. The game picks the models up by name; without them it shows gray stand-ins.
+
+## Test switches (console, ` key)
+
+- `holdover.ForceAim 1`: aim without holding the right mouse button.
+- `holdover.DebugView 1/2/3`: look at yourself from the side, front or behind.
+- `holdover.TestShots 1`: takes pistol and rifle screenshots (ready and aimed) into `Saved/Screenshots/test`, then quits.

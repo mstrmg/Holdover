@@ -188,6 +188,17 @@ private:
 	void UpdateAimAlpha(float DeltaSeconds, bool bWantAim, float AimTime);
 	void SetupBody();
 
+	// Test tools (holdover.DebugView, holdover.TestShots)
+	void UpdateDebugView();
+	void UpdateTestShots(float DeltaSeconds);
+	void LogArmDiagnostics(const FString& Label) const;
+
+	UPROPERTY(Transient)
+	TObjectPtr<class ACameraActor> DebugCam;
+	int32 AppliedDebugView = 0;
+	float TestTime = 0.f;
+	int32 TestStep = 0;
+
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UCameraComponent> Camera;
 
