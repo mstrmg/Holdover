@@ -8,8 +8,8 @@ All files are under `art/props/forest/` on Miles's PC, one FBX each. Rocks, logs
 
 | File | What it is | Faces (LOD0) |
 |---|---|---|
-| `SM_Rock_S.fbx`, `SM_Rock_M.fbx`, `SM_Rock_L.fbx` | Mossy rocks, about 0.3 m, 0.7 m and 1.4 m | 400 each |
-| `SM_Log_Short.fbx`, `SM_Log_Long.fbx`, `SM_Log_Thick.fbx` | Fallen logs, 1.6 m, 3.2 m, 2.4 m long | under 200 each |
+| `SM_Rock_S.fbx`, `SM_Rock_M.fbx`, `SM_Rock_L.fbx` | Mossy rocks, about 0.3 m, 0.7 m and 1.4 m | 320 each |
+| `SM_Log_Short.fbx`, `SM_Log_Long.fbx`, `SM_Log_Thick.fbx` | Fallen logs, 1.6 m, 3.2 m, 2.4 m long | about 130 each |
 | `SM_Stump_S.fbx`, `SM_Stump_L.fbx` | Stumps with flared roots | about 100 each |
 | `SM_Branches.fbx` | Bundle of four fallen sticks | 32 |
 | `SM_GroundPatch_4x4.fbx` | 4 m by 4 m bumpy leaf-litter ground tile | 576 |
