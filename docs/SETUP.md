@@ -19,7 +19,8 @@ Do these once. After that, Claude can build the game on your PC remotely and fix
 
 1. In the Unreal editor, click **Add** (top of the Content Browser) > **Add Feature or Content Pack**.
 2. Pick **Third Person** under "Blueprint Feature" and click **Add to Project**.
-3. That's it: the game finds the mannequin by itself. Without it, the gun still works and floats in front of you.
+3. For the first-person arms the game also needs Epic's first-person hold animations: **Add > Add Feature or Content Pack > First Person** (they land in `Content/Characters/Mannequins/Anims/Pistol` and `.../Rifle`). Without them the arms show a stiff default pose.
+4. That's it: the game finds the mannequin by itself. Without it, the gun still works and floats in front of you.
 
 ## 4. Play
 

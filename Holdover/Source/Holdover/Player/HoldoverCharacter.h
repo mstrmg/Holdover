@@ -16,6 +16,8 @@ class UHoldoverGunData;
 class AHoldoverGun;
 class UAnimInstance;
 class USkeletalMesh;
+class USkeletalMeshComponent;
+class UAnimSequence;
 struct FInputActionValue;
 
 /**
@@ -129,6 +131,14 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Body")
 	TSoftClassPtr<UAnimInstance> BodyAnimClass;
 
+	/** First-person arms: idle hold animation looped while holding a pistol (Manny skeleton). */
+	UPROPERTY(Config, EditAnywhere, Category = "Body")
+	TSoftObjectPtr<UAnimSequence> PistolArmsIdle;
+
+	/** First-person arms: idle hold animation looped while holding a rifle (Manny skeleton). */
+	UPROPERTY(Config, EditAnywhere, Category = "Body")
+	TSoftObjectPtr<UAnimSequence> RifleArmsIdle;
+
 	// ---------- Guns ----------
 
 	/** Gun data per slot. An empty slot uses the built-in preset (slot 0 M9-style pistol, slot 1 AK-style rifle). */
@@ -213,6 +223,16 @@ private:
 	/** Full body (with head) that only casts the shadow. */
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UPoseableMeshComponent> BodyShadow;
+
+	/** Plays the first-person arms' idle hold animation; never drawn. */
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<USkeletalMeshComponent> ArmsDriver;
+
+	/** The first-person arms you see, moved with the gun by the body rig. */
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UPoseableMeshComponent> ArmsMesh;
+
+	void UpdateArmsAnimation();
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UHoldoverGunAnimator> Animator;

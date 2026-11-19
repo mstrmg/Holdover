@@ -16,6 +16,7 @@
 #include "Engine/Engine.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/SkeletalMesh.h"
+#include "Animation/AnimSequence.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
@@ -92,8 +93,44 @@ AHoldoverCharacter::AHoldoverCharacter()
 	BodyShadow->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	BodyShadow->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
 
+	// First-person arms ("viewmodel"): a hidden copy plays the idle hold animation, the poseable copy is drawn
+	// and moved with the gun by the body rig.
+	ArmsDriver = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmsDriver"));
+	ArmsDriver->SetupAttachment(Camera);
+	ArmsDriver->SetHiddenInGame(true);
+	ArmsDriver->SetCastShadow(false);
+	ArmsDriver->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ArmsDriver->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+	ArmsDriver->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+
+	ArmsMesh = CreateDefaultSubobject<UPoseableMeshComponent>(TEXT("ArmsMesh"));
+	ArmsMesh->SetupAttachment(Camera);
+	ArmsMesh->SetCastShadow(false);
+	ArmsMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ArmsMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+	ArmsMesh->bUseAttachParentBound = false;
+
+	PistolArmsIdle = TSoftObjectPtr<UAnimSequence>(FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Anims/Pistol/MF_Pistol_Idle_ADS.MF_Pistol_Idle_ADS")));
+	RifleArmsIdle = TSoftObjectPtr<UAnimSequence>(FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Anims/Rifle/MF_Rifle_Idle_ADS.MF_Rifle_Idle_ADS")));
+
 	Animator = CreateDefaultSubobject<UHoldoverGunAnimator>(TEXT("GunAnimator"));
 	BodyRig = CreateDefaultSubobject<UHoldoverBodyRig>(TEXT("BodyRig"));
+}
+
+void AHoldoverCharacter::UpdateArmsAnimation()
+{
+	if (!ArmsDriver->GetSkeletalMeshAsset() || !Gun || !Gun->GetData())
+	{
+		return;
+	}
+	const TSoftObjectPtr<UAnimSequence>& Wanted = Gun->GetData()->bIsPistol ? PistolArmsIdle : RifleArmsIdle;
+	UAnimSequence* Seq = Wanted.IsNull() ? nullptr : Wanted.LoadSynchronous();
+	if (!Seq)
+	{
+		UE_LOG(LogHoldover, Warning, TEXT("No first-person arms animation (%s): the arms show their reference pose."), *Wanted.ToString());
+		return;
+	}
+	ArmsDriver->PlayAnimation(Seq, true);
 }
 
 void AHoldoverCharacter::BeginPlay()
@@ -139,6 +176,11 @@ void AHoldoverCharacter::SetupBody()
 
 	BodyVisible->SetSkinnedAssetAndUpdate(LoadedBody, true);
 	BodyShadow->SetSkinnedAssetAndUpdate(LoadedBody, true);
+
+	ArmsDriver->SetSkeletalMeshAsset(LoadedBody);
+	ArmsDriver->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+	ArmsMesh->SetSkinnedAssetAndUpdate(LoadedBody, true);
+	BodyRig->SetupArms(ArmsDriver, ArmsMesh);
 }
 
 // =====================================================================
@@ -226,6 +268,7 @@ void AHoldoverCharacter::SpawnGun(int32 Slot)
 	RecoilVel = FVector4(0, 0, 0, 0);
 	AimAlpha = 0.f;
 	AimAlphaVel = 0.f;
+	UpdateArmsAnimation();
 
 	if (bFresh)
 	{
@@ -526,15 +569,23 @@ void AHoldoverCharacter::UpdateDebugView()
 void AHoldoverCharacter::LogArmDiagnostics(const FString& Label) const
 {
 	const FTransform Eyes = Camera->GetComponentTransform();
-	auto Bone = [this, &Eyes](const TCHAR* Name)
+	// The arms you see are the first-person arms when they are set up, else the full body.
+	UPoseableMeshComponent* Src = (ArmsMesh && ArmsMesh->GetSkinnedAsset()) ? ArmsMesh.Get() : BodyVisible.Get();
+	auto Bone = [Src, &Eyes](const TCHAR* Name)
 	{
-		if (!BodyVisible || !BodyVisible->GetSkinnedAsset() || BodyVisible->GetBoneIndex(Name) == INDEX_NONE)
+		if (!Src || !Src->GetSkinnedAsset() || Src->GetBoneIndex(Name) == INDEX_NONE)
 		{
 			return FString(TEXT("n/a"));
 		}
-		const FVector W = BodyVisible->GetBoneLocationByName(Name, EBoneSpaces::WorldSpace);
+		const FVector W = Src->GetBoneLocationByName(Name, EBoneSpaces::WorldSpace);
 		return Eyes.InverseTransformPosition(W).ToCompactString();
 	};
+	if (Gun && Gun->GetData())
+	{
+		UE_LOG(LogHoldover, Log, TEXT("[Arms %s] weapon_r %s gun GripHand %s SupportHand %s"), *Label, *Bone(TEXT("weapon_r")),
+			*Eyes.InverseTransformPosition(Gun->GetSocketWorldTransform(Gun->GetData()->GripHandSocket).GetLocation()).ToCompactString(),
+			*Eyes.InverseTransformPosition(Gun->GetSocketWorldTransform(Gun->GetData()->SupportHandSocket).GetLocation()).ToCompactString());
+	}
 	UE_LOG(LogHoldover, Log, TEXT("[Arms %s] eye-space cm (X fwd, Y right, Z up): head %s neck %s clav_r %s upperarm_r %s lowerarm_r %s hand_r %s | upperarm_l %s lowerarm_l %s hand_l %s"),
 		*Label, *Bone(TEXT("head")), *Bone(TEXT("neck_01")), *Bone(TEXT("clavicle_r")), *Bone(TEXT("upperarm_r")), *Bone(TEXT("lowerarm_r")),
 		*Bone(TEXT("hand_r")), *Bone(TEXT("upperarm_l")), *Bone(TEXT("lowerarm_l")), *Bone(TEXT("hand_l")));
