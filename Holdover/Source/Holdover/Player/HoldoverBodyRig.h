@@ -94,7 +94,7 @@ public:
 
 	/** Fine adjustment of the grip, in the gun's frame (X along the barrel, Z up), pistol. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
-	FTransform PistolArmsGripOffset = FTransform::Identity;
+	FTransform PistolArmsGripOffset = FTransform(FQuat::Identity, FVector(-1.f, 0.f, -4.f));
 
 	/** Fine adjustment of the grip, in the gun's frame, rifle. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")

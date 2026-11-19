@@ -172,12 +172,39 @@ def ensure_master():
     return mat
 
 
+def fix_master_defaults(mat, textures):
+    # Each texture parameter's default must match its sampler type (color / masks / normal). The engine's
+    # DefaultTexture is a color texture, so on the ORM and Normal slots M_Gun failed to compile and every gun
+    # rendered with the gray default material. Use this gun's own textures as the defaults.
+    MP = unreal.MaterialProperty
+    slots = {"BaseColor": MP.MP_BASE_COLOR, "ORM": MP.MP_ROUGHNESS, "Normal": MP.MP_NORMAL}
+    changed = False
+    for param, prop in slots.items():
+        tex = textures.get(param)
+        if not tex:
+            continue
+        try:
+            node = mel.get_material_property_input_node(mat, prop)
+        except Exception as e:  # noqa
+            log("WARNING cannot read M_Gun %s node: %s" % (param, e))
+            continue
+        if node and node.get_editor_property("texture") != tex:
+            node.set_editor_property("texture", tex)
+            changed = True
+    if changed:
+        mel.recompile_material(mat)
+        eal.save_loaded_asset(mat)
+        log("M_Gun parameter defaults set to " + ", ".join(t.get_name() for t in textures.values() if t))
+
+
 def make_instance(gun, dest, textures):
     name = "MI_" + gun
     path = dest + "/" + name
     mi = eal.load_asset(path) if eal.does_asset_exist(path) else assets.create_asset(
         name, dest, unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
-    mel.set_material_instance_parent(mi, ensure_master())
+    master = ensure_master()
+    fix_master_defaults(master, textures)
+    mel.set_material_instance_parent(mi, master)
     for param, tex in textures.items():
         if tex:
             mel.set_material_instance_texture_parameter_value(mi, param, tex)
