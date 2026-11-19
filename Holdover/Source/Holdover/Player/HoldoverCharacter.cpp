@@ -220,6 +220,7 @@ void AHoldoverCharacter::SpawnGun(int32 Slot)
 	Recoil = FVector4(0, 0, 0, 0);
 	RecoilVel = FVector4(0, 0, 0, 0);
 	AimAlpha = 0.f;
+	AimAlphaVel = 0.f;
 
 	if (bFresh)
 	{
@@ -460,7 +461,114 @@ void AHoldoverCharacter::Tick(float DeltaSeconds)
 	Camera->SetRelativeLocation(FVector(EyeForward, 0.f, EyeHeight - CapsuleHalf - Bob));
 
 	UpdateRecoil(DeltaSeconds);
+	UpdateSway(DeltaSeconds);
 	UpdateHold(DeltaSeconds);
+}
+
+namespace
+{
+	/** Smoothly limits a value to +-Max: nearly linear when small, never passes Max, no hard stop. */
+	float SoftLimit(float V, float Max)
+	{
+		if (Max <= KINDA_SMALL_NUMBER)
+		{
+			return 0.f;
+		}
+		const float R = V / Max;
+		return V / FMath::Sqrt(1.f + R * R);
+	}
+
+	FVector SoftLimit(const FVector& V, float Max)
+	{
+		const float Len = V.Size();
+		return Len > KINDA_SMALL_NUMBER ? V * (SoftLimit(Len, Max) / Len) : FVector::ZeroVector;
+	}
+}
+
+void AHoldoverCharacter::UpdateSway(float DeltaSeconds)
+{
+	if (!Gun || !Controller || DeltaSeconds <= 0.f)
+	{
+		return;
+	}
+	const UHoldoverGunData* D = Gun->GetData();
+
+	const FRotator View = GetControlRotation();
+	const FVector ViewVelocity = Camera->GetComponentQuat().UnrotateVector(GetVelocity());
+	if (!bHavePrevView)
+	{
+		PrevViewRotation = View;
+		PrevViewVelocity = ViewVelocity;
+		bHavePrevView = true;
+	}
+	const FVector2D ViewDelta(
+		FMath::FindDeltaAngleDegrees(PrevViewRotation.Pitch, View.Pitch),
+		FMath::FindDeltaAngleDegrees(PrevViewRotation.Yaw, View.Yaw));
+	const FVector VelocityChange = ViewVelocity - PrevViewVelocity;
+	PrevViewRotation = View;
+	PrevViewVelocity = ViewVelocity;
+
+	// A snap (spawn, teleport, reset) is not a turn: don't swing the gun for it.
+	if (ViewDelta.GetAbsMax() > 60.f || VelocityChange.Size() > 3000.f)
+	{
+		SwayAngle = SwayGunVel = FVector2D::ZeroVector;
+		MoveSway = MoveSwayVel = FVector::ZeroVector;
+		return;
+	}
+
+	const float Weight = FMath::Max(D->SwayWeight, 0.2f);
+	const float Damping = FMath::Max(SwayDampingRatio, 0.05f);
+
+	// The gun is a weight on a spring that follows the view. The view turns at a steady rate through the frame;
+	// the gun keeps its own turn speed, so it trails when you start turning and catches up (a touch past) when you stop.
+	const float K = FMath::Max(SwayStiffness, 1.f) / Weight;
+	const float C = 2.f * Damping * FMath::Sqrt(K);
+	const FVector2D ViewRate = ViewDelta / DeltaSeconds;
+
+	// Body motion: a change of walking speed nudges the hands the other way, then they settle.
+	const float Km = FMath::Max(MoveSwayStiffness, 1.f) / Weight;
+	const float Cm = 2.f * Damping * FMath::Sqrt(Km);
+	MoveSwayVel -= VelocityChange * MoveInertia;
+
+	const int32 Steps = FMath::Clamp(FMath::CeilToInt(DeltaSeconds / (1.f / 240.f)), 1, 16);
+	const float Dt = DeltaSeconds / Steps;
+	for (int32 i = 0; i < Steps; ++i)
+	{
+		const FVector2D Acc = SwayAngle * -K - SwayGunVel * C;
+		SwayGunVel += Acc * Dt;
+		SwayAngle += (SwayGunVel - ViewRate) * Dt;
+
+		const FVector AccM = MoveSway * -Km - MoveSwayVel * Cm;
+		MoveSwayVel += AccM * Dt;
+		MoveSway += MoveSwayVel * Dt;
+	}
+
+	// Guard against runaway on a very long frame; what you see is soft-limited later.
+	const float Guard = FMath::Max(SwayMaxDegrees, 1.f) * 4.f;
+	SwayAngle.X = FMath::Clamp(SwayAngle.X, -Guard, Guard);
+	SwayAngle.Y = FMath::Clamp(SwayAngle.Y, -Guard, Guard);
+	MoveSway = MoveSway.GetClampedToMaxSize(FMath::Max(MoveSwayMaxCm, 0.5f) * 4.f);
+}
+
+void AHoldoverCharacter::UpdateAimAlpha(float DeltaSeconds, bool bWantAim, float AimTime)
+{
+	// Critically damped spring: starts gently, arrives without a bump, and reverses smoothly if you let go half-way.
+	// Reaches 95% of the way in AimTime.
+	const float W = 4.75f / FMath::Max(AimTime, 0.05f);
+	const float Target = bWantAim ? 1.f : 0.f;
+	const int32 Steps = FMath::Clamp(FMath::CeilToInt(DeltaSeconds / (1.f / 240.f)), 1, 16);
+	const float Dt = DeltaSeconds / Steps;
+	for (int32 i = 0; i < Steps; ++i)
+	{
+		const float Acc = W * W * (Target - AimAlpha) - 2.f * W * AimAlphaVel;
+		AimAlphaVel += Acc * Dt;
+		AimAlpha += AimAlphaVel * Dt;
+	}
+	if (AimAlpha < 0.f || AimAlpha > 1.f)
+	{
+		AimAlpha = FMath::Clamp(AimAlpha, 0.f, 1.f);
+		AimAlphaVel = 0.f;
+	}
 }
 
 void AHoldoverCharacter::UpdateRecoil(float DeltaSeconds)
@@ -496,8 +604,10 @@ void AHoldoverCharacter::UpdateHold(float DeltaSeconds)
 
 	// Raise or lower the gun.
 	const bool bWantAim = bAimHeld && !Animator->IsBusy();
-	AimAlpha = FMath::FInterpConstantTo(AimAlpha, bWantAim ? 1.f : 0.f, DeltaSeconds, 1.f / FMath::Max(D->AimTime, 0.05f));
-	const float A = FMath::SmoothStep(0.f, 1.f, AimAlpha);
+	UpdateAimAlpha(DeltaSeconds, bWantAim, D->AimTime);
+	const float A = AimAlpha;
+	// The muzzle lines up a little before the gun arrives, as when a real shooter drives the front sight onto the target.
+	const float RotA = 1.f - FMath::Pow(1.f - A, FMath::Max(D->AimRotationLead, 1.f));
 
 	// Low ready.
 	const FTransform Ready(D->ReadyRotation, D->ReadyOffset);
@@ -510,8 +620,9 @@ void AHoldoverCharacter::UpdateHold(float DeltaSeconds)
 	const FTransform Aimed(AimRot, FVector(D->AimEyeRelief, 0.f, 0.f) - AimRot.RotateVector(Rear));
 
 	FTransform Hold;
-	Hold.SetLocation(FMath::Lerp(Ready.GetLocation(), Aimed.GetLocation(), A));
-	Hold.SetRotation(FQuat::Slerp(Ready.GetRotation(), Aimed.GetRotation(), A).GetNormalized());
+	// Straight line from ready to the eye, bowed out by the arc (zero at both ends).
+	Hold.SetLocation(FMath::Lerp(Ready.GetLocation(), Aimed.GetLocation(), A) + D->AimArc * FMath::Sin(PI * A));
+	Hold.SetRotation(FQuat::Slerp(Ready.GetRotation(), Aimed.GetRotation(), RotA).GetNormalized());
 
 	// Recoil: the gun turns about the shooting hand and is pushed back and up.
 	const FVector GripLocal = Gun->GetSocketLocal(D->GripHandSocket);
@@ -520,7 +631,18 @@ void AHoldoverCharacter::UpdateHold(float DeltaSeconds)
 	FTransform Kicked = Hold;
 	Kicked.SetRotation(Kick * Hold.GetRotation());
 	Kicked.SetLocation(Pivot + Kick.RotateVector(Hold.GetLocation() - Pivot) + FVector(-Recoil.Z, 0.f, Recoil.W));
-	BaseGunInCamera = Kicked;
+
+	// Gun weight: it trails the view and body motion, turning about the wrist and forearm behind the grip.
+	const float SwayScale = FMath::Max(SwayStrength, 0.f) * FMath::Lerp(1.f, SwayWhileAiming, A);
+	const float LagPitch = SoftLimit(SwayAngle.X * SwayScale, SwayMaxDegrees);
+	const float LagYaw = SoftLimit(SwayAngle.Y * SwayScale, SwayMaxDegrees);
+	const FQuat SwayRot = FRotator(LagPitch, LagYaw, LagYaw * SwayRollPerYaw).Quaternion();
+	const FVector SwayPivot = Kicked.TransformPosition(GripLocal) - FVector(SwayPivotBehindGrip, 0.f, 0.f);
+	FTransform Swayed = Kicked;
+	Swayed.SetRotation((SwayRot * Kicked.GetRotation()).GetNormalized());
+	Swayed.SetLocation(SwayPivot + SwayRot.RotateVector(Kicked.GetLocation() - SwayPivot)
+		+ SoftLimit(MoveSway * SwayScale, MoveSwayMaxCm));
+	BaseGunInCamera = Swayed;
 
 	FHoldoverAnimFrame Frame;
 	Frame.BaseGunInCamera = BaseGunInCamera;

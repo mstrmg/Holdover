@@ -32,6 +32,7 @@ Legend: [x] done and tested in the game, [~] code written but not yet built or t
 21. [~] Actions for the M9: fire, rack, reload with retention, empty reload, mag check, press check, safety on and off (decocker), slide release, tap-rack, stovepipe and double-feed clearing.
 22. [~] Recoil per gun: pattern plus randomness, gun moves in the hands and settles; muzzle flip from grip height.
 23. [~] Aiming: bring the gun up to the eye, sight alignment from the gun's real sight sockets, adjustable eye relief.
+23b. [~] Gun weight (Miles, 2026-11-19): the barrel trails slightly behind where you look and settles, like bodycam footage; starting, stopping and strafing nudge the gun; heavier guns lag more; less lag while aiming. Aiming in and out eases smoothly with a slight push-out arc, muzzle lining up just before the gun arrives. Strength is a setting (`SwayStrength`, for the settings menu). `Player/HoldoverCharacter`.
 24. [~] Malfunctions: stovepipe, double feed, failure to fire (dud), each with a chance per gun and per magazine and cleared only with the correct drill. (built, chances set to 0 for now)
 25. [~] Mag check and press check show the real round count and chamber state (no counter on screen).
 26. [~] Safety and decocker on the M9; selector on the AK, FAL and AR.

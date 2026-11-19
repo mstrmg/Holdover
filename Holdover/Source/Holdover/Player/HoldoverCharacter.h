@@ -68,6 +68,47 @@ public:
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Eye View", meta = (ClampMin = "0.05", ClampMax = "5"))
 	float MouseSensitivity = 0.5f;
 
+	// ---------- Gun weight: the gun trails a little behind where you look and move ----------
+
+	/** Overall strength of the gun lag (0 = gun locked to the view, 1 = default, 2 = heavy). Meant for the settings menu. */
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Gun Sway", meta = (ClampMin = "0", ClampMax = "2"))
+	float SwayStrength = 1.f;
+
+	/** How hard the arms pull the gun back onto the look direction. Lower = more lag. Divided by the gun's Sway Weight. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Sway", meta = (ClampMin = "50", ClampMax = "5000"))
+	float SwayStiffness = 600.f;
+
+	/** 1 = the gun settles without overshooting; lower = it swings past and back a little. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Sway", meta = (ClampMin = "0.2", ClampMax = "2"))
+	float SwayDampingRatio = 0.75f;
+
+	/** Largest angle the gun can trail behind the view, degrees (reached gently, never a hard stop). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Sway", meta = (ClampMin = "0", ClampMax = "20"))
+	float SwayMaxDegrees = 6.f;
+
+	/** The gun cants this much (degrees of roll per degree of sideways lag) when you turn. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Sway")
+	float SwayRollPerYaw = 0.35f;
+
+	/** The gun turns about a point this far behind the shooting hand (the wrist and forearm), cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Sway")
+	float SwayPivotBehindGrip = 12.f;
+
+	/** Lag while aiming, as a fraction of the lag at ready (arms locked out, gun braced). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Sway", meta = (ClampMin = "0", ClampMax = "1"))
+	float SwayWhileAiming = 0.6f;
+
+	/** Starting, stopping and strafing shift the gun: cm/s of hand speed per cm/s of body speed change. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Sway")
+	float MoveInertia = 0.05f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Sway", meta = (ClampMin = "10", ClampMax = "2000"))
+	float MoveSwayStiffness = 140.f;
+
+	/** Largest shift from moving, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Sway", meta = (ClampMin = "0", ClampMax = "10"))
+	float MoveSwayMaxCm = 2.5f;
+
 	// ---------- Movement ----------
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -143,6 +184,8 @@ private:
 	// Per-frame
 	void UpdateHold(float DeltaSeconds);
 	void UpdateRecoil(float DeltaSeconds);
+	void UpdateSway(float DeltaSeconds);
+	void UpdateAimAlpha(float DeltaSeconds, bool bWantAim, float AimTime);
 	void SetupBody();
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
@@ -192,6 +235,7 @@ private:
 	bool bAimHeld = false;
 	bool bJog = false;
 	float AimAlpha = 0.f;
+	float AimAlphaVel = 0.f;
 	FName HoldKey;
 
 	// Recoil spring state: pitch (deg), yaw (deg), back (cm), rise (cm), and their speeds.
@@ -199,6 +243,16 @@ private:
 	FVector4 RecoilVel = FVector4(0, 0, 0, 0);
 	float RecoilDrift = 0.f;
 	float WalkPhase = 0.f;
+
+	// Gun lag state. SwayAngle is the gun's angle minus the view's (pitch, yaw, degrees); SwayGunVel is the gun's
+	// own turn speed (deg/s). MoveSway is the shift from body motion (cm, view space).
+	FVector2D SwayAngle = FVector2D::ZeroVector;
+	FVector2D SwayGunVel = FVector2D::ZeroVector;
+	FRotator PrevViewRotation = FRotator::ZeroRotator;
+	bool bHavePrevView = false;
+	FVector MoveSway = FVector::ZeroVector;
+	FVector MoveSwayVel = FVector::ZeroVector;
+	FVector PrevViewVelocity = FVector::ZeroVector;
 
 	FTransform BaseGunInCamera = FTransform::Identity;
 };

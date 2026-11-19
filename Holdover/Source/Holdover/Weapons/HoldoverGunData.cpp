@@ -94,6 +94,8 @@ void UHoldoverGunData::ApplyPresetM9(UHoldoverGunData* D)
 	D->InspectOffset = FVector(32.f, 4.f, -14.f);
 	D->InspectRotation = FRotator(5.f, -10.f, -35.f);
 	D->AimTime = 0.25f;
+	D->AimArc = FVector(3.f, 0.f, -1.f);
+	D->SwayWeight = 1.f;
 
 	D->RecoilPitchImpulse = 260.f;
 	D->RecoilYawImpulse = 45.f;
@@ -180,6 +182,8 @@ void UHoldoverGunData::ApplyPresetAK(UHoldoverGunData* D)
 	D->InspectOffset = FVector(30.f, 6.f, -16.f);
 	D->InspectRotation = FRotator(5.f, -15.f, -40.f);
 	D->AimTime = 0.32f;
+	D->AimArc = FVector(5.f, 0.f, -2.f);
+	D->SwayWeight = 1.6f;
 
 	D->RecoilPitchImpulse = 170.f;
 	D->RecoilYawImpulse = 60.f;
