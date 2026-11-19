@@ -489,7 +489,7 @@
         {"t": 0.36, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
       ],
       "attach": [
-        {"t": 0.42, "hand": "handL", "bone": "Magazine"}
+        {"t": 0.42, "hand": "handL", "bone": "Magazine", "grip": {"pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34]}}
       ],
       "events": [
         {"t": 0.25, "name": "MagDetach"},
@@ -600,7 +600,7 @@
         {"t": 0.95, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
       ],
       "attach": [
-        {"t": 0.0, "hand": "handL", "bone": "Magazine"},
+        {"t": 0.0, "hand": "handL", "bone": "Magazine", "grip": {"pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34]}},
         {"t": 0.66, "hand": "handL", "bone": null}
       ],
       "events": [
@@ -655,8 +655,8 @@
         {"t": 1.85, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
       ],
       "attach": [
-        {"t": 0.42, "hand": "handL", "bone": "Magazine"},
-        {"t": 0.9, "hand": "handL", "bone": "Magazine"},
+        {"t": 0.42, "hand": "handL", "bone": "Magazine", "grip": {"pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34]}},
+        {"t": 0.9, "hand": "handL", "bone": "Magazine", "grip": {"pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34]}},
         {"t": 1.56, "hand": "handL", "bone": null}
       ],
       "events": [
@@ -745,7 +745,7 @@
         {"t": 2.0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
       ],
       "attach": [
-        {"t": 0.45, "hand": "handL", "bone": "Magazine"},
+        {"t": 0.45, "hand": "handL", "bone": "Magazine", "grip": {"pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34]}},
         {"t": 1.11, "hand": "handL", "bone": null}
       ],
       "events": [
@@ -813,7 +813,7 @@
         {"t": 1.6, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
       ],
       "attach": [
-        {"t": 0.25, "hand": "handL", "bone": "Magazine"},
+        {"t": 0.25, "hand": "handL", "bone": "Magazine", "grip": {"pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34]}},
         {"t": 1.32, "hand": "handL", "bone": null}
       ],
       "events": [
@@ -1448,7 +1448,7 @@
         {"t": 0.65, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
       ],
       "attach": [
-        {"t": 4.75, "hand": "handL", "bone": "Magazine"},
+        {"t": 4.75, "hand": "handL", "bone": "Magazine", "grip": {"pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34]}},
         {"t": 5.41, "hand": "handL", "bone": null}
       ],
       "events": [
