@@ -160,6 +160,7 @@ UHoldoverGunData* AHoldoverCharacter::LoadGunData(int32 Slot)
 			UHoldoverGunData::ApplyPresetAK(Data);
 		}
 	}
+	UHoldoverGunData::LoadImportedArt(Data);
 	if (LoadedGunData.Num() <= Slot)
 	{
 		LoadedGunData.SetNum(Slot + 1);
