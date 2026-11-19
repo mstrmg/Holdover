@@ -10,8 +10,8 @@ Do these once. After that, Claude can build the game on your PC remotely and fix
 
 ## 2. Get the project
 
-1. In GitHub Desktop: **File > Clone repository**, pick **mstrmg/holdover**, and set the local path to `D:\Claude area\Holdover\repo`.
-2. Open the folder `D:\Claude area\Holdover\repo\Holdover`, right-click **Holdover.uproject** and choose **Generate Visual Studio project files** (on Windows 11 it may be under "Show more options").
+1. In GitHub Desktop: **File > Clone repository**, pick **mstrmg/holdover**, and set the local path to `D:\Claude area\Holdover\Holdover`.
+2. Open the folder `D:\Claude area\Holdover\Holdover\Holdover`, right-click **Holdover.uproject** and choose **Generate Visual Studio project files** (on Windows 11 it may be under "Show more options").
 3. Double-click **Holdover.uproject**. It will say the Holdover module is missing and ask to rebuild it. Click **Yes**. The first build takes a few minutes.
    - If it says the build failed, don't worry: tell Claude, and Claude will run the build on your PC and fix the errors.
 
