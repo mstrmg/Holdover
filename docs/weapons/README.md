@@ -43,3 +43,4 @@ Each gun has its own folder under `D:\Claude area\Holdover\art\weapons\<gun>\`:
 | AK-style rifle | [rifle_ak.md](rifle_ak.md) | Done: modeled, textured, exported |
 | FAL-style battle rifle | [rifle_fal.md](rifle_fal.md) | Done: modeled, textured, exported |
 | 1911-style pistol | [pistol_1911.md](pistol_1911.md) | Done: modeled, textured, exported |
+| AR-15-style carbine | [carbine_ar.md](carbine_ar.md) | Done: modeled, textured, exported |

@@ -10,6 +10,7 @@ Every asset in the game, where it came from, and its license.
 | AK-style rifle, magazine, 7.62x39 round and casing | Blender (Claude, Python) | Original model, no third-party meshes or textures. |
 | FAL-style rifle, magazine, 7.62x51 round and casing | Blender (Claude, Python) | Original model, no third-party meshes or textures. |
 | 1911-style pistol, magazine, .45 ACP round and casing | Blender (Claude, Python) | Original model, no third-party meshes or textures. |
+| AR-15-style carbine, magazine, 5.56x45 round and casing | Blender (Claude, Python) | Original model, no third-party meshes or textures. |
 | Paper target on wooden stand, steel plate on post, popper, shooting bench, stool, shooting mat, distance marker signs (5, 10, 25, 50 m) | Blender (Claude, Python) | Original low-poly models in `art/props/` (source `range_props.blend`, FBX per prop). Bullseye paper texture and sign lettering are generated in Blender. Wood and steel use the third-party textures below. |
 
 ## Third-party assets

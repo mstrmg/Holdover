@@ -67,7 +67,8 @@ sp = chaikin([(-212, 18.5), (-376, 18.5), (-384, 22), (-389, 21), (-389, -96), (
 st = profile("Stock", sp, -19, 19, C, POLY)
 stx = [(19, -110), (19, 0), (17.5, 12), (14, 19), (8, 23), (-8, 23), (-14, 19), (-17.5, 12), (-19, 0), (-19, -110)]
 intersect(st, xsec("c_stx", stx, -400, -200, CUT))
-cut(st, [box("c_stslot", -372, -350, -4, 4, -96, -76, CUT), box("c_stwin", -360, -250, -20, 20, -40, -14, CUT)])
+cut(st, [box("c_stslot", -372, -350, -4, 4, -96, -76, CUT)] +
+         [profile("c_strec%d" % i, chaikin([(-366, -22), (-262, -22), (-300, -50), (-366, -82)], 1, closed=True), y0, y1, CUT) for i, (y0, y1) in enumerate(((17.6, 25), (-25, -17.6)))])  # shallow side recesses
 bevel(st, 1.5, 2, 35)
 lev = box("st_lever", -236, -214, -6, 6, -27, -19, C, POLY); bevel(lev, 0.8, 2)
 pad = profile("st_pad", chaikin([(-389, 21), (-395, 21), (-395, -97), (-389, -97)], 1, closed=True), -19.5, 19.5, C, POLY); bevel(pad, 2, 3)
