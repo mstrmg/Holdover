@@ -41,6 +41,7 @@ Explain everything to Miles in plain language. When he must do something on his 
 - Audio: MetaSounds, surface-dependent impacts and forest reverb.
 - Lighting: Lumen, Virtual Shadow Maps, volumetric fog. Target resolution: 1080p at 60 fps (TSR or FSR upscaling only if needed).
 - Textures: 2K (2048 px) maximum for every asset, including Megascans and Blender bakes.
+- Preview renders: 1920x1080.
 - Expose tuning values (recoil, sway, casing ejection speed, etc.) as `UPROPERTY(EditAnywhere)` so they can be tweaked without code changes.
 - Large binary files go through Git LFS (see `.gitattributes`). Claude's cloud session cannot upload LFS files; Miles adds binaries from his PC.
 - Free assets only: Quixel Megascans and Megaplants on Fab (free again since Nov 2026), Poly Haven, ambientCG, Sketchfab (check license), Freesound, Sonniss GDC bundles. Record each asset's source and license in `docs/ASSETS.md`.

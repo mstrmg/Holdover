@@ -40,3 +40,4 @@ Each gun has its own folder under `D:\Claude area\Holdover\art\weapons\<gun>\`:
 | Gun | Doc | Status |
 |---|---|---|
 | M9-style pistol | [pistol_m9.md](pistol_m9.md) | Done: modeled, textured, exported |
+| AK-style rifle | [rifle_ak.md](rifle_ak.md) | Done: modeled, textured, exported |
