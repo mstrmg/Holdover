@@ -7,6 +7,7 @@ Every asset in the game, where it came from, and its license.
 | Asset | Made with | Notes |
 |---|---|---|
 | M9-style pistol, magazine, 9 mm round and casing | Blender (Claude, Python) | Original model, no third-party meshes or textures; textures baked from procedural Blender materials. |
+| AK-style rifle, magazine, 7.62x39 round and casing | Blender (Claude, Python) | Original model, no third-party meshes or textures. |
 | Paper target on wooden stand, steel plate on post, popper, shooting bench, stool, shooting mat, distance marker signs (5, 10, 25, 50 m) | Blender (Claude, Python) | Original low-poly models in `art/props/` (source `range_props.blend`, FBX per prop). Bullseye paper texture and sign lettering are generated in Blender. Wood and steel use the third-party textures below. |
 
 ## Third-party assets
