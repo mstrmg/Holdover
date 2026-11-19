@@ -1,0 +1,1834 @@
+{
+  "gun": "Pistol_M9",
+  "version": 1,
+  "hold": {
+    "handL": {
+      "space": "gun",
+      "pos": [26.0, 24.0, -92.0],
+      "fingersDir": [0.55, -0.3, -0.78],
+      "palmNormal": [-0.17, -0.95, 0.25]
+    },
+    "fingersL": [
+      {"pose": "SupportWrap", "weight": 1}
+    ],
+    "handR": {
+      "space": "gun",
+      "pos": [18.0, -17.0, -80.0],
+      "fingersDir": [0.71, 0.0, -0.71],
+      "palmNormal": [0.0, 1.0, 0.0]
+    },
+    "fingersR": [
+      {"pose": "Grip", "weight": 1},
+      {"pose": "IndexTrigger", "weight": 0}
+    ]
+  },
+  "states": {
+    "SlideHome": {
+      "Slide": {"loc": [0, 0.0, 0.0]},
+      "Barrel": {"loc": [0, 0.0, 0]},
+      "SlideStop": {"rot": {"axis": [0, 1, 0], "deg": 0}}
+    },
+    "SlideLocked": {
+      "Slide": {"loc": [-58.0, 0.0, 0.0]},
+      "Barrel": {"loc": [-9.0, 0.0, -1.5]},
+      "SlideStop": {"rot": {"axis": [0, 1, 0], "deg": 8.0}}
+    },
+    "HammerDown": {
+      "Hammer": {"rot": {"axis": [0, 1, 0], "deg": 0}}
+    },
+    "HammerCocked": {
+      "Hammer": {"rot": {"axis": [0, 1, 0], "deg": -60.0}}
+    },
+    "SafetyOn": {
+      "Safety": {"rot": {"axis": [0, 1, 0], "deg": -60.0}}
+    },
+    "SafetyOff": {
+      "Safety": {"rot": {"axis": [0, 1, 0], "deg": 0.0}}
+    },
+    "MagIn": {
+      "Magazine": {"loc": [0, 0.0, 0]}
+    },
+    "MagOut": {
+      "Magazine": {"loc": [-103.528, 0.0, -386.37]}
+    }
+  },
+  "actions": {
+    "Fire": {
+      "duration": 0.36,
+      "bones": {
+        "Trigger": {
+          "rot": [
+            {"t": 0.0, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "linear"},
+            {"t": 0.015, "v": {"axis": [0, 1, 0], "deg": 0.312}, "ease": "linear"},
+            {"t": 0.03, "v": {"axis": [0, 1, 0], "deg": 1.25}, "ease": "linear"},
+            {"t": 0.045, "v": {"axis": [0, 1, 0], "deg": 2.812}, "ease": "linear"},
+            {"t": 0.06, "v": {"axis": [0, 1, 0], "deg": 5.0}, "ease": "linear"},
+            {"t": 0.0767, "v": {"axis": [0, 1, 0], "deg": 3.472}, "ease": "linear"},
+            {"t": 0.0933, "v": {"axis": [0, 1, 0], "deg": 2.222}, "ease": "linear"},
+            {"t": 0.11, "v": {"axis": [0, 1, 0], "deg": 1.25}, "ease": "linear"},
+            {"t": 0.1267, "v": {"axis": [0, 1, 0], "deg": 0.556}, "ease": "linear"},
+            {"t": 0.1433, "v": {"axis": [0, 1, 0], "deg": 0.139}, "ease": "linear"},
+            {"t": 0.16, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 0.06, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 0.082, "v": [-14.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.3, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
+          {"t": 0.06, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
+          {"t": 0.088, "v": {"axis": [0.01, -1.0, 0.09], "deg": 7.029}, "ease": "linear"},
+          {"t": 0.0915, "v": {"axis": [0.01, -0.99, 0.1], "deg": 7.031}, "ease": "linear"},
+          {"t": 0.095, "v": {"axis": [0.01, -0.99, 0.11], "deg": 7.023}, "ease": "linear"},
+          {"t": 0.1108, "v": {"axis": [0.01, -0.99, 0.12], "deg": 6.821}, "ease": "linear"},
+          {"t": 0.1265, "v": {"axis": [0.01, -0.99, 0.12], "deg": 6.434}, "ease": "linear"},
+          {"t": 0.1423, "v": {"axis": [0.01, -0.99, 0.12], "deg": 5.898}, "ease": "linear"},
+          {"t": 0.1581, "v": {"axis": [0.01, -0.99, 0.12], "deg": 5.248}, "ease": "linear"},
+          {"t": 0.1738, "v": {"axis": [0.0, -0.99, 0.12], "deg": 4.518}, "ease": "linear"},
+          {"t": 0.1896, "v": {"axis": [0.0, -0.99, 0.12], "deg": 3.744}, "ease": "linear"},
+          {"t": 0.2054, "v": {"axis": [0.0, -0.99, 0.12], "deg": 2.96}, "ease": "linear"},
+          {"t": 0.2212, "v": {"axis": [0.0, -0.99, 0.12], "deg": 2.2}, "ease": "linear"},
+          {"t": 0.2369, "v": {"axis": [0.0, -0.99, 0.12], "deg": 1.501}, "ease": "linear"},
+          {"t": 0.2527, "v": {"axis": [0.0, -0.99, 0.12], "deg": 0.897}, "ease": "linear"},
+          {"t": 0.2685, "v": {"axis": [0.0, -0.99, 0.12], "deg": 0.422}, "ease": "linear"},
+          {"t": 0.2842, "v": {"axis": [0.0, -0.99, 0.12], "deg": 0.111}, "ease": "linear"},
+          {"t": 0.3, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"}
+        ]
+      },
+      "fingersR": [
+        {"t": 0, "pose": "IndexTrigger", "weight": 0.7, "ease": "smooth"},
+        {"t": 0.06, "pose": "IndexTrigger", "weight": 1, "ease": "smooth"},
+        {"t": 0.16, "pose": "IndexTrigger", "weight": 0.7, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.058, "name": "HammerDrop"},
+        {"t": 0.06, "name": "ShotBreak"},
+        {"t": 0.15, "name": "TriggerReset"}
+      ]
+    },
+    "FireDA": {
+      "duration": 0.6,
+      "bones": {
+        "Hammer": {
+          "rot": [
+            {"t": 0, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "linear"},
+            {"t": 0.296, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "linear"},
+            {"t": 0.3, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        },
+        "Trigger": {
+          "rot": [
+            {"t": 0, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "linear"},
+            {"t": 0.3, "v": {"axis": [0, 1, 0], "deg": 15.0}, "ease": "linear"},
+            {"t": 0.3156, "v": {"axis": [0, 1, 0], "deg": 11.852}, "ease": "linear"},
+            {"t": 0.3311, "v": {"axis": [0, 1, 0], "deg": 9.074}, "ease": "linear"},
+            {"t": 0.3467, "v": {"axis": [0, 1, 0], "deg": 6.667}, "ease": "linear"},
+            {"t": 0.3622, "v": {"axis": [0, 1, 0], "deg": 4.63}, "ease": "linear"},
+            {"t": 0.3778, "v": {"axis": [0, 1, 0], "deg": 2.963}, "ease": "linear"},
+            {"t": 0.3933, "v": {"axis": [0, 1, 0], "deg": 1.667}, "ease": "linear"},
+            {"t": 0.4089, "v": {"axis": [0, 1, 0], "deg": 0.741}, "ease": "linear"},
+            {"t": 0.4244, "v": {"axis": [0, 1, 0], "deg": 0.185}, "ease": "linear"},
+            {"t": 0.44, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 0.3, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 0.322, "v": [-14.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.54, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
+          {"t": 0.3, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
+          {"t": 0.328, "v": {"axis": [0.01, -1.0, 0.09], "deg": 7.029}, "ease": "linear"},
+          {"t": 0.3315, "v": {"axis": [0.01, -0.99, 0.1], "deg": 7.031}, "ease": "linear"},
+          {"t": 0.335, "v": {"axis": [0.01, -0.99, 0.11], "deg": 7.023}, "ease": "linear"},
+          {"t": 0.3508, "v": {"axis": [0.01, -0.99, 0.12], "deg": 6.821}, "ease": "linear"},
+          {"t": 0.3665, "v": {"axis": [0.01, -0.99, 0.12], "deg": 6.434}, "ease": "linear"},
+          {"t": 0.3823, "v": {"axis": [0.01, -0.99, 0.12], "deg": 5.898}, "ease": "linear"},
+          {"t": 0.3981, "v": {"axis": [0.01, -0.99, 0.12], "deg": 5.248}, "ease": "linear"},
+          {"t": 0.4138, "v": {"axis": [0.0, -0.99, 0.12], "deg": 4.518}, "ease": "linear"},
+          {"t": 0.4296, "v": {"axis": [0.0, -0.99, 0.12], "deg": 3.744}, "ease": "linear"},
+          {"t": 0.4454, "v": {"axis": [0.0, -0.99, 0.12], "deg": 2.96}, "ease": "linear"},
+          {"t": 0.4612, "v": {"axis": [0.0, -0.99, 0.12], "deg": 2.2}, "ease": "linear"},
+          {"t": 0.4769, "v": {"axis": [0.0, -0.99, 0.12], "deg": 1.501}, "ease": "linear"},
+          {"t": 0.4927, "v": {"axis": [0.0, -0.99, 0.12], "deg": 0.897}, "ease": "linear"},
+          {"t": 0.5085, "v": {"axis": [0.0, -0.99, 0.12], "deg": 0.422}, "ease": "linear"},
+          {"t": 0.5242, "v": {"axis": [0.0, -0.99, 0.12], "deg": 0.111}, "ease": "linear"},
+          {"t": 0.54, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"}
+        ]
+      },
+      "fingersR": [
+        {"t": 0, "pose": "IndexTrigger", "weight": 0.7, "ease": "smooth"},
+        {"t": 0.3, "pose": "IndexTrigger", "weight": 1, "ease": "smooth"},
+        {"t": 0.4, "pose": "IndexTrigger", "weight": 0.7, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.298, "name": "HammerDrop"},
+        {"t": 0.3, "name": "ShotBreak"},
+        {"t": 0.39, "name": "TriggerReset"}
+      ]
+    },
+    "DryFire": {
+      "duration": 0.25,
+      "bones": {
+        "Hammer": {
+          "rot": [
+            {"t": 0.068, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "linear"},
+            {"t": 0.072, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        },
+        "Trigger": {
+          "rot": [
+            {"t": 0.0, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "linear"},
+            {"t": 0.014, "v": {"axis": [0, 1, 0], "deg": 0.2}, "ease": "linear"},
+            {"t": 0.028, "v": {"axis": [0, 1, 0], "deg": 0.8}, "ease": "linear"},
+            {"t": 0.042, "v": {"axis": [0, 1, 0], "deg": 1.8}, "ease": "linear"},
+            {"t": 0.056, "v": {"axis": [0, 1, 0], "deg": 3.2}, "ease": "linear"},
+            {"t": 0.07, "v": {"axis": [0, 1, 0], "deg": 5.0}, "ease": "linear"},
+            {"t": 0.0863, "v": {"axis": [0, 1, 0], "deg": 3.828}, "ease": "linear"},
+            {"t": 0.1025, "v": {"axis": [0, 1, 0], "deg": 2.812}, "ease": "linear"},
+            {"t": 0.1188, "v": {"axis": [0, 1, 0], "deg": 1.953}, "ease": "linear"},
+            {"t": 0.135, "v": {"axis": [0, 1, 0], "deg": 1.25}, "ease": "linear"},
+            {"t": 0.1512, "v": {"axis": [0, 1, 0], "deg": 0.703}, "ease": "linear"},
+            {"t": 0.1675, "v": {"axis": [0, 1, 0], "deg": 0.312}, "ease": "linear"},
+            {"t": 0.1838, "v": {"axis": [0, 1, 0], "deg": 0.078}, "ease": "linear"},
+            {"t": 0.2, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "fingersR": [
+        {"t": 0, "pose": "IndexTrigger", "weight": 0.7, "ease": "smooth"},
+        {"t": 0.07, "pose": "IndexTrigger", "weight": 1, "ease": "smooth"},
+        {"t": 0.2, "pose": "IndexTrigger", "weight": 0.7, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.072, "name": "HammerDrop"},
+        {"t": 0.072, "name": "Sound:DryFire"}
+      ]
+    },
+    "RackSlide": {
+      "duration": 0.78,
+      "holdAt": 0.36,
+      "bones": {
+        "Barrel": {
+          "loc": [
+            {"t": 0.22, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2305, "v": [-2.25, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.241, "v": [-9.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.251, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.376, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.378, "v": [-9.0, 0.0, -0.9], "ease": "linear"},
+            {"t": 0.381, "v": [-5.143, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.385, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Hammer": {
+          "rot": [
+            {"t": 0.22, "v": null, "ease": "linear"},
+            {"t": 0.27, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "smooth"}
+          ]
+        },
+        "Slide": {
+          "loc": [
+            {"t": 0.22, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2356, "v": [-0.741, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2511, "v": [-2.963, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2667, "v": [-6.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2822, "v": [-11.852, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2978, "v": [-18.519, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3133, "v": [-26.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3289, "v": [-36.296, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3444, "v": [-47.407, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.36, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.385, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.16, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 0.58, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 0.75, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.16, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "linear"},
+          {"t": 0.58, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "smooth"},
+          {"t": 0.75, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.14, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.22, "space": "gun", "pos": [18.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.36, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.44, "space": "gun", "pos": [-72.0, 45.0, 69.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.72, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.1, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.22, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.38, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.44, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.62, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.72, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.24, "name": "Sound:SlideBack"},
+        {"t": 0.27, "name": "HammerCock"},
+        {"t": 0.33, "name": "SlideToRear"},
+        {"t": 0.38, "name": "InBattery"},
+        {"t": 0.385, "name": "Sound:SlideForward"}
+      ]
+    },
+    "LockOpen": {
+      "duration": 0.85,
+      "bones": {
+        "Barrel": {
+          "loc": [
+            {"t": 0.22, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2305, "v": [-2.25, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.241, "v": [-9.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.251, "v": [-9.0, 0.0, -1.5], "ease": "smooth"}
+          ]
+        },
+        "Hammer": {
+          "rot": [
+            {"t": 0.22, "v": null, "ease": "linear"},
+            {"t": 0.27, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "smooth"}
+          ]
+        },
+        "Slide": {
+          "loc": [
+            {"t": 0.22, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2356, "v": [-0.741, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2511, "v": [-2.963, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2667, "v": [-6.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2822, "v": [-11.852, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2978, "v": [-18.519, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3133, "v": [-26.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3289, "v": [-36.296, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3444, "v": [-47.407, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.36, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.4, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.43, "v": [-58.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "SlideStop": {
+          "rot": [
+            {"t": 0.36, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"},
+            {"t": 0.4, "v": {"axis": [0, 1, 0], "deg": 8.0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.16, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 0.58, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 0.75, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.16, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "linear"},
+          {"t": 0.58, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "smooth"},
+          {"t": 0.75, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.14, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.22, "space": "gun", "pos": [18.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.36, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.42, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.5, "space": "gun", "pos": [-15.0, 40.0, 59.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.72, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.1, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.22, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.38, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.44, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.62, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.72, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "fingersR": [
+        {"t": 0.3, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.36, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.44, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.5, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.24, "name": "Sound:SlideBack"},
+        {"t": 0.27, "name": "HammerCock"},
+        {"t": 0.33, "name": "SlideToRear"},
+        {"t": 0.43, "name": "SlideLock"},
+        {"t": 0.43, "name": "Sound:SlideLock"}
+      ]
+    },
+    "SlingshotRelease": {
+      "duration": 0.78,
+      "bones": {
+        "Barrel": {
+          "loc": [
+            {"t": 0.36, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.374, "v": [-3.96, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.381, "v": [-1.44, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.385, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Hammer": {
+          "rot": [
+            {"t": 0.22, "v": null, "ease": "linear"},
+            {"t": 0.27, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "smooth"}
+          ]
+        },
+        "Slide": {
+          "loc": [
+            {"t": 0.22, "v": [-58.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2356, "v": [-58.025, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2511, "v": [-58.099, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2667, "v": [-58.222, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2822, "v": [-58.395, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2978, "v": [-58.617, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3133, "v": [-58.889, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3289, "v": [-59.21, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3444, "v": [-59.58, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.36, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.385, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "SlideStop": {
+          "rot": [
+            {"t": 0.3, "v": {"axis": [0, 1, 0], "deg": 8.0}, "ease": "smooth"},
+            {"t": 0.32, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.16, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 0.58, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 0.75, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.16, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "linear"},
+          {"t": 0.58, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "smooth"},
+          {"t": 0.75, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.14, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.22, "space": "gun", "pos": [-40.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.36, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.44, "space": "gun", "pos": [-72.0, 45.0, 69.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.72, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.1, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.22, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.38, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.44, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.62, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.72, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.24, "name": "Sound:SlideBack"},
+        {"t": 0.27, "name": "HammerCock"},
+        {"t": 0.33, "name": "SlideToRear"},
+        {"t": 0.38, "name": "InBattery"},
+        {"t": 0.385, "name": "Sound:SlideForward"}
+      ]
+    },
+    "SlideRelease": {
+      "duration": 0.45,
+      "bones": {
+        "Barrel": {
+          "loc": [
+            {"t": 0.21, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.216, "v": [-5.4, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.222, "v": [-1.8, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.225, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Slide": {
+          "loc": [
+            {"t": 0.2, "v": [-58.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.225, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "SlideStop": {
+          "rot": [
+            {"t": 0.17, "v": {"axis": [0, 1, 0], "deg": 8.0}, "ease": "linear"},
+            {"t": 0.2, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.14, "space": "gun", "pos": [22.0, 27.5, -45.0], "fingersDir": [0.75, -0.2, 0.62], "palmNormal": [-0.3, -0.95, 0.06], "ease": "smooth"},
+        {"t": 0.2, "space": "gun", "pos": [22.0, 27.5, -49.0], "fingersDir": [0.75, -0.2, 0.62], "palmNormal": [-0.3, -0.95, 0.06], "ease": "smooth"},
+        {"t": 0.4, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0.06, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.14, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.24, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.34, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.2, "name": "SlideRelease"},
+        {"t": 0.22, "name": "InBattery"},
+        {"t": 0.225, "name": "Sound:SlideForward"}
+      ]
+    },
+    "MagOut": {
+      "duration": 0.95,
+      "bones": {
+        "MagRelease": {
+          "loc": [
+            {"t": 0.08, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.11, "v": [0.0, -2.5, 0.0], "ease": "linear"},
+            {"t": 0.2, "v": [0.0, -2.5, 0.0], "ease": "smooth"},
+            {"t": 0.24, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Magazine": {
+          "loc": [
+            {"t": 0.11, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.1267, "v": [-2.588, 0.0, -9.659], "ease": "linear"},
+            {"t": 0.1433, "v": [-4.141, 0.0, -15.455], "ease": "linear"},
+            {"t": 0.16, "v": [-4.659, 0.0, -17.387], "ease": "linear"},
+            {"t": 0.3, "v": [-4.659, 0.0, -17.387], "ease": "linear"},
+            {"t": 0.315, "v": [-4.962, 0.0, -18.517], "ease": "linear"},
+            {"t": 0.33, "v": [-5.87, 0.0, -21.908], "ease": "linear"},
+            {"t": 0.345, "v": [-7.384, 0.0, -27.558], "ease": "linear"},
+            {"t": 0.36, "v": [-9.504, 0.0, -35.469], "ease": "linear"},
+            {"t": 0.375, "v": [-12.23, 0.0, -45.64], "ease": "linear"},
+            {"t": 0.39, "v": [-15.561, 0.0, -58.072], "ease": "linear"},
+            {"t": 0.405, "v": [-19.497, 0.0, -72.763], "ease": "linear"},
+            {"t": 0.42, "v": [-24.039, 0.0, -89.715], "ease": "linear"},
+            {"t": 0.435, "v": [-29.187, 0.0, -108.928], "ease": "linear"},
+            {"t": 0.45, "v": [-34.941, 0.0, -130.4], "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.1, "v": {"axis": [1, 0, 0], "deg": -12}, "ease": "smooth"},
+          {"t": 0.3, "v": {"axis": [1, 0, 0], "deg": -8}, "ease": "smooth"},
+          {"t": 0.42, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.28, "space": "gun", "pos": [2.66, 0.0, -164.82], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.3, "space": "gun", "pos": [2.66, 0.0, -164.82], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.45, "space": "gun", "pos": [-27.62, 0.0, -277.83], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.8, "space": "body", "pos": [80.0, 120.0, 1020.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.12, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.22, "pose": "PalmMag", "weight": 0, "ease": "smooth"},
+        {"t": 0.3, "pose": "PalmMag", "weight": 1, "ease": "smooth"}
+      ],
+      "fingersR": [
+        {"t": 0, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.2, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.28, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "attach": [
+        {"t": 0.45, "hand": "handL", "bone": "Magazine"}
+      ],
+      "events": [
+        {"t": 0.11, "name": "MagDetach"},
+        {"t": 0.11, "name": "Sound:MagRelease"},
+        {"t": 0.8, "name": "MagStow"},
+        {"t": 0.82, "name": "Sound:MagPouch"}
+      ]
+    },
+    "MagDrop": {
+      "duration": 0.42,
+      "bones": {
+        "MagRelease": {
+          "loc": [
+            {"t": 0.08, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.11, "v": [0.0, -2.5, 0.0], "ease": "linear"},
+            {"t": 0.2, "v": [0.0, -2.5, 0.0], "ease": "smooth"},
+            {"t": 0.24, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Magazine": {
+          "loc": [
+            {"t": 0.11, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.125, "v": [-0.899, 0.0, -3.354], "ease": "linear"},
+            {"t": 0.14, "v": [-3.595, 0.0, -13.416], "ease": "linear"},
+            {"t": 0.155, "v": [-8.088, 0.0, -30.185], "ease": "linear"},
+            {"t": 0.17, "v": [-14.379, 0.0, -53.663], "ease": "linear"},
+            {"t": 0.185, "v": [-22.467, 0.0, -83.848], "ease": "linear"},
+            {"t": 0.2, "v": [-32.352, 0.0, -120.741], "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.1, "v": {"axis": [1, 0, 0], "deg": -12}, "ease": "smooth"},
+          {"t": 0.3, "v": {"axis": [1, 0, 0], "deg": -8}, "ease": "smooth"},
+          {"t": 0.42, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.12, "space": "gun", "pos": [36.0, 84.0, -132.0], "fingersDir": [0.55, -0.3, -0.78], "palmNormal": [-0.17, -0.95, 0.25], "ease": "smooth"},
+        {"t": 0.4, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.08, "pose": "SupportWrap", "weight": 0.3, "ease": "smooth"},
+        {"t": 0.34, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "fingersR": [
+        {"t": 0, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.2, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.28, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.11, "name": "MagDetach"},
+        {"t": 0.11, "name": "Sound:MagRelease"},
+        {"t": 0.2, "name": "MagDrop"}
+      ]
+    },
+    "MagIn": {
+      "duration": 0.95,
+      "bones": {
+        "Magazine": {
+          "loc": [
+            {"t": 0.56, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "rot": [
+          {"t": 0.0, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 0.25, "v": {"axis": [-0.78, 0.62, 0.05], "deg": 12.8}, "ease": "linear"},
+          {"t": 0.75, "v": {"axis": [-0.78, 0.62, 0.05], "deg": 12.8}, "ease": "smooth"},
+          {"t": 0.9, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0.0, "space": "body", "pos": [80.0, 120.0, 1020.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
+        {"t": 0.42, "space": "gun", "pos": [-8.21, 0.0, -205.39], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.48, "space": "gun", "pos": [-0.45, 0.0, -176.41], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "linear"},
+        {"t": 0.56, "space": "gun", "pos": [7.32, 0.0, -147.43], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.6, "space": "gun", "pos": [7.84, 0.0, -145.5], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.85, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0.0, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 0.56, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 0.62, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.66, "pose": "PalmMag", "weight": 0, "ease": "smooth"},
+        {"t": 0.82, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "attach": [
+        {"t": 0.0, "hand": "handL", "bone": "Magazine"},
+        {"t": 0.56, "hand": "handL", "bone": null}
+      ],
+      "events": [
+        {"t": 0.0, "name": "MagFromPouch"},
+        {"t": 0.0, "name": "Sound:MagPouch"},
+        {"t": 0.56, "name": "MagAttach"},
+        {"t": 0.57, "name": "MagSeat"},
+        {"t": 0.57, "name": "Sound:MagIn"}
+      ]
+    },
+    "ReloadTactical": {
+      "duration": 1.8,
+      "bones": {
+        "MagRelease": {
+          "loc": [
+            {"t": 0.08, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.11, "v": [0.0, -2.5, 0.0], "ease": "linear"},
+            {"t": 0.2, "v": [0.0, -2.5, 0.0], "ease": "smooth"},
+            {"t": 0.24, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Magazine": {
+          "loc": [
+            {"t": 1.41, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "rot": [
+          {"t": 0.85, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 1.1, "v": {"axis": [-0.78, 0.62, 0.05], "deg": 12.8}, "ease": "linear"},
+          {"t": 1.6, "v": {"axis": [-0.78, 0.62, 0.05], "deg": 12.8}, "ease": "smooth"},
+          {"t": 1.75, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0.85, "space": "body", "pos": [80.0, 120.0, 1020.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
+        {"t": 1.27, "space": "gun", "pos": [-8.21, 0.0, -205.39], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 1.33, "space": "gun", "pos": [-0.45, 0.0, -176.41], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "linear"},
+        {"t": 1.41, "space": "gun", "pos": [7.32, 0.0, -147.43], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 1.45, "space": "gun", "pos": [7.84, 0.0, -145.5], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 1.7, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0.85, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 1.41, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 1.47, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 1.51, "pose": "PalmMag", "weight": 0, "ease": "smooth"},
+        {"t": 1.67, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "fingersR": [
+        {"t": 0, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.2, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.28, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "attach": [
+        {"t": 0.45, "hand": "handL", "bone": "Magazine"},
+        {"t": 0.85, "hand": "handL", "bone": "Magazine"},
+        {"t": 1.41, "hand": "handL", "bone": null}
+      ],
+      "events": [
+        {"t": 0.11, "name": "MagDetach"},
+        {"t": 0.11, "name": "Sound:MagRelease"},
+        {"t": 0.8, "name": "MagStow"},
+        {"t": 0.82, "name": "Sound:MagPouch"},
+        {"t": 0.85, "name": "MagFromPouch"},
+        {"t": 0.85, "name": "Sound:MagPouch"},
+        {"t": 1.41, "name": "MagAttach"},
+        {"t": 1.42, "name": "MagSeat"},
+        {"t": 1.42, "name": "Sound:MagIn"}
+      ]
+    },
+    "ReloadEmpty": {
+      "duration": 1.88,
+      "bones": {
+        "Barrel": {
+          "loc": [
+            {"t": 1.46, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 1.474, "v": [-3.96, 0.0, -1.5], "ease": "linear"},
+            {"t": 1.481, "v": [-1.44, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.485, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Hammer": {
+          "rot": [
+            {"t": 1.32, "v": null, "ease": "linear"},
+            {"t": 1.37, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "smooth"}
+          ]
+        },
+        "MagRelease": {
+          "loc": [
+            {"t": 0.08, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.11, "v": [0.0, -2.5, 0.0], "ease": "linear"},
+            {"t": 0.2, "v": [0.0, -2.5, 0.0], "ease": "smooth"},
+            {"t": 0.24, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Magazine": {
+          "loc": [
+            {"t": 0.86, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Slide": {
+          "loc": [
+            {"t": 1.32, "v": [-58.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.3356, "v": [-58.025, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.3511, "v": [-58.099, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.3667, "v": [-58.222, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.3822, "v": [-58.395, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.3978, "v": [-58.617, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.4133, "v": [-58.889, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.4289, "v": [-59.21, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.4444, "v": [-59.58, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.46, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.485, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "SlideStop": {
+          "rot": [
+            {"t": 1.4, "v": {"axis": [0, 1, 0], "deg": 8.0}, "ease": "smooth"},
+            {"t": 1.42, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 1.1, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 1.26, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 1.68, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 1.85, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0.3, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 0.55, "v": {"axis": [-0.78, 0.62, 0.05], "deg": 12.8}, "ease": "linear"},
+          {"t": 1.05, "v": {"axis": [-0.78, 0.62, 0.05], "deg": 12.8}, "ease": "linear"},
+          {"t": 1.0625, "v": {"axis": [-0.73, 0.68, 0.05], "deg": 11.515}, "ease": "linear"},
+          {"t": 1.075, "v": {"axis": [-0.56, 0.83, 0.04], "deg": 8.935}, "ease": "linear"},
+          {"t": 1.0875, "v": {"axis": [-0.23, 0.97, 0.01], "deg": 6.928}, "ease": "linear"},
+          {"t": 1.1, "v": {"axis": [0.0, 1.0, 0.0], "deg": 5.926}, "ease": "linear"},
+          {"t": 1.1167, "v": {"axis": [-0.12, 0.99, 0.0], "deg": 4.696}, "ease": "linear"},
+          {"t": 1.1333, "v": {"axis": [-0.52, 0.86, 0.02], "deg": 3.899}, "ease": "linear"},
+          {"t": 1.15, "v": {"axis": [-0.9, 0.44, 0.02], "deg": 4.661}, "ease": "linear"},
+          {"t": 1.1667, "v": {"axis": [-0.99, 0.15, 0.01], "deg": 6.846}, "ease": "linear"},
+          {"t": 1.1833, "v": {"axis": [-1.0, 0.03, 0.0], "deg": 9.566}, "ease": "linear"},
+          {"t": 1.2, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 12.305}, "ease": "linear"},
+          {"t": 1.215, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 14.529}, "ease": "linear"},
+          {"t": 1.23, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 16.339}, "ease": "linear"},
+          {"t": 1.245, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 17.555}, "ease": "linear"},
+          {"t": 1.26, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "linear"},
+          {"t": 1.68, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "smooth"},
+          {"t": 1.85, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0.3, "space": "body", "pos": [80.0, 120.0, 1020.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
+        {"t": 0.72, "space": "gun", "pos": [-8.21, 0.0, -205.39], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.78, "space": "gun", "pos": [-0.45, 0.0, -176.41], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "linear"},
+        {"t": 0.86, "space": "gun", "pos": [7.32, 0.0, -147.43], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.9, "space": "gun", "pos": [7.84, 0.0, -145.5], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 1.1, "hold": true, "ease": "smooth"},
+        {"t": 1.24, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 1.32, "space": "gun", "pos": [-40.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 1.46, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 1.54, "space": "gun", "pos": [-72.0, 45.0, 69.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 1.82, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0.3, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 0.86, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 0.92, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.96, "pose": "PalmMag", "weight": 0, "ease": "smooth"},
+        {"t": 1.1, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 1.2, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 1.2, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 1.32, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 1.48, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 1.54, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 1.72, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 1.82, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "fingersR": [
+        {"t": 0, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.2, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.28, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "attach": [
+        {"t": 0.3, "hand": "handL", "bone": "Magazine"},
+        {"t": 0.86, "hand": "handL", "bone": null}
+      ],
+      "events": [
+        {"t": 0.11, "name": "MagDetach"},
+        {"t": 0.11, "name": "Sound:MagRelease"},
+        {"t": 0.2, "name": "MagDrop"},
+        {"t": 0.3, "name": "MagFromPouch"},
+        {"t": 0.3, "name": "Sound:MagPouch"},
+        {"t": 0.86, "name": "MagAttach"},
+        {"t": 0.87, "name": "MagSeat"},
+        {"t": 0.87, "name": "Sound:MagIn"},
+        {"t": 1.34, "name": "Sound:SlideBack"},
+        {"t": 1.37, "name": "HammerCock"},
+        {"t": 1.43, "name": "SlideToRear"},
+        {"t": 1.48, "name": "InBattery"},
+        {"t": 1.485, "name": "Sound:SlideForward"}
+      ]
+    },
+    "MagCheck": {
+      "duration": 1.6,
+      "holdAt": 0.75,
+      "bones": {
+        "MagRelease": {
+          "loc": [
+            {"t": 0.18, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.21, "v": [0.0, -2.5, 0.0], "ease": "linear"},
+            {"t": 0.28, "v": [0.0, -2.5, 0.0], "ease": "smooth"},
+            {"t": 0.31, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.2, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 1.3, "v": [-60.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 1.55, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.2, "v": {"axis": [1, 0, 0], "deg": -15}, "ease": "linear"},
+          {"t": 1.3, "v": {"axis": [1, 0, 0], "deg": -15}, "ease": "smooth"},
+          {"t": 1.55, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.25, "space": "gun", "pos": [7.32, 0.0, -147.43], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.42, "space": "gun", "pos": [-27.62, 0.0, -277.83], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.7, "space": "camera", "pos": [330.0, 30.0, -230.0], "fingersDir": [0.94, 0.0, 0.34], "palmNormal": [-0.34, 0.0, 0.94], "ease": "smooth"},
+        {"t": 0.9, "space": "camera", "pos": [330.0, 30.0, -230.0], "fingersDir": [0.94, 0.0, 0.34], "palmNormal": [-0.34, 0.0, 0.94], "ease": "smooth"},
+        {"t": 1.12, "space": "gun", "pos": [-27.62, 0.0, -277.83], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "linear"},
+        {"t": 1.24, "space": "gun", "pos": [2.14, 0.0, -166.75], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "linear"},
+        {"t": 1.3, "space": "gun", "pos": [7.32, 0.0, -147.43], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 1.33, "space": "gun", "pos": [7.84, 0.0, -145.5], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 1.55, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.15, "pose": "PalmMag", "weight": 0, "ease": "smooth"},
+        {"t": 0.15, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.25, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 1.3, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 1.36, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 1.38, "pose": "PalmMag", "weight": 0, "ease": "smooth"},
+        {"t": 1.55, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "fingersR": [
+        {"t": 0.12, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.2, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.28, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.34, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "attach": [
+        {"t": 0.25, "hand": "handL", "bone": "Magazine"},
+        {"t": 1.3, "hand": "handL", "bone": null}
+      ],
+      "events": [
+        {"t": 0.21, "name": "Sound:MagRelease"},
+        {"t": 0.25, "name": "MagDetach"},
+        {"t": 0.7, "name": "MagCheckView"},
+        {"t": 1.3, "name": "MagAttach"},
+        {"t": 1.31, "name": "MagSeat"},
+        {"t": 1.31, "name": "Sound:MagIn"}
+      ]
+    },
+    "PressCheck": {
+      "duration": 1.1,
+      "holdAt": 0.45,
+      "bones": {
+        "Barrel": {
+          "loc": [
+            {"t": 0.24, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+            {"t": 0.3, "v": [-9.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.72, "v": [-9.0, 0.0, 0.0], "ease": "smooth"},
+            {"t": 0.78, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Slide": {
+          "loc": [
+            {"t": 0.24, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+            {"t": 0.36, "v": [-12.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.7, "v": [-12.0, 0.0, 0.0], "ease": "smooth"},
+            {"t": 0.78, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.2, "v": [-70.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 0.8, "v": [-70.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 1.0, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.2, "v": {"axis": [1, 0, 0], "deg": -25}, "ease": "linear"},
+          {"t": 0.8, "v": {"axis": [1, 0, 0], "deg": -25}, "ease": "smooth"},
+          {"t": 1.0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.22, "space": "gun", "pos": [28.0, 0.0, 29.0], "fingersDir": [0.0, -0.93, -0.37], "palmNormal": [0.0, 0.37, -0.93], "ease": "smooth"},
+        {"t": 0.36, "space": "gun", "pos": [16.0, 0.0, 29.0], "fingersDir": [0.0, -0.93, -0.37], "palmNormal": [0.0, 0.37, -0.93], "ease": "smooth"},
+        {"t": 0.7, "space": "gun", "pos": [16.0, 0.0, 29.0], "fingersDir": [0.0, -0.93, -0.37], "palmNormal": [0.0, 0.37, -0.93], "ease": "smooth"},
+        {"t": 0.78, "space": "gun", "pos": [28.0, 0.0, 29.0], "fingersDir": [0.0, -0.93, -0.37], "palmNormal": [0.0, 0.37, -0.93], "ease": "smooth"},
+        {"t": 1.0, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.12, "pose": "PinchRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.12, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.22, "pose": "PinchRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.78, "pose": "PinchRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.85, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.88, "pose": "PinchRack", "weight": 0, "ease": "smooth"},
+        {"t": 1.0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.45, "name": "ChamberView"},
+        {"t": 0.78, "name": "Sound:SlideSeat"}
+      ]
+    },
+    "SafetyOn": {
+      "duration": 0.45,
+      "bones": {
+        "Hammer": {
+          "rot": [
+            {"t": 0.19, "v": null, "ease": "linear"},
+            {"t": 0.21, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        },
+        "Safety": {
+          "rot": [
+            {"t": 0.12, "v": {"axis": [0, 1, 0], "deg": 0.0}, "ease": "linear"},
+            {"t": 0.136, "v": {"axis": [0, 1, 0], "deg": -2.4}, "ease": "linear"},
+            {"t": 0.152, "v": {"axis": [0, 1, 0], "deg": -9.6}, "ease": "linear"},
+            {"t": 0.168, "v": {"axis": [0, 1, 0], "deg": -21.6}, "ease": "linear"},
+            {"t": 0.184, "v": {"axis": [0, 1, 0], "deg": -38.4}, "ease": "linear"},
+            {"t": 0.2, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.1, "v": {"axis": [1, 0, 0], "deg": 4}, "ease": "linear"},
+          {"t": 0.3, "v": {"axis": [1, 0, 0], "deg": 4}, "ease": "smooth"},
+          {"t": 0.45, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "fingersR": [
+        {"t": 0, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.24, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.36, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.2, "name": "SafetyOn"},
+        {"t": 0.2, "name": "Sound:SafetyClick"},
+        {"t": 0.21, "name": "HammerDrop"},
+        {"t": 0.21, "name": "Sound:Decock"}
+      ]
+    },
+    "SafetyOff": {
+      "duration": 0.45,
+      "bones": {
+        "Safety": {
+          "rot": [
+            {"t": 0.12, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "linear"},
+            {"t": 0.136, "v": {"axis": [0, 1, 0], "deg": -57.6}, "ease": "linear"},
+            {"t": 0.152, "v": {"axis": [0, 1, 0], "deg": -50.4}, "ease": "linear"},
+            {"t": 0.168, "v": {"axis": [0, 1, 0], "deg": -38.4}, "ease": "linear"},
+            {"t": 0.184, "v": {"axis": [0, 1, 0], "deg": -21.6}, "ease": "linear"},
+            {"t": 0.2, "v": {"axis": [0, 1, 0], "deg": 0.0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.1, "v": {"axis": [1, 0, 0], "deg": 4}, "ease": "linear"},
+          {"t": 0.3, "v": {"axis": [1, 0, 0], "deg": 4}, "ease": "smooth"},
+          {"t": 0.45, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "fingersR": [
+        {"t": 0, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.24, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.36, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.2, "name": "SafetyOff"},
+        {"t": 0.2, "name": "Sound:SafetyClick"}
+      ]
+    },
+    "Decock": {
+      "duration": 0.85,
+      "bones": {
+        "Hammer": {
+          "rot": [
+            {"t": 0.19, "v": null, "ease": "linear"},
+            {"t": 0.21, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        },
+        "Safety": {
+          "rot": [
+            {"t": 0.12, "v": {"axis": [0, 1, 0], "deg": 0.0}, "ease": "linear"},
+            {"t": 0.136, "v": {"axis": [0, 1, 0], "deg": -2.4}, "ease": "linear"},
+            {"t": 0.152, "v": {"axis": [0, 1, 0], "deg": -9.6}, "ease": "linear"},
+            {"t": 0.168, "v": {"axis": [0, 1, 0], "deg": -21.6}, "ease": "linear"},
+            {"t": 0.184, "v": {"axis": [0, 1, 0], "deg": -38.4}, "ease": "linear"},
+            {"t": 0.2, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "linear"},
+            {"t": 0.52, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "linear"},
+            {"t": 0.536, "v": {"axis": [0, 1, 0], "deg": -57.6}, "ease": "linear"},
+            {"t": 0.552, "v": {"axis": [0, 1, 0], "deg": -50.4}, "ease": "linear"},
+            {"t": 0.568, "v": {"axis": [0, 1, 0], "deg": -38.4}, "ease": "linear"},
+            {"t": 0.584, "v": {"axis": [0, 1, 0], "deg": -21.6}, "ease": "linear"},
+            {"t": 0.6, "v": {"axis": [0, 1, 0], "deg": 0.0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.1, "v": {"axis": [1, 0, 0], "deg": 4}, "ease": "linear"},
+          {"t": 0.3, "v": {"axis": [1, 0, 0], "deg": 4}, "ease": "smooth"},
+          {"t": 0.4, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.5, "v": {"axis": [1, 0, 0], "deg": 4}, "ease": "linear"},
+          {"t": 0.7, "v": {"axis": [1, 0, 0], "deg": 4}, "ease": "smooth"},
+          {"t": 0.85, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "fingersR": [
+        {"t": 0, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.24, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.36, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.4, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.5, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.64, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.76, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.2, "name": "SafetyOn"},
+        {"t": 0.2, "name": "Sound:SafetyClick"},
+        {"t": 0.21, "name": "HammerDrop"},
+        {"t": 0.21, "name": "Sound:Decock"},
+        {"t": 0.6, "name": "SafetyOff"},
+        {"t": 0.6, "name": "Sound:SafetyClick"}
+      ]
+    },
+    "TapRack": {
+      "duration": 1.02,
+      "bones": {
+        "Barrel": {
+          "loc": [
+            {"t": 0.46, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.4705, "v": [-2.25, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.481, "v": [-9.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.491, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.616, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.618, "v": [-9.0, 0.0, -0.9], "ease": "linear"},
+            {"t": 0.621, "v": [-5.143, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.625, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Hammer": {
+          "rot": [
+            {"t": 0.46, "v": null, "ease": "linear"},
+            {"t": 0.51, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "smooth"}
+          ]
+        },
+        "Slide": {
+          "loc": [
+            {"t": 0.46, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.4756, "v": [-0.741, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.4911, "v": [-2.963, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.5067, "v": [-6.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.5222, "v": [-11.852, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.5378, "v": [-18.519, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.5533, "v": [-26.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.5689, "v": [-36.296, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.5844, "v": [-47.407, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.6, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.625, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0.24, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.4, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 0.82, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 0.99, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0.24, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.4, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "linear"},
+          {"t": 0.82, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "smooth"},
+          {"t": 0.99, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.1, "space": "gun", "pos": [5.25, 0.0, -155.16], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.14, "space": "gun", "pos": [7.84, 0.0, -145.5], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 0.24, "hold": true, "ease": "smooth"},
+        {"t": 0.38, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.46, "space": "gun", "pos": [18.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.6, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.68, "space": "gun", "pos": [-72.0, 45.0, 69.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.96, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.06, "pose": "PalmMag", "weight": 0, "ease": "smooth"},
+        {"t": 0.06, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 0.16, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 0.2, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.22, "pose": "PalmMag", "weight": 0, "ease": "smooth"},
+        {"t": 0.24, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.34, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.34, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.46, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.62, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.68, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.86, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.96, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.14, "name": "MagSeat"},
+        {"t": 0.14, "name": "Sound:MagTap"},
+        {"t": 0.48, "name": "Sound:SlideBack"},
+        {"t": 0.51, "name": "HammerCock"},
+        {"t": 0.57, "name": "SlideToRear"},
+        {"t": 0.62, "name": "InBattery"},
+        {"t": 0.625, "name": "Sound:SlideForward"}
+      ]
+    },
+    "ClearStovepipe": {
+      "duration": 0.78,
+      "bones": {
+        "Barrel": {
+          "loc": [
+            {"t": 0.22, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2305, "v": [-2.25, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.241, "v": [-9.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.251, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.376, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 0.378, "v": [-9.0, 0.0, -0.9], "ease": "linear"},
+            {"t": 0.381, "v": [-5.143, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.385, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Hammer": {
+          "rot": [
+            {"t": 0.22, "v": null, "ease": "linear"},
+            {"t": 0.27, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "smooth"}
+          ]
+        },
+        "Slide": {
+          "loc": [
+            {"t": 0.22, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2356, "v": [-0.741, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2511, "v": [-2.963, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2667, "v": [-6.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2822, "v": [-11.852, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2978, "v": [-18.519, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3133, "v": [-26.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3289, "v": [-36.296, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3444, "v": [-47.407, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.36, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.385, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.16, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 0.58, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 0.75, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.16, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "linear"},
+          {"t": 0.58, "v": {"axis": [1, 0, 0], "deg": -18}, "ease": "smooth"},
+          {"t": 0.75, "v": {"axis": [1, 0, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.14, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.22, "space": "gun", "pos": [18.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.36, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.44, "space": "gun", "pos": [-72.0, 45.0, 69.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.72, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.1, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.22, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.38, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.44, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.62, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.72, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.24, "name": "Sound:SlideBack"},
+        {"t": 0.27, "name": "HammerCock"},
+        {"t": 0.3, "name": "ClearMalfunction"},
+        {"t": 0.33, "name": "SlideToRear"},
+        {"t": 0.38, "name": "InBattery"},
+        {"t": 0.385, "name": "Sound:SlideForward"}
+      ]
+    },
+    "ClearDoubleFeed": {
+      "duration": 5.34,
+      "bones": {
+        "Barrel": {
+          "loc": [
+            {"t": 0.22, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2305, "v": [-2.25, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.241, "v": [-9.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.251, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 1.63, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 1.644, "v": [-3.96, 0.0, -1.5], "ease": "linear"},
+            {"t": 1.651, "v": [-1.44, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.655, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.27, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.2805, "v": [-2.25, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.291, "v": [-9.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.301, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 2.426, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 2.428, "v": [-9.0, 0.0, -0.9], "ease": "linear"},
+            {"t": 2.431, "v": [-5.143, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.435, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.05, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.0605, "v": [-2.25, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.071, "v": [-9.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.081, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 3.206, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 3.208, "v": [-9.0, 0.0, -0.9], "ease": "linear"},
+            {"t": 3.211, "v": [-5.143, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.215, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.78, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.7905, "v": [-2.25, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.801, "v": [-9.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.811, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 4.936, "v": [-9.0, 0.0, -1.5], "ease": "linear"},
+            {"t": 4.938, "v": [-9.0, 0.0, -0.9], "ease": "linear"},
+            {"t": 4.941, "v": [-5.143, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.945, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Hammer": {
+          "rot": [
+            {"t": 0.22, "v": null, "ease": "linear"},
+            {"t": 0.27, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "linear"},
+            {"t": 4.83, "v": {"axis": [0, 1, 0], "deg": -60.0}, "ease": "smooth"}
+          ]
+        },
+        "MagRelease": {
+          "loc": [
+            {"t": 0.93, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.96, "v": [0.0, -2.5, 0.0], "ease": "linear"},
+            {"t": 1.05, "v": [0.0, -2.5, 0.0], "ease": "smooth"},
+            {"t": 1.09, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Magazine": {
+          "loc": [
+            {"t": 0.96, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.975, "v": [-0.899, 0.0, -3.354], "ease": "linear"},
+            {"t": 0.99, "v": [-3.595, 0.0, -13.416], "ease": "linear"},
+            {"t": 1.005, "v": [-8.088, 0.0, -30.185], "ease": "linear"},
+            {"t": 1.02, "v": [-14.379, 0.0, -53.663], "ease": "linear"},
+            {"t": 1.035, "v": [-22.467, 0.0, -83.848], "ease": "linear"},
+            {"t": 1.05, "v": [-32.352, 0.0, -120.741], "ease": "smooth"},
+            {"t": 4.17, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "Slide": {
+          "loc": [
+            {"t": 0.22, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2356, "v": [-0.741, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2511, "v": [-2.963, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2667, "v": [-6.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2822, "v": [-11.852, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.2978, "v": [-18.519, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3133, "v": [-26.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3289, "v": [-36.296, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.3444, "v": [-47.407, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.36, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.4, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 0.43, "v": [-58.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.49, "v": [-58.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.5056, "v": [-58.025, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.5211, "v": [-58.099, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.5367, "v": [-58.222, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.5522, "v": [-58.395, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.5678, "v": [-58.617, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.5833, "v": [-58.889, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.5989, "v": [-59.21, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.6144, "v": [-59.58, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.63, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 1.655, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.27, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.2856, "v": [-0.741, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.3011, "v": [-2.963, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.3167, "v": [-6.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.3322, "v": [-11.852, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.3478, "v": [-18.519, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.3633, "v": [-26.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.3789, "v": [-36.296, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.3944, "v": [-47.407, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.41, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 2.435, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.05, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.0656, "v": [-0.741, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.0811, "v": [-2.963, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.0967, "v": [-6.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.1122, "v": [-11.852, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.1278, "v": [-18.519, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.1433, "v": [-26.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.1589, "v": [-36.296, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.1744, "v": [-47.407, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.19, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 3.215, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.78, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.7956, "v": [-0.741, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.8111, "v": [-2.963, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.8267, "v": [-6.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.8422, "v": [-11.852, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.8578, "v": [-18.519, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.8733, "v": [-26.667, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.8889, "v": [-36.296, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.9044, "v": [-47.407, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.92, "v": [-60.0, 0.0, 0.0], "ease": "linear"},
+            {"t": 4.945, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+          ]
+        },
+        "SlideStop": {
+          "rot": [
+            {"t": 0.36, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"},
+            {"t": 0.4, "v": {"axis": [0, 1, 0], "deg": 8.0}, "ease": "linear"},
+            {"t": 1.57, "v": {"axis": [0, 1, 0], "deg": 8.0}, "ease": "smooth"},
+            {"t": 1.59, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+          ]
+        }
+      },
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.16, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 0.58, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 0.75, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 1.27, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 1.43, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 1.85, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 2.02, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 2.05, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 2.21, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 2.63, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 2.8, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 2.83, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 2.99, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 3.41, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 3.58, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 4.56, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 4.72, "v": [-90.0, 0.0, -35.0], "ease": "linear"},
+          {"t": 5.14, "v": [-90.0, 0.0, -35.0], "ease": "smooth"},
+          {"t": 5.31, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 0.16, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "linear"},
+          {"t": 0.58, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "smooth"},
+          {"t": 0.75, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
+          {"t": 0.85, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 0.95, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 12.0}, "ease": "smooth"},
+          {"t": 1.15, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 8.0}, "ease": "smooth"},
+          {"t": 1.27, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 1.43, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "linear"},
+          {"t": 1.85, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "smooth"},
+          {"t": 2.02, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
+          {"t": 2.05, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 2.21, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "linear"},
+          {"t": 2.63, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "smooth"},
+          {"t": 2.8, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
+          {"t": 2.83, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 2.99, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "linear"},
+          {"t": 3.41, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "smooth"},
+          {"t": 3.58, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
+          {"t": 3.61, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 3.86, "v": {"axis": [-0.78, 0.62, 0.05], "deg": 12.8}, "ease": "linear"},
+          {"t": 4.36, "v": {"axis": [-0.78, 0.62, 0.05], "deg": 12.8}, "ease": "smooth"},
+          {"t": 4.51, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
+          {"t": 4.56, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 4.72, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "linear"},
+          {"t": 5.14, "v": {"axis": [-1.0, 0.0, 0.0], "deg": 18.0}, "ease": "smooth"},
+          {"t": 5.31, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.14, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.22, "space": "gun", "pos": [18.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.36, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.42, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.5, "space": "gun", "pos": [-15.0, 40.0, 59.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 0.72, "hold": true, "ease": "smooth"},
+        {"t": 0.85, "hold": true, "ease": "smooth"},
+        {"t": 0.97, "space": "gun", "pos": [36.0, 84.0, -132.0], "fingersDir": [0.55, -0.3, -0.78], "palmNormal": [-0.17, -0.95, 0.25], "ease": "smooth"},
+        {"t": 1.25, "hold": true, "ease": "smooth"},
+        {"t": 1.27, "hold": true, "ease": "smooth"},
+        {"t": 1.41, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 1.49, "space": "gun", "pos": [-40.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 1.63, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 1.71, "space": "gun", "pos": [-72.0, 45.0, 69.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 1.99, "hold": true, "ease": "smooth"},
+        {"t": 2.05, "hold": true, "ease": "smooth"},
+        {"t": 2.19, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 2.27, "space": "gun", "pos": [18.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 2.41, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 2.49, "space": "gun", "pos": [-72.0, 45.0, 69.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 2.77, "hold": true, "ease": "smooth"},
+        {"t": 2.83, "hold": true, "ease": "smooth"},
+        {"t": 2.97, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 3.05, "space": "gun", "pos": [18.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 3.19, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 3.27, "space": "gun", "pos": [-72.0, 45.0, 69.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 3.55, "hold": true, "ease": "smooth"},
+        {"t": 3.61, "space": "body", "pos": [80.0, 120.0, 1020.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
+        {"t": 4.03, "space": "gun", "pos": [-8.21, 0.0, -205.39], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 4.09, "space": "gun", "pos": [-0.45, 0.0, -176.41], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "linear"},
+        {"t": 4.17, "space": "gun", "pos": [7.32, 0.0, -147.43], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 4.21, "space": "gun", "pos": [7.84, 0.0, -145.5], "fingersDir": [0.97, 0.0, -0.26], "palmNormal": [0.26, 0.0, 0.97], "ease": "smooth"},
+        {"t": 4.46, "hold": true, "ease": "smooth"},
+        {"t": 4.56, "hold": true, "ease": "smooth"},
+        {"t": 4.7, "space": "gun", "pos": [18.0, 30.0, 54.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 4.78, "space": "gun", "pos": [18.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 4.92, "space": "gun", "pos": [-42.0, 0.0, 29.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 5.0, "space": "gun", "pos": [-72.0, 45.0, 69.0], "fingersDir": [0.0, -0.99, -0.15], "palmNormal": [0.0, 0.15, -0.99], "ease": "smooth"},
+        {"t": 5.28, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.1, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.1, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.22, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.38, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 0.44, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 0.62, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.72, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.85, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.93, "pose": "SupportWrap", "weight": 0.3, "ease": "smooth"},
+        {"t": 1.19, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 1.27, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 1.37, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 1.37, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 1.49, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 1.65, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 1.71, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 1.89, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 1.99, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 2.05, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 2.15, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 2.15, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 2.27, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 2.43, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 2.49, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 2.67, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 2.77, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 2.83, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 2.93, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 2.93, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 3.05, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 3.21, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 3.27, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 3.45, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 3.55, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 3.61, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 4.17, "pose": "PalmMag", "weight": 1, "ease": "smooth"},
+        {"t": 4.23, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 4.27, "pose": "PalmMag", "weight": 0, "ease": "smooth"},
+        {"t": 4.43, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 4.56, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 4.66, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 4.66, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 4.78, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 4.94, "pose": "OverhandRack", "weight": 1, "ease": "smooth"},
+        {"t": 5.0, "pose": "OverhandRack", "weight": 0, "ease": "smooth"},
+        {"t": 5.18, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 5.28, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "fingersR": [
+        {"t": 0.3, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.36, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.44, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 0.5, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.85, "pose": "ThumbPress", "weight": 0, "ease": "smooth"},
+        {"t": 0.95, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 1.05, "pose": "ThumbPress", "weight": 1, "ease": "smooth"},
+        {"t": 1.13, "pose": "ThumbPress", "weight": 0, "ease": "smooth"}
+      ],
+      "attach": [
+        {"t": 3.61, "hand": "handL", "bone": "Magazine"},
+        {"t": 4.17, "hand": "handL", "bone": null}
+      ],
+      "events": [
+        {"t": 0.24, "name": "Sound:SlideBack"},
+        {"t": 0.27, "name": "HammerCock"},
+        {"t": 0.33, "name": "SlideToRear"},
+        {"t": 0.43, "name": "SlideLock"},
+        {"t": 0.43, "name": "Sound:SlideLock"},
+        {"t": 0.96, "name": "MagDetach"},
+        {"t": 0.96, "name": "Sound:MagRelease"},
+        {"t": 1.05, "name": "MagDrop"},
+        {"t": 1.51, "name": "Sound:SlideBack"},
+        {"t": 1.54, "name": "HammerCock"},
+        {"t": 1.6, "name": "SlideToRear"},
+        {"t": 1.65, "name": "InBattery"},
+        {"t": 1.655, "name": "Sound:SlideForward"},
+        {"t": 1.85, "name": "ClearMalfunction"},
+        {"t": 2.29, "name": "Sound:SlideBack"},
+        {"t": 2.32, "name": "HammerCock"},
+        {"t": 2.38, "name": "SlideToRear"},
+        {"t": 2.43, "name": "InBattery"},
+        {"t": 2.435, "name": "Sound:SlideForward"},
+        {"t": 3.07, "name": "Sound:SlideBack"},
+        {"t": 3.1, "name": "HammerCock"},
+        {"t": 3.16, "name": "SlideToRear"},
+        {"t": 3.21, "name": "InBattery"},
+        {"t": 3.215, "name": "Sound:SlideForward"},
+        {"t": 3.61, "name": "MagFromPouch"},
+        {"t": 3.61, "name": "Sound:MagPouch"},
+        {"t": 4.17, "name": "MagAttach"},
+        {"t": 4.18, "name": "MagSeat"},
+        {"t": 4.18, "name": "Sound:MagIn"},
+        {"t": 4.8, "name": "Sound:SlideBack"},
+        {"t": 4.83, "name": "HammerCock"},
+        {"t": 4.89, "name": "SlideToRear"},
+        {"t": 4.94, "name": "InBattery"},
+        {"t": 4.945, "name": "Sound:SlideForward"}
+      ]
+    },
+    "Draw": {
+      "duration": 1.0,
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0.0, "v": [-150.0, -150.0, -260.0], "ease": "linear"},
+          {"t": 0.0167, "v": [-149.919, -149.703, -259.465], "ease": "linear"},
+          {"t": 0.0333, "v": [-149.683, -148.837, -257.942], "ease": "linear"},
+          {"t": 0.05, "v": [-149.301, -147.438, -255.556], "ease": "linear"},
+          {"t": 0.0667, "v": [-148.785, -145.543, -252.428], "ease": "linear"},
+          {"t": 0.0833, "v": [-148.143, -143.189, -248.683], "ease": "linear"},
+          {"t": 0.1, "v": [-147.385, -140.413, -244.444], "ease": "linear"},
+          {"t": 0.1167, "v": [-146.523, -137.251, -239.835], "ease": "linear"},
+          {"t": 0.1333, "v": [-145.566, -133.74, -234.979], "ease": "linear"},
+          {"t": 0.15, "v": [-144.523, -129.917, -230.0], "ease": "linear"},
+          {"t": 0.1667, "v": [-143.405, -125.819, -225.021], "ease": "linear"},
+          {"t": 0.1833, "v": [-142.222, -121.481, -220.165], "ease": "linear"},
+          {"t": 0.2, "v": [-140.984, -116.942, -215.556], "ease": "linear"},
+          {"t": 0.2167, "v": [-139.701, -112.238, -211.317], "ease": "linear"},
+          {"t": 0.2333, "v": [-138.383, -107.404, -207.572], "ease": "linear"},
+          {"t": 0.25, "v": [-137.04, -102.479, -204.444], "ease": "linear"},
+          {"t": 0.2667, "v": [-135.682, -97.499, -202.058], "ease": "linear"},
+          {"t": 0.2833, "v": [-134.318, -92.501, -200.535], "ease": "linear"},
+          {"t": 0.3, "v": [-132.96, -87.521, -200.0], "ease": "linear"},
+          {"t": 0.3156, "v": [-131.7, -82.901, -198.428], "ease": "linear"},
+          {"t": 0.3312, "v": [-130.462, -78.36, -193.984], "ease": "linear"},
+          {"t": 0.3469, "v": [-129.253, -73.928, -187.08], "ease": "linear"},
+          {"t": 0.3625, "v": [-128.083, -69.636, -178.125], "ease": "linear"},
+          {"t": 0.3781, "v": [-126.958, -65.513, -167.529], "ease": "linear"},
+          {"t": 0.3938, "v": [-125.888, -61.589, -155.703], "ease": "linear"},
+          {"t": 0.4094, "v": [-124.881, -57.896, -143.057], "ease": "linear"},
+          {"t": 0.425, "v": [-123.944, -54.463, -130.0], "ease": "linear"},
+          {"t": 0.4406, "v": [-123.087, -51.32, -116.943], "ease": "linear"},
+          {"t": 0.4563, "v": [-122.318, -48.499, -104.297], "ease": "linear"},
+          {"t": 0.4719, "v": [-121.644, -46.028, -92.471], "ease": "linear"},
+          {"t": 0.4875, "v": [-121.074, -43.939, -81.875], "ease": "linear"},
+          {"t": 0.5031, "v": [-120.617, -42.261, -72.92], "ease": "linear"},
+          {"t": 0.5188, "v": [-120.28, -41.025, -66.016], "ease": "linear"},
+          {"t": 0.5344, "v": [-120.071, -40.261, -61.572], "ease": "linear"},
+          {"t": 0.55, "v": [-120.0, -40.0, -60.0], "ease": "smooth"},
+          {"t": 0.9, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [0, 1, 0], "deg": 80}, "ease": "smooth"},
+          {"t": 0.3, "v": {"axis": [0, 1, 0], "deg": 70}, "ease": "smooth"},
+          {"t": 0.55, "v": {"axis": [0, 1, 0], "deg": 10}, "ease": "smooth"},
+          {"t": 0.9, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "space": "body", "pos": [60.0, 40.0, 1100.0], "fingersDir": [0.31, -0.21, 0.93], "palmNormal": [-0.07, -0.98, -0.2], "ease": "smooth"},
+        {"t": 0.75, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "Relaxed", "weight": 1, "ease": "smooth"},
+        {"t": 0.55, "pose": "Relaxed", "weight": 0, "ease": "smooth"},
+        {"t": 0.55, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.8, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ],
+      "fingersR": [
+        {"t": 0, "pose": "IndexTrigger", "weight": 0, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.0, "name": "HolsterOut"},
+        {"t": 0.05, "name": "Sound:Draw"}
+      ]
+    },
+    "Holster": {
+      "duration": 1.0,
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0.0, "v": [0.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 0.0167, "v": [-0.482, -0.161, -0.395], "ease": "linear"},
+          {"t": 0.0333, "v": [-1.878, -0.626, -1.529], "ease": "linear"},
+          {"t": 0.05, "v": [-4.115, -1.372, -3.324], "ease": "linear"},
+          {"t": 0.0667, "v": [-7.121, -2.374, -5.701], "ease": "linear"},
+          {"t": 0.0833, "v": [-10.822, -3.607, -8.584], "ease": "linear"},
+          {"t": 0.1, "v": [-15.144, -5.048, -11.895], "ease": "linear"},
+          {"t": 0.1167, "v": [-20.015, -6.672, -15.556], "ease": "linear"},
+          {"t": 0.1333, "v": [-25.362, -8.454, -19.488], "ease": "linear"},
+          {"t": 0.15, "v": [-31.111, -10.37, -23.615], "ease": "linear"},
+          {"t": 0.1667, "v": [-37.189, -12.396, -27.859], "ease": "linear"},
+          {"t": 0.1833, "v": [-43.524, -14.508, -32.141], "ease": "linear"},
+          {"t": 0.2, "v": [-50.041, -16.68, -36.385], "ease": "linear"},
+          {"t": 0.2167, "v": [-56.668, -18.889, -40.512], "ease": "linear"},
+          {"t": 0.2333, "v": [-63.332, -21.111, -44.444], "ease": "linear"},
+          {"t": 0.25, "v": [-69.959, -23.32, -48.105], "ease": "linear"},
+          {"t": 0.2667, "v": [-76.476, -25.492, -51.416], "ease": "linear"},
+          {"t": 0.2833, "v": [-82.811, -27.604, -54.299], "ease": "linear"},
+          {"t": 0.3, "v": [-88.889, -29.63, -56.676], "ease": "linear"},
+          {"t": 0.3167, "v": [-94.638, -31.546, -58.471], "ease": "linear"},
+          {"t": 0.3333, "v": [-99.985, -33.328, -59.605], "ease": "linear"},
+          {"t": 0.35, "v": [-104.856, -34.952, -60.0], "ease": "linear"},
+          {"t": 0.3643, "v": [-108.597, -36.199, -60.681], "ease": "linear"},
+          {"t": 0.3786, "v": [-111.89, -37.297, -62.647], "ease": "linear"},
+          {"t": 0.3929, "v": [-114.686, -38.229, -65.783], "ease": "linear"},
+          {"t": 0.4071, "v": [-116.942, -38.981, -69.977], "ease": "linear"},
+          {"t": 0.4214, "v": [-118.61, -39.537, -75.113], "ease": "linear"},
+          {"t": 0.4357, "v": [-119.645, -39.882, -81.077], "ease": "linear"},
+          {"t": 0.45, "v": [-120.0, -40.0, -87.755], "ease": "linear"},
+          {"t": 0.4667, "v": [-120.081, -40.297, -96.296], "ease": "linear"},
+          {"t": 0.4833, "v": [-120.317, -41.163, -105.472], "ease": "linear"},
+          {"t": 0.5, "v": [-120.699, -42.562, -115.102], "ease": "linear"},
+          {"t": 0.5167, "v": [-121.215, -44.457, -125.004], "ease": "linear"},
+          {"t": 0.5333, "v": [-121.857, -46.811, -134.996], "ease": "linear"},
+          {"t": 0.55, "v": [-122.615, -49.587, -144.898], "ease": "linear"},
+          {"t": 0.5667, "v": [-123.477, -52.749, -154.528], "ease": "linear"},
+          {"t": 0.5833, "v": [-124.434, -56.26, -163.704], "ease": "linear"},
+          {"t": 0.6, "v": [-125.477, -60.083, -172.245], "ease": "linear"},
+          {"t": 0.6167, "v": [-126.595, -64.181, -179.97], "ease": "linear"},
+          {"t": 0.6333, "v": [-127.778, -68.519, -186.697], "ease": "linear"},
+          {"t": 0.65, "v": [-129.016, -73.058, -192.245], "ease": "linear"},
+          {"t": 0.6667, "v": [-130.299, -77.762, -196.432], "ease": "linear"},
+          {"t": 0.6833, "v": [-131.617, -82.596, -199.078], "ease": "linear"},
+          {"t": 0.7, "v": [-132.96, -87.521, -200.0], "ease": "linear"},
+          {"t": 0.7158, "v": [-134.247, -92.238, -200.481], "ease": "linear"},
+          {"t": 0.7316, "v": [-135.538, -96.973, -201.854], "ease": "linear"},
+          {"t": 0.7474, "v": [-136.826, -101.696, -204.015], "ease": "linear"},
+          {"t": 0.7632, "v": [-138.102, -106.374, -206.858], "ease": "linear"},
+          {"t": 0.7789, "v": [-139.357, -110.977, -210.278], "ease": "linear"},
+          {"t": 0.7947, "v": [-140.583, -115.473, -214.171], "ease": "linear"},
+          {"t": 0.8105, "v": [-141.772, -119.831, -218.431], "ease": "linear"},
+          {"t": 0.8263, "v": [-142.914, -124.02, -222.954], "ease": "linear"},
+          {"t": 0.8421, "v": [-144.002, -128.008, -227.634], "ease": "linear"},
+          {"t": 0.8579, "v": [-145.027, -131.765, -232.366], "ease": "linear"},
+          {"t": 0.8737, "v": [-145.98, -135.259, -237.046], "ease": "linear"},
+          {"t": 0.8895, "v": [-146.852, -138.459, -241.569], "ease": "linear"},
+          {"t": 0.9053, "v": [-147.636, -141.333, -245.829], "ease": "linear"},
+          {"t": 0.9211, "v": [-148.323, -143.851, -249.722], "ease": "linear"},
+          {"t": 0.9368, "v": [-148.904, -145.982, -253.142], "ease": "linear"},
+          {"t": 0.9526, "v": [-149.371, -147.693, -255.985], "ease": "linear"},
+          {"t": 0.9684, "v": [-149.715, -148.954, -258.146], "ease": "linear"},
+          {"t": 0.9842, "v": [-149.927, -149.733, -259.519], "ease": "linear"},
+          {"t": 1.0, "v": [-150.0, -150.0, -260.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [0, 1, 0], "deg": 0}, "ease": "smooth"},
+          {"t": 0.45, "v": {"axis": [0, 1, 0], "deg": 10}, "ease": "smooth"},
+          {"t": 0.7, "v": {"axis": [0, 1, 0], "deg": 70}, "ease": "smooth"},
+          {"t": 1.0, "v": {"axis": [0, 1, 0], "deg": 80}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.4, "space": "body", "pos": [60.0, 40.0, 1100.0], "fingersDir": [0.31, -0.21, 0.93], "palmNormal": [-0.07, -0.98, -0.2], "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.2, "pose": "Relaxed", "weight": 0, "ease": "smooth"},
+        {"t": 0.25, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.45, "pose": "Relaxed", "weight": 1, "ease": "smooth"}
+      ],
+      "fingersR": [
+        {"t": 0, "pose": "IndexTrigger", "weight": 0, "ease": "smooth"}
+      ],
+      "events": [
+        {"t": 0.92, "name": "Sound:Holster"},
+        {"t": 0.95, "name": "HolsterIn"}
+      ]
+    },
+    "Inspect": {
+      "duration": 2.6,
+      "gun": {
+        "pivot": "GripHand",
+        "loc": [
+          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 0.4, "v": [-140.0, 0.0, 0.0], "ease": "linear"},
+          {"t": 2.2, "v": [-140.0, 0.0, 0.0], "ease": "smooth"},
+          {"t": 2.6, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
+        ],
+        "rot": [
+          {"t": 0, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"},
+          {"t": 0.5, "v": {"axis": [-0.93, -0.16, 0.32], "deg": 58.256}, "ease": "linear"},
+          {"t": 1.2, "v": {"axis": [-0.93, -0.16, 0.32], "deg": 58.256}, "ease": "smooth"},
+          {"t": 1.6, "v": {"axis": [0.93, -0.12, -0.34], "deg": 42.612}, "ease": "linear"},
+          {"t": 2.1, "v": {"axis": [0.93, -0.12, -0.34], "deg": 42.612}, "ease": "smooth"},
+          {"t": 2.6, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"}
+        ]
+      },
+      "handL": [
+        {"t": 0, "hold": true, "ease": "smooth"},
+        {"t": 0.35, "space": "camera", "pos": [380.0, 90.0, -150.0], "fingersDir": [0.4, -0.3, 0.86], "palmNormal": [-0.13, -0.95, -0.27], "ease": "smooth"},
+        {"t": 2.4, "hold": true, "ease": "smooth"}
+      ],
+      "fingersL": [
+        {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
+        {"t": 0.15, "pose": "Relaxed", "weight": 0, "ease": "smooth"},
+        {"t": 0.2, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 0.35, "pose": "Relaxed", "weight": 1, "ease": "smooth"},
+        {"t": 2.3, "pose": "Relaxed", "weight": 1, "ease": "smooth"},
+        {"t": 2.3, "pose": "SupportWrap", "weight": 0, "ease": "smooth"},
+        {"t": 2.45, "pose": "Relaxed", "weight": 0, "ease": "smooth"},
+        {"t": 2.55, "pose": "SupportWrap", "weight": 1, "ease": "smooth"}
+      ]
+    }
+  }
+}
