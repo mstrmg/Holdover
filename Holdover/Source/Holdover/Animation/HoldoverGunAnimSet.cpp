@@ -371,6 +371,12 @@ namespace HoldoverAnim
 						{
 							Key.Bone = FName(*Bone);
 						}
+						const FJsonObj Grip = Obj(K, TEXT("grip"));
+						if (Grip.IsValid() && ReadHandTarget(Grip, Key.Grip))
+						{
+							Key.Grip.Space = ESpace::Gun; // always gun space
+							Key.bHasGrip = true;
+						}
 						Act.Attach.Add(Key);
 					}
 				}

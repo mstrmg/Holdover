@@ -394,6 +394,7 @@ void UHoldoverGunAnimator::ApplyAttachments(float T, const FHoldoverAnimFrame& F
 	bool bLeft = true;
 	float PickTime = 0.f;
 	float LetGoTime = -1.f;
+	const FAttachKey* PickKey = nullptr;
 	for (int32 i = 0; i < Current->Attach.Num(); ++i)
 	{
 		const FAttachKey& K = Current->Attach[i];
@@ -404,6 +405,7 @@ void UHoldoverGunAnimator::ApplyAttachments(float T, const FHoldoverAnimFrame& F
 		Bone = K.Bone;
 		bLeft = K.bLeftHand;
 		PickTime = K.T;
+		PickKey = &K;
 		LetGoTime = -1.f;
 		for (int32 j = i + 1; j < Current->Attach.Num(); ++j)
 		{
@@ -432,9 +434,17 @@ void UHoldoverGunAnimator::ApplyAttachments(float T, const FHoldoverAnimFrame& F
 		return;
 	}
 
+	if (!bAttachOffsetValid && PickKey && PickKey->bHasGrip)
+	{
+		// The timeline says how the hand holds the part when it sits at rest: keep that grip while carrying it.
+		// offset = inverse(grip hand) x bone rest, both in gun space.
+		const FTransform GripGun(HandBasis(PickKey->Grip.FingersDir, PickKey->Grip.PalmNormal), PickKey->Grip.Pos);
+		AttachOffset = Rest.GetRelativeTransform(GripGun);
+		bAttachOffsetValid = true;
+	}
 	if (!bAttachOffsetValid)
 	{
-		// A fresh mag from the pouch is held so that it lands exactly seated when it is let go;
+		// Older timelines without a grip: a fresh mag from the pouch is held so that it lands exactly seated when it is let go;
 		// a mag taken out of the gun keeps the grip it had when the hand took it.
 		const bool bFromPouch = Current->HasEvent(AnimMagFromPouch, PickTime, 0.05f);
 		const float RefTime = (bFromPouch && LetGoTime >= 0.f) ? LetGoTime : PickTime;

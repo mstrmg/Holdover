@@ -69,6 +69,9 @@ namespace HoldoverAnim
 		float T = 0.f;
 		bool bLeftHand = true;
 		FName Bone; // None = let go
+		/** Where this hand holds the part when the part sits at its rest pose (gun space). Fixes the carry offset. */
+		bool bHasGrip = false;
+		FHandTarget Grip;
 	};
 
 	struct FEventKey
