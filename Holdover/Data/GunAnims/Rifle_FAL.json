@@ -476,7 +476,7 @@
         {"t": 0.2, "space": "gun", "pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34], "ease": "smooth"},
         {"t": 0.32, "space": "gun", "pos": [-15.41, 30.0, -116.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
         {"t": 0.42, "space": "gun", "pos": [9.59, 30.0, -166.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
-        {"t": 0.85, "space": "body", "pos": [120.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"}
+        {"t": 0.85, "space": "body", "pos": [170.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"}
       ],
       "fingersL": [
         {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},
@@ -586,7 +586,7 @@
         ]
       },
       "handL": [
-        {"t": 0.0, "space": "body", "pos": [120.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
+        {"t": 0.0, "space": "body", "pos": [170.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
         {"t": 0.45, "space": "gun", "pos": [9.59, 30.0, -156.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
         {"t": 0.55, "space": "gun", "pos": [-15.41, 30.0, -116.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
         {"t": 0.66, "space": "gun", "pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34], "ease": "smooth"},
@@ -637,7 +637,7 @@
         ]
       },
       "handL": [
-        {"t": 0.9, "space": "body", "pos": [120.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
+        {"t": 0.9, "space": "body", "pos": [170.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
         {"t": 1.35, "space": "gun", "pos": [9.59, 30.0, -156.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
         {"t": 1.45, "space": "gun", "pos": [-15.41, 30.0, -116.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
         {"t": 1.56, "space": "gun", "pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34], "ease": "smooth"},
@@ -715,7 +715,7 @@
         ]
       },
       "handL": [
-        {"t": 0.45, "space": "body", "pos": [120.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
+        {"t": 0.45, "space": "body", "pos": [170.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
         {"t": 0.9, "space": "gun", "pos": [9.59, 30.0, -156.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
         {"t": 1.0, "space": "gun", "pos": [-15.41, 30.0, -116.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
         {"t": 1.11, "space": "gun", "pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34], "ease": "smooth"},
@@ -1370,7 +1370,7 @@
         {"t": 4.23, "space": "gun", "pos": [-111.0, 44.0, 8.0], "fingersDir": [0.3, -0.2, -0.93], "palmNormal": [-0.06, -0.98, 0.19], "ease": "smooth"},
         {"t": 4.29, "space": "gun", "pos": [-131.0, 69.0, 28.0], "fingersDir": [0.3, -0.2, -0.93], "palmNormal": [-0.06, -0.98, 0.19], "ease": "smooth"},
         {"t": 4.65, "hold": true, "ease": "smooth"},
-        {"t": 4.75, "space": "body", "pos": [120.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
+        {"t": 4.75, "space": "body", "pos": [170.0, 100.0, 1070.0], "fingersDir": [0.0, 0.0, -1.0], "palmNormal": [-1.0, 0.0, 0.0], "ease": "smooth"},
         {"t": 5.2, "space": "gun", "pos": [9.59, 30.0, -156.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
         {"t": 5.3, "space": "gun", "pos": [-15.41, 30.0, -116.77], "fingersDir": [0.48, -0.35, -0.81], "palmNormal": [-0.18, -0.94, 0.3], "ease": "smooth"},
         {"t": 5.41, "space": "gun", "pos": [-40.0, 30.0, -110.0], "fingersDir": [0.25, -0.35, -0.9], "palmNormal": [-0.09, -0.94, 0.34], "ease": "smooth"},
