@@ -3,7 +3,11 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/HoldoverGunAnimator.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/CameraActor.h"
 #include "Components/CapsuleComponent.h"
+#include "Core/HoldoverDebug.h"
+#include "Misc/Paths.h"
+#include "UnrealClient.h"
 #include "Components/PoseableMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Core/HoldoverGameMode.h"
@@ -464,6 +468,139 @@ void AHoldoverCharacter::Tick(float DeltaSeconds)
 	UpdateRecoil(DeltaSeconds);
 	UpdateSway(DeltaSeconds);
 	UpdateHold(DeltaSeconds);
+	UpdateDebugView();
+	UpdateTestShots(DeltaSeconds);
+}
+
+// =====================================================================
+// Test tools
+// =====================================================================
+
+void AHoldoverCharacter::UpdateDebugView()
+{
+	APlayerController* PC = Cast<APlayerController>(Controller);
+	const int32 View = HoldoverDebug::DebugView();
+	if (!PC)
+	{
+		return;
+	}
+	if (View <= 0)
+	{
+		if (AppliedDebugView != 0)
+		{
+			PC->SetViewTarget(this);
+			AppliedDebugView = 0;
+		}
+		return;
+	}
+	if (!DebugCam)
+	{
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		DebugCam = GetWorld()->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), FTransform::Identity, Params);
+		if (!DebugCam)
+		{
+			return;
+		}
+		DebugCam->GetCameraComponent()->SetFieldOfView(60.f);
+		DebugCam->GetCameraComponent()->bConstrainAspectRatio = false;
+	}
+	// Placed relative to the eyes, looking at the hands: 1 = from the right side, 2 = from the front, 3 = from behind and above.
+	const FTransform Eyes = Camera->GetComponentTransform();
+	const FVector Look = Eyes.TransformPosition(FVector(30.f, 0.f, -18.f));
+	FVector From;
+	switch (View)
+	{
+	case 2: From = Eyes.TransformPosition(FVector(170.f, 25.f, 0.f)); break;
+	case 3: From = Eyes.TransformPosition(FVector(-70.f, 45.f, 35.f)); break;
+	default: From = Eyes.TransformPosition(FVector(35.f, 150.f, 5.f)); break;
+	}
+	DebugCam->SetActorLocationAndRotation(From, (Look - From).Rotation());
+	if (AppliedDebugView != View || PC->GetViewTarget() != DebugCam)
+	{
+		PC->SetViewTarget(DebugCam);
+		AppliedDebugView = View;
+	}
+}
+
+void AHoldoverCharacter::LogArmDiagnostics(const FString& Label) const
+{
+	const FTransform Eyes = Camera->GetComponentTransform();
+	auto Bone = [this, &Eyes](const TCHAR* Name)
+	{
+		if (!BodyVisible || !BodyVisible->GetSkinnedAsset() || BodyVisible->GetBoneIndex(Name) == INDEX_NONE)
+		{
+			return FString(TEXT("n/a"));
+		}
+		const FVector W = BodyVisible->GetBoneLocationByName(Name, EBoneSpaces::WorldSpace);
+		return Eyes.InverseTransformPosition(W).ToCompactString();
+	};
+	UE_LOG(LogHoldover, Log, TEXT("[Arms %s] eye-space cm (X fwd, Y right, Z up): head %s neck %s clav_r %s upperarm_r %s lowerarm_r %s hand_r %s | upperarm_l %s lowerarm_l %s hand_l %s"),
+		*Label, *Bone(TEXT("head")), *Bone(TEXT("neck_01")), *Bone(TEXT("clavicle_r")), *Bone(TEXT("upperarm_r")), *Bone(TEXT("lowerarm_r")),
+		*Bone(TEXT("hand_r")), *Bone(TEXT("upperarm_l")), *Bone(TEXT("lowerarm_l")), *Bone(TEXT("hand_l")));
+	UE_LOG(LogHoldover, Log, TEXT("[Arms %s] targets: handR %s handL %s gun %s aim %.2f"), *Label,
+		*Animator->GetHandInCamera(false).GetLocation().ToCompactString(), *Animator->GetHandInCamera(true).GetLocation().ToCompactString(),
+		*GunHold->GetRelativeLocation().ToCompactString(), AimAlpha);
+}
+
+void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
+{
+	const int32 Mode = HoldoverDebug::TestShots();
+	if (Mode <= 0)
+	{
+		return;
+	}
+	TestTime += DeltaSeconds;
+
+	// Each step happens at its time; a screenshot is taken one step after the view is set so the frame shows it.
+	struct FStep { float T; int32 Slot; int32 Aim; int32 View; const TCHAR* Shot; };
+	static const FStep Steps[] = {
+		{ 4.0f, 0, 0, 0, nullptr },
+		{ 4.5f, 0, 0, 0, TEXT("pistol_ready_eyes") },
+		{ 5.0f, 0, 0, 1, nullptr },
+		{ 5.5f, 0, 0, 1, TEXT("pistol_ready_side") },
+		{ 6.0f, 0, 0, 3, nullptr },
+		{ 6.5f, 0, 0, 3, TEXT("pistol_ready_behind") },
+		{ 7.0f, 0, 1, 0, nullptr },
+		{ 9.0f, 0, 1, 0, TEXT("pistol_aim_eyes") },
+		{ 9.5f, 0, 1, 1, nullptr },
+		{ 10.0f, 0, 1, 1, TEXT("pistol_aim_side") },
+		{ 10.5f, 0, 0, 0, nullptr },
+		{ 11.0f, 1, 0, 0, nullptr },
+		{ 14.0f, 1, 0, 0, TEXT("rifle_ready_eyes") },
+		{ 14.5f, 1, 0, 1, nullptr },
+		{ 15.0f, 1, 0, 1, TEXT("rifle_ready_side") },
+		{ 15.5f, 1, 1, 0, nullptr },
+		{ 17.5f, 1, 1, 0, TEXT("rifle_aim_eyes") },
+		{ 18.0f, 1, 1, 1, nullptr },
+		{ 18.5f, 1, 1, 1, TEXT("rifle_aim_side") },
+		{ 19.5f, 1, 0, 0, nullptr },
+	};
+	constexpr int32 NumSteps = UE_ARRAY_COUNT(Steps);
+	while (TestStep < NumSteps && TestTime >= Steps[TestStep].T)
+	{
+		const FStep& S = Steps[TestStep++];
+		HoldoverDebug::CVarForceAim->Set(S.Aim, ECVF_SetByConsole);
+		HoldoverDebug::CVarDebugView->Set(S.View, ECVF_SetByConsole);
+		if (S.Slot != CurrentSlot)
+		{
+			SelectGun(S.Slot);
+		}
+		if (S.Shot)
+		{
+			const FString File = FPaths::ProjectSavedDir() / TEXT("Screenshots/test") / (FString(S.Shot) + TEXT(".png"));
+			FScreenshotRequest::RequestScreenshot(File, false, false);
+			LogArmDiagnostics(S.Shot);
+		}
+	}
+	if (TestStep >= NumSteps && Mode == 1)
+	{
+		HoldoverDebug::CVarTestShots->Set(0, ECVF_SetByConsole);
+		if (APlayerController* PC = Cast<APlayerController>(Controller))
+		{
+			PC->ConsoleCommand(TEXT("quit"));
+		}
+	}
 }
 
 namespace
@@ -604,7 +741,7 @@ void AHoldoverCharacter::UpdateHold(float DeltaSeconds)
 	const UHoldoverGunData* D = Gun->GetData();
 
 	// Raise or lower the gun.
-	const bool bWantAim = bAimHeld && !Animator->IsBusy();
+	const bool bWantAim = (bAimHeld || HoldoverDebug::ForceAim()) && !Animator->IsBusy();
 	UpdateAimAlpha(DeltaSeconds, bWantAim, D->AimTime);
 	const float A = AimAlpha;
 	// The muzzle lines up a little before the gun arrives, as when a real shooter drives the front sight onto the target.
