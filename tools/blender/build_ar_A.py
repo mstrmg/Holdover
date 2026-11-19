@@ -44,6 +44,7 @@ lp = [(-158, -16.8), (22, -16.8), (22, -24), (17, -31), (11, -33), (9, -62), (4,
       (-158, -30), (-170, -30), (-176, -22)]
 lo = profile("l_body", chaikin(lp, 1, closed=True), -14.5, 14.5, C, ANOD)
 tower = cyl("l_tower", -176, -157, 17, 0, 0, C, ANOD, seg=40)
+intersect(tower, box("c_twr", -180, -150, -20, 20, -20, 8.5, CUT))   # flat top so it clears the charging handle
 lw = box("c_lwell", -64.5, 7.5, -11.6, 11.6, -70, -10, CUT)
 cut(lo, [lw]); bevel(lo, 0.8, 2, 40)
 pins = []
