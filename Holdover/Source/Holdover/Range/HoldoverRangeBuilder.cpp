@@ -153,6 +153,18 @@ void AHoldoverRangeBuilder::ResetTargets()
 	}
 }
 
+bool AHoldoverRangeBuilder::LevelHasSun() const
+{
+	if (UWorld* World = GetWorld())
+	{
+		for (TActorIterator<ADirectionalLight> It(World); It; ++It)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void AHoldoverRangeBuilder::SpawnLightingIfMissing()
 {
 	UWorld* World = GetWorld();
@@ -160,7 +172,7 @@ void AHoldoverRangeBuilder::SpawnLightingIfMissing()
 	{
 		return;
 	}
-	for (TActorIterator<ADirectionalLight> It(World); It; ++It)
+	if (LevelHasSun())
 	{
 		return; // the level already has its own lighting
 	}

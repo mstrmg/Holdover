@@ -16,6 +16,7 @@ namespace HoldoverShapes
 	UStaticMesh* Cube() { return LoadMesh(TEXT("/Engine/BasicShapes/Cube.Cube")); }
 	UStaticMesh* Cylinder() { return LoadMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder")); }
 	UStaticMesh* Sphere() { return LoadMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere")); }
+	UStaticMesh* Cone() { return LoadMesh(TEXT("/Engine/BasicShapes/Cone.Cone")); }
 
 	UMaterialInterface* BaseMaterial()
 	{

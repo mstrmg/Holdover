@@ -58,17 +58,25 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
-private:
-	void BuildGeometry();
-	void SpawnTargets();
-	void SpawnLightingIfMissing();
+	/** Builds the ground, berm and range furniture. Subclasses build other ranges. */
+	virtual void BuildGeometry();
+
+	/** Adds sun, sky and fog unless the level already has a sun. */
+	virtual void SpawnLightingIfMissing();
+
+	/** True when the level already has its own directional light. */
+	bool LevelHasSun() const;
 
 	UPROPERTY(VisibleAnywhere, Category = "Range")
 	TObjectPtr<USceneComponent> Root;
 
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<AHoldoverPaperTarget>> Targets;
-
+	/** Actors spawned for this range (lights, fog...), destroyed with it. */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<AActor>> SpawnedHelpers;
+
+private:
+	void SpawnTargets();
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<AHoldoverPaperTarget>> Targets;
 };
