@@ -124,7 +124,7 @@ void UHoldoverGunData::ApplyPresetAK(UHoldoverGunData* D)
 	D->FallbackMagazineSize = FVector(6.5f, 2.6f, 19.5f);
 
 	D->ActionType = EHoldoverActionType::RotatingBolt;
-	D->SlideMotion = MakeMove(TEXT("BoltCarrier"), FVector(-11.0f, 0.f, 0.f));
+	D->SlideMotion = MakeMove(TEXT("BoltCarrier"), FVector(-7.5f, 0.f, 0.f)); // 75 mm: matches the model and the timelines
 	D->LockedBackFraction = 1.f;
 	D->EjectFraction = 0.8f;
 	D->bLastRoundHoldOpen = false;
@@ -133,7 +133,7 @@ void UHoldoverGunData::ApplyPresetAK(UHoldoverGunData* D)
 	D->HandPullTime = 0.24f;
 	D->SpringReturnTime = 0.06f;
 	D->LockingMotion = MakeTurn(TEXT("Bolt"), FVector(1.f, 0.f, 0.f), 35.f);
-	D->LockingTravelFraction = 0.073f;
+	D->LockingTravelFraction = 0.107f; // bolt unlocks in the first 8 mm of 75
 	D->HammerCockMotion = FHoldoverBoneMotion();
 	D->TriggerPullMotion = MakeTurn(TEXT("Trigger"), FVector(0.f, 1.f, 0.f), 12.f);
 	D->SlideStopUpMotion = FHoldoverBoneMotion();
