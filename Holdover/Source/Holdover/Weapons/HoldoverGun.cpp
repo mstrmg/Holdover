@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Core/HoldoverDebug.h"
 #include "Core/HoldoverShapes.h"
+#include "Engine/Engine.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/World.h"
 #include "Holdover.h"
