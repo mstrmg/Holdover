@@ -109,7 +109,7 @@ GUNS = {
         rear_serrations=[18, 0, 10], slide_top_z=15.0, slide_half_width=15.0,
         ejection_port=[75, -13, 5],
         recoil=dict(rotY=-7.0, tX=-14.0, rotZ=0.8, settle=0.24),
-        mag_pouch=[80, 120, 40], holster=[10, -190, 40],
+        mag_pouch=[140, 120, 40], holster=[40, -190, 40],
     ),
     "Pistol_1911": dict(
         kind="pistol", da=False, decocker=False, grip_safety=True,
@@ -126,7 +126,7 @@ GUNS = {
         rear_serrations=[22, 0, 10], slide_top_z=11.0, slide_half_width=11.6,
         ejection_port=[98, -12, 5],
         recoil=dict(rotY=-9.0, tX=-16.0, rotZ=0.9, settle=0.26),
-        mag_pouch=[80, 120, 40], holster=[10, -190, 40],
+        mag_pouch=[140, 120, 40], holster=[40, -190, 40],
     ),
     "Rifle_AK": dict(
         kind="rifle", style="ak", hold_open=False,
@@ -141,7 +141,7 @@ GUNS = {
         dust_cover=None,
         grip_socket="GripHand", grip_rake=20.0, support_socket="SupportHand", support_radius=24.0,
         recoil=dict(rotY=-4.0, tX=-18.0, rotZ=0.6, settle=0.22),
-        mag_pouch=[120, 100, 90],
+        mag_pouch=[170, 100, 90],
     ),
     "Rifle_FAL": dict(
         kind="rifle", style="fal", hold_open=True,
@@ -156,7 +156,7 @@ GUNS = {
         dust_cover=None,
         grip_socket="GripHand", grip_rake=20.0, support_socket="SupportHand", support_radius=26.0,
         recoil=dict(rotY=-5.5, tX=-24.0, rotZ=0.7, settle=0.26),
-        mag_pouch=[120, 100, 90],
+        mag_pouch=[170, 100, 90],
     ),
     "Carbine_AR": dict(
         kind="rifle", style="ar", hold_open=True,
@@ -171,7 +171,7 @@ GUNS = {
         dust_cover="DustCover", dust_open=100.0,
         grip_socket="GripHand", grip_rake=25.0, support_socket="SupportHand", support_radius=22.0,
         recoil=dict(rotY=-3.0, tX=-12.0, rotZ=0.4, settle=0.18),
-        mag_pouch=[120, 100, 90],
+        mag_pouch=[170, 100, 90],
     ),
 }
 
@@ -365,7 +365,7 @@ def pistol_actions(g):
         a = Action(t0 + 0.95)
         a.attach(t0, "L", g["mag"]).ev(t0, "MagFromPouch").ev(t0, "Sound:MagPouch")
         a.gun("rotX", [K(t0, CUR), K(t0 + 0.25, -10), K(t0 + 0.75, -10), K(t0 + 0.9, 0)], pivot=g["grip_socket"])
-        a.gun("rotY", [K(t0, CUR), K(t0 + 0.25, 8), K(t0 + 0.75, 8), K(t0 + 0.9, 0)])
+        a.gun("rotY", [K(t0, CUR), K(t0 + 0.25, -10), K(t0 + 0.75, -10), K(t0 + 0.9, 0)])   # muzzle tips up so the well faces the mag
         a.hand("L", [hand(t0, "body", g["mag_pouch"], [0, 0, -1], [-1, 0, 0]),
                      hand_on_mag(t0 + 0.42, g, 60, interp="easeOut"),
                      hand_on_mag(t0 + 0.48, g, 30, interp="lin"),
@@ -479,11 +479,11 @@ def pistol_actions(g):
         a.gun("rotY", [K(0, 80), K(0.30, 70), K(0.55, 10), K(0.9, 0)] if not reverse else [K(0, 0), K(0.45, 10), K(0.7, 70), K(1.0, 80)])
         a.gun("tX", [K(0, -150), K(0.55, -120), K(0.9, 0)] if not reverse else [K(0, 0), K(0.45, -120), K(1.0, -150)])
         if not reverse:
-            a.hand("L", [hand(0, "body", [60, 40, 120], [0.3, -0.2, 0.9], [0, -1, 0]), hold(0.75, "easeOut")])
+            a.hand("L", [hand(0, "body", [140, 50, 140], [0.3, -0.2, 0.9], [0, -1, 0]), hold(0.75, "easeOut")])
             a.fingers("L", "Relaxed", [K(0, 1), K(0.55, 0)]).fingers("L", "SupportWrap", [K(0.55, 0), K(0.8, 1)])
             a.ev(0.0, "HolsterOut").ev(0.05, "Sound:Draw")
         else:
-            a.hand("L", [hold(0), hand(0.40, "body", [60, 40, 120], [0.3, -0.2, 0.9], [0, -1, 0])])
+            a.hand("L", [hold(0), hand(0.40, "body", [140, 50, 140], [0.3, -0.2, 0.9], [0, -1, 0])])
             a.fingers("L", "SupportWrap", [K(0, 1), K(0.25, 0)]).fingers("L", "Relaxed", [K(0.2, 0), K(0.45, 1)])
             a.ev(0.95, "HolsterIn").ev(0.92, "Sound:Holster")
         a.fingers("R", "IndexTrigger", [K(0, 0)])
