@@ -1,5 +1,9 @@
 #include "Weapons/HoldoverGunData.h"
 
+#include "Engine/SkeletalMesh.h"
+#include "Engine/StaticMesh.h"
+#include "Holdover.h"
+
 UHoldoverGunData::UHoldoverGunData()
 {
 	ApplyPresetM9(this);
@@ -88,12 +92,12 @@ void UHoldoverGunData::ApplyPresetM9(UHoldoverGunData* D)
 	D->CaseMassGrams = 4.0f;
 	D->RoundMassGrams = 12.0f;
 
-	D->ReadyOffset = FVector(38.f, 9.f, -24.f);
-	D->ReadyRotation = FRotator(-12.f, -4.f, 0.f);
+	D->ReadyOffset = FVector(40.f, 7.f, -12.f);
+	D->ReadyRotation = FRotator(-5.f, -2.f, 0.f);
 	D->AimEyeRelief = 58.f;
 	D->InspectOffset = FVector(32.f, 4.f, -14.f);
 	D->InspectRotation = FRotator(5.f, -10.f, -35.f);
-	D->AimTime = 0.25f;
+	D->AimTime = 0.4f;
 	D->AimArc = FVector(3.f, 0.f, -1.f);
 	D->SwayWeight = 1.f;
 
@@ -176,12 +180,12 @@ void UHoldoverGunData::ApplyPresetAK(UHoldoverGunData* D)
 	D->CaseMassGrams = 6.6f;
 	D->RoundMassGrams = 16.3f;
 
-	D->ReadyOffset = FVector(30.f, 12.f, -22.f);
-	D->ReadyRotation = FRotator(-15.f, -6.f, 0.f);
+	D->ReadyOffset = FVector(32.f, 10.f, -11.f);
+	D->ReadyRotation = FRotator(-5.f, -3.f, 0.f);
 	D->AimEyeRelief = 52.f;
 	D->InspectOffset = FVector(30.f, 6.f, -16.f);
 	D->InspectRotation = FRotator(5.f, -15.f, -40.f);
-	D->AimTime = 0.32f;
+	D->AimTime = 0.5f;
 	D->AimArc = FVector(5.f, 0.f, -2.f);
 	D->SwayWeight = 1.6f;
 
@@ -192,4 +196,49 @@ void UHoldoverGunData::ApplyPresetAK(UHoldoverGunData* D)
 	D->RecoilStiffness = 200.f;
 	D->RecoilDamping = 22.f;
 	D->RecoilResidual = 0.06f;
+}
+
+void UHoldoverGunData::LoadImportedArt(UHoldoverGunData* D)
+{
+	if (!D || D->GunId.IsNone())
+	{
+		return;
+	}
+	// The Blender exports are imported to /Game/Guns/<GunId>/ with their file names (tools/unreal/import_guns.py).
+	static const TMap<FName, FString> Calibers = {
+		{TEXT("Pistol_M9"), TEXT("9mm")},
+		{TEXT("Pistol_1911"), TEXT("45ACP")},
+		{TEXT("Rifle_AK"), TEXT("762x39")},
+		{TEXT("Rifle_FAL"), TEXT("762x51")},
+		{TEXT("Carbine_AR"), TEXT("556")},
+	};
+	const FString Id = D->GunId.ToString();
+	const FString Folder = FString::Printf(TEXT("/Game/Guns/%s/"), *Id);
+	auto Load = [&Folder](const FString& Name) -> UObject*
+	{
+		const FString Path = Folder + Name + TEXT(".") + Name;
+		return StaticLoadObject(UObject::StaticClass(), nullptr, *Path, nullptr, LOAD_NoWarn | LOAD_Quiet);
+	};
+	if (!D->GunMesh)
+	{
+		D->GunMesh = Cast<USkeletalMesh>(Load(TEXT("SK_") + Id));
+	}
+	if (!D->MagazineMesh)
+	{
+		D->MagazineMesh = Cast<UStaticMesh>(Load(TEXT("SM_") + Id + TEXT("_Mag")));
+	}
+	if (const FString* Cal = Calibers.Find(D->GunId))
+	{
+		if (!D->RoundMesh)
+		{
+			D->RoundMesh = Cast<UStaticMesh>(Load(TEXT("SM_Round_") + *Cal));
+		}
+		if (!D->CasingMesh)
+		{
+			D->CasingMesh = Cast<UStaticMesh>(Load(TEXT("SM_Casing_") + *Cal));
+		}
+	}
+	UE_LOG(LogHoldover, Log, TEXT("Gun art for %s: model %s, magazine %s"), *Id,
+		D->GunMesh ? TEXT("imported") : TEXT("missing (gray stand-in)"),
+		D->MagazineMesh ? TEXT("imported") : TEXT("missing"));
 }

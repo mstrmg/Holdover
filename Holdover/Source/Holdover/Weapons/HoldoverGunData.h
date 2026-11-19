@@ -396,4 +396,7 @@ public:
 	/** Built-in presets, used when no data asset is assigned. */
 	static void ApplyPresetM9(UHoldoverGunData* Data);
 	static void ApplyPresetAK(UHoldoverGunData* Data);
+
+	/** Fills empty model slots from the imported Blender exports in /Game/Guns/<GunId>/, if they are there. */
+	static void LoadImportedArt(UHoldoverGunData* Data);
 };
