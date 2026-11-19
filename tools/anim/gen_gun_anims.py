@@ -130,7 +130,7 @@ GUNS = {
     ),
     "Rifle_AK": dict(
         kind="rifle", style="ak", hold_open=False,
-        carrier="BoltCarrier", carrier_travel=110.0, bolt="Bolt", bolt_chan="rotX", bolt_unlock=35.0, unlock_dist=8.0,
+        carrier="BoltCarrier", carrier_travel=75.0, bolt="Bolt", bolt_chan="rotX", bolt_unlock=35.0, unlock_dist=8.0,
         charging_handle=None, handle_pos=[12, -30, 5], handle_moves_with_carrier=True,
         trigger="Trigger", trigger_chan="rotY", trigger_pull=12.0,
         selector="Selector", sel_safe=0.0, sel_fire=24.0, sel_auto=12.0, selector_pos=[-178, -16.6, -4],
@@ -692,28 +692,31 @@ def rifle_actions(g):
     else:   # AK: no hold-open, so drop, insert, then charge
         A["ReloadEmpty"] = merge(merge(A["MagDrop"], mag_in(0.45).out(), 0.0), A["ChargeHandle"], 1.5)
 
-    # mag check: pull the mag, tilt it to look at the top round, reinsert
-    a = Action(1.7)
+    # mag check: take the mag out, lift it to the eye with its top tipped back to show the top round, put it back
+    a = Action(1.8)
     a.gun("rotX", [K(0, 0), K(0.2, 20), K(1.4, 20), K(1.65, 0)], pivot=g["grip_socket"])
+    view = [340, 70, -110]
+    Rm = rot_y(-45)
+    def at_view(t):
+        gp, gf, gpl = mag_grip(g)
+        return hand(t, "camera", add(view, mat_vec(Rm, gp)), mat_vec(Rm, gf), mat_vec(Rm, gpl))
     if rock:
+        clear = [25, 0, -g["mag_clear"]]
         a.hand("L", [hold(0), hand_on_mag(0.2, g, rock=0, interp="easeOut"), hand_on_mag(0.34, g, rock=g["mag_rock"]),
-                     hand_on_mag(0.48, g, rock=g["mag_rock"], extra=[25, 0, -70]),
-                     hand_on_mag(0.62, g, rock=g["mag_rock"], extra=[25, 0, -70], tilt=40), hand_on_mag(0.95, g, rock=g["mag_rock"], extra=[25, 0, -70], tilt=40),
-                     hand_on_mag(1.1, g, rock=g["mag_rock"], extra=[25, 0, -70]),
-                     hand_on_mag(1.2, g, rock=g["mag_rock"]), hand_on_mag(1.32, g, rock=0), hold(1.6)])
-        a.bone(g["mag"], "rotY", [K(0.25, 0), K(0.34, g["mag_rock"]), K(1.2, g["mag_rock"], "easeIn"), K(1.32, 0)])
-        a.bone(g["mag"], "tX", [K(0.34, 0), K(0.48, 25), K(1.1, 25), K(1.2, 0)]); a.bone(g["mag"], "tZ", [K(0.34, 0), K(0.48, -70), K(1.1, -70), K(1.2, 0)])
-        seat = 1.32
+                     hand_on_mag(0.46, g, rock=g["mag_rock"], extra=clear), at_view(0.75), at_view(1.0),
+                     hand_on_mag(1.2, g, rock=g["mag_rock"], extra=clear), hand_on_mag(1.32, g, rock=g["mag_rock"]),
+                     hand_on_mag(1.44, g, rock=0), hold(1.72)])
+        seat = 1.44
     else:
-        a.hand("L", [hold(0), hand_on_mag(0.2, g, 0, interp="easeOut"), hand_on_mag(0.42, g, 90), hand_on_mag(0.56, g, 90, tilt=40),
-                     hand_on_mag(0.95, g, 90, tilt=40), hand_on_mag(1.1, g, 90), hand_on_mag(1.25, g, 0), hold(1.6)])
-        mag_tracks_along(a, g, [(0.25, 0, "easeOut"), (0.42, 90, None), (1.1, 90, "easeIn"), (1.25, 0, None)])
-        seat = 1.25
+        a.hand("L", [hold(0), hand_on_mag(0.2, g, 0, interp="easeOut"), hand_on_mag(0.42, g, g["mag_clear"]), at_view(0.72), at_view(1.0),
+                     hand_on_mag(1.2, g, g["mag_clear"], interp="lin"), hand_on_mag(1.3, g, 30, interp="lin"), hand_on_mag(1.36, g, 0),
+                     hand_on_mag(1.40, g, -3), hold(1.7)])
+        seat = 1.36
     mag_unlatch(a, 0.25)
     a.attach(0.25, "L", g["mag"]).attach(seat, "L", None)
-    a.fingers("L", "SupportWrap", [K(0, 1), K(0.12, 0), K(1.4, 0), K(1.6, 1)]).fingers("L", "PalmMag", [K(0.12, 0), K(0.2, 1), K(seat, 1), K(seat + 0.1, 0)])
-    a.ev(0.62, "MagCheckView").ev(seat, "MagAttach").ev(seat, "MagSeat").ev(seat, "Sound:MagIn")
-    a.d["holdAt"] = 0.7
+    a.fingers("L", "SupportWrap", [K(0, 1), K(0.12, 0), K(1.5, 0), K(1.7, 1)]).fingers("L", "PalmMag", [K(0.12, 0), K(0.2, 1), K(seat, 1), K(seat + 0.1, 0)])
+    a.ev(0.75, "MagCheckView").ev(seat, "MagAttach").ev(seat, "MagSeat").ev(seat, "Sound:MagIn")
+    a.d["holdAt"] = 0.8
     A["MagCheck"] = a.out()
 
     # chamber (press) check: ease the bolt back 25 mm with the handle, look, let it close, tap forward
@@ -815,28 +818,32 @@ def shift_keys(keys, dt):
     return [[round(k[0] + dt, 4)] + k[1:] for k in keys]
 
 def merge(a, b, dt):
-    """returns action a with action b appended, starting at time dt (b's tracks win where both key a channel after dt)"""
+    """returns action a with action b appended, starting at time dt. Per channel, a's keys are kept up to the
+    moment b's own keys for that channel begin (so b may start its tracks later than dt)"""
     out = json.loads(json.dumps(a))
     out.pop("holdAt", None)          # chained drills play straight through
     out["duration"] = round(max(a["duration"], dt + b["duration"]), 4)
+    def join(old, new):
+        if not new: return old
+        cut = new[0][0] + dt
+        return [k for k in old if k[0] < cut - 1e-9] + shift_keys(new, dt)
     for bone, chans in b.get("bones", {}).items():
         for ch, keys in chans.items():
             old = out.setdefault("bones", {}).setdefault(bone, {}).get(ch, [])
-            out["bones"][bone][ch] = [k for k in old if k[0] < dt] + shift_keys(keys, dt)
+            out["bones"][bone][ch] = join(old, keys)
     if "gun" in b:
         g = out.setdefault("gun", {})
         for ch, keys in b["gun"].items():
             if ch == "pivot": g.setdefault("pivot", keys); continue
-            old = g.get(ch, [])
-            g[ch] = [k for k in old if k[0] < dt] + shift_keys(keys, dt)
+            g[ch] = join(g.get(ch, []), keys)
     for side in ("L", "R"):
         hk = b.get("hand" + side)
         if hk:
-            old = [k for k in out.get("hand" + side, []) if k["t"] < dt]
+            cut = hk[0]["t"] + dt
+            old = [k for k in out.get("hand" + side, []) if k["t"] < cut - 1e-9]
             out["hand" + side] = old + [dict(k, t=round(k["t"] + dt, 4)) for k in hk]
         for pose, keys in b.get("fingers" + side, {}).items():
-            old = out.setdefault("fingers" + side, {}).get(pose, [])
-            out["fingers" + side][pose] = [k for k in old if k[0] < dt] + shift_keys(keys, dt)
+            fs = out.setdefault("fingers" + side, {}); fs[pose] = join(fs.get(pose, []), keys)
     out["events"] = sorted(out.get("events", []) + [[round(e[0] + dt, 4), e[1]] for e in b.get("events", [])], key=lambda e: e[0])
     att = out.get("attach", []) + [[round(e[0] + dt, 4)] + e[1:] for e in b.get("attach", [])]
     if att: out["attach"] = sorted(att, key=lambda e: e[0])
@@ -1029,7 +1036,12 @@ def strip_attached(a):
         chans = a.get("bones", {}).get(bone)
         if not chans: continue
         for ch in list(chans):
-            chans[ch] = [k for k in chans[ch] if not any(t0 < k[0] < t1 for t0, t1 in sp)]
+            keys = [k for k in chans[ch] if not any(t0 < k[0] < t1 for t0, t1 in sp)]
+            # let go = seated: the bone's own track must read its rest value from the release on
+            for t0, t1 in sp:
+                if t1 < 1e8:
+                    keys = [k for k in keys if k[0] < t1 - 1e-9] + [[round(t1, 4), 0.0, "step"]] + [k for k in keys if k[0] > t1 + 1e-9]
+            chans[ch] = keys
             if not chans[ch]: del chans[ch]
         if not chans: del a["bones"][bone]
 

@@ -100,6 +100,10 @@ VIEWS = {   # check cameras, camera-space mm relative to the gun's hold origin: 
     "right": ((-80, -520, 160), (90, 0, -40)),
     "left": ((-80, 520, 160), (90, 0, -40)),
     "top": ((60, -60, 600), (80, 0, -40)),
+    "leftclose": ((-60, 420, 60), (-60, 0, -40)),     # close side views for checking levers (rifle-sized; fine for pistols too)
+    "rightclose": ((-60, -420, 60), (-60, 0, -40)),
+    "rightwide": ((0, -1050, 250), (20, 0, -80)),     # whole rifle
+    "leftwide": ((0, 1050, 250), (20, 0, -80)),
 }
 
 def aim_camera(cam, gun, view):
@@ -223,8 +227,14 @@ def pose_frame(data, act, arm, hands, t, start):
         pb.matrix_basis = Matrix()
     bpy.context.view_layer.update()
     order = sorted(arm.pose.bones, key=lambda pb: len(pb.parent_recursive))
+    def chain_c(name):   # like chain(), but a carried ancestor brings its children along
+        m = Matrix(); b = arm.data.bones[name]
+        while b:
+            if b.name in carried: return carried[b.name] @ m
+            m = deltas[b.name] @ m; b = b.parent
+        return m
     for pb in order:
-        d = carried.get(pb.name) or chain(arm, pb.name, deltas)
+        d = chain_c(pb.name)
         mm = Matrix(d); mm.translation = d.translation * MM
         pb.matrix = mm @ pb.bone.matrix_local
         bpy.context.view_layer.update()
@@ -287,3 +297,30 @@ def preview(gun, action, times=None, out_dir=None, repo=None, view="right"):
     sheet = os.path.join(out_dir, "%s_%s_%s_sheet.png" % (gun, action, view))
     contact_sheet(paths, sheet)
     return {"sheet": sheet, "frames": paths, "times": times}
+
+def state_sheet(gun, combos, view="leftclose", out_dir=None, repo=None):
+    """renders the gun (no hands) in each combination of mechanical states, e.g. [[], ["HammerCocked"], ["SlideLocked"]]"""
+    repo = repo or REPO
+    data = json.load(open(os.path.join(repo, "Holdover", "Data", "GunAnims", gun + ".json")))
+    arm = find_armature(data)
+    SOCKETS_CACHE.clear()
+    for b in arm.data.bones: SOCKETS_CACHE[b.name] = b.head_local / MM
+    cam = setup_view(arm); aim_camera(cam, gun, view)
+    hands = {"R": make_hand("AnimCheckHandR", (0.85, 0.15, 0.1, 1), True), "L": make_hand("AnimCheckHandL", (0.1, 0.3, 0.9, 1), False)}
+    for h in hands.values(): h.hide_render = True
+    out_dir = out_dir or os.path.join(os.path.dirname(bpy.data.filepath), "anim_checks")
+    os.makedirs(out_dir, exist_ok=True)
+    paths = []
+    for combo in combos:
+        bones = {}
+        for st in combo:
+            for b, v in data["states"][st].items():
+                d = bones.setdefault(b, {})
+                if "loc" in v: d["loc"] = [{"t": 0, "v": v["loc"], "ease": "step"}]
+                if "rot" in v: d["rot"] = [{"t": 0, "v": v["rot"], "ease": "step"}]
+        pose_frame(data, {"duration": 1, "bones": bones}, arm, hands, 0, {})
+        p = os.path.join(out_dir, "%s_state_%s_%s.png" % (gun, view, "_".join(combo) or "rest"))
+        bpy.context.scene.render.filepath = p; bpy.ops.render.render(write_still=True); paths.append(p)
+    sheet = os.path.join(out_dir, "%s_states_%s.png" % (gun, view))
+    contact_sheet(paths, sheet)
+    return sheet

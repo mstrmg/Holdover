@@ -16,7 +16,7 @@ Millimetres in gun space (X forward, Y left, Z up, bore axis at Z = 0, bolt face
 |---|---|---|
 | `Root` | 0, 0, 0 | Receiver, barrel, gas block, gas tube, sight bases, handguard retainer, cleaning rod, all wood, butt plate, trigger guard. |
 | `DustCover` | -90, 0, 16 | Lifts off for takedown (rear end up first). Not needed for normal shooting. |
-| `BoltCarrier` | 0, 0, 10 | Slides straight back along -X, about 110 mm full travel. Includes the gas piston and the charging handle (right side). The AK has no bolt hold-open: after the last round it closes on an empty chamber. |
+| `BoltCarrier` | 0, 0, 10 | Slides straight back along -X, about 75 mm of travel in the animations (a real AK moves about 110 mm, but on this model the carrier would come out of the back of the dust cover; fix the model to restore full travel). Includes the gas piston and the charging handle (right side). The AK has no bolt hold-open: after the last round it closes on an empty chamber. |
 | `Bolt` | -50, 0, 0 (child of `BoltCarrier`) | Rotates about the bore axis about 35 degrees to unlock in the first 8 mm of carrier travel, then rides back with the carrier. Visible through the ejection port. |
 | `Trigger` | -118, 0, -30 | Rotates rearward about the left-right axis, about 12 degrees. |
 | `Selector` | -178, -16.6, -4 | Long lever on the right side. Rotates about the left-right axis, front end down: safe (up, covers the charging handle slot), full auto (about 12 degrees), semi (about 24 degrees). In safe it blocks the charging handle's travel. |
