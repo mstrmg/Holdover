@@ -39,7 +39,7 @@ Explain everything to Miles in plain language. When he must do something on his 
 - Input: Enhanced Input, with separate mapping contexts for full manual and assisted modes.
 - Casings and dropped mags: Chaos physics with pooling and a cap.
 - Audio: MetaSounds, surface-dependent impacts and forest reverb.
-- Lighting: Lumen, Virtual Shadow Maps, volumetric fog. Upscaling: TSR or FSR, target 60 fps at 1440p.
+- Lighting: Lumen, Virtual Shadow Maps, volumetric fog. Upscaling: TSR or FSR, target 60 fps at 1080p (Miles, 2026-11-19). Textures are 2K (2048) by default; preview renders are 1920x1080.
 - Expose tuning values (recoil, sway, casing ejection speed, etc.) as `UPROPERTY(EditAnywhere)` so they can be tweaked without code changes.
 - Large binary files go through Git LFS (see `.gitattributes`). Claude's cloud session cannot upload LFS files; Miles adds binaries from his PC.
 - Free assets only: Quixel Megascans and Megaplants on Fab (free again since Nov 2026), Poly Haven, ambientCG, Sketchfab (check license), Freesound, Sonniss GDC bundles. Record each asset's source and license in `docs/ASSETS.md`.
