@@ -113,8 +113,8 @@ void AHoldoverCharacter::BeginPlay()
 
 void AHoldoverCharacter::SetupBody()
 {
-	USkeletalMesh* Mesh = BodyMesh.IsNull() ? nullptr : BodyMesh.LoadSynchronous();
-	if (!Mesh)
+	USkeletalMesh* LoadedBody = BodyMesh.IsNull() ? nullptr : BodyMesh.LoadSynchronous();
+	if (!LoadedBody)
 	{
 		UE_LOG(LogHoldover, Warning, TEXT("No body mesh (%s). Add the Third Person content pack to see your body; the gun works without it."),
 			*BodyMesh.ToString());
@@ -123,7 +123,7 @@ void AHoldoverCharacter::SetupBody()
 	}
 
 	USkeletalMeshComponent* Driver = GetMesh();
-	Driver->SetSkeletalMeshAsset(Mesh);
+	Driver->SetSkeletalMeshAsset(LoadedBody);
 	if (UClass* AnimClass = BodyAnimClass.IsNull() ? nullptr : BodyAnimClass.LoadSynchronous())
 	{
 		Driver->SetAnimInstanceClass(AnimClass);
@@ -133,8 +133,8 @@ void AHoldoverCharacter::SetupBody()
 		UE_LOG(LogHoldover, Warning, TEXT("No body animation (%s): the body stands still."), *BodyAnimClass.ToString());
 	}
 
-	BodyVisible->SetSkinnedAssetAndUpdate(Mesh, true);
-	BodyShadow->SetSkinnedAssetAndUpdate(Mesh, true);
+	BodyVisible->SetSkinnedAssetAndUpdate(LoadedBody, true);
+	BodyShadow->SetSkinnedAssetAndUpdate(LoadedBody, true);
 }
 
 // =====================================================================
