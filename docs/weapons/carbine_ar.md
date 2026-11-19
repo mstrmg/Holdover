@@ -14,7 +14,7 @@ Millimetres in gun space (X forward, Y left, Z up, bore axis at Z = 0, bolt face
 | Bone | Pivot (mm) | Motion |
 |---|---|---|
 | `Root` | 0, 0, 0 | Upper and lower receiver, buffer tube, castle nut, barrel and barrel nut, handguards and cap, front sight base, flash hider, pistol grip. |
-| `BoltCarrier` | -80, 0, 2 | Slides straight back along -X, about 95 mm. Held back by the bolt catch on an empty magazine. |
+| `BoltCarrier` | -80, 0, 2 | Slides straight back along -X, about 95 mm. Note: locked back, the top of its rear end shows above the buffer tube (the carrier is a little taller than the tube); a model fix for later. Held back by the bolt catch on an empty magazine. |
 | `Bolt` | -6, 0, 0 (child of `BoltCarrier`) | Rotates about 22 degrees around the bore axis to unlock in the first 8 mm of carrier travel, and slides back with the carrier. |
 | `ChargingHandle` | -165, 0, 13 | Pull straight back along -X up to about 95 mm (it drags the bolt carrier), then push it forward again; it does not move when firing. |
 | `DustCover` | -62, -16.6, -10 (hinge) | Right side. Springs open (rotates about 100 degrees down around the X axis) the first time the bolt moves. |
