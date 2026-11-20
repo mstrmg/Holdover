@@ -13,7 +13,7 @@ What it does:
 4. Makes M_RangeGround, the Blender terrain's material: it blends the five ground surfaces by the
    terrain's vertex colours (R grass, G gravel, B dirt, A berm earth, rest forest floor), breaks the
    borders up with noise so they are not straight lines, and mixes in a large-scale copy of each
-   texture plus slow light/dark patches so the 2 m texture repeat is hard to see. Its instance is
+   texture, a turned copy, and slow light/dark patches so the 2 m texture repeat is hard to see. Its instance is
    MI_RangeGround in /Game/Range/Forest/Ground (the game picks it up by the terrain's slot name).
 5. Assigns them to every static mesh under /Game/Range by material slot name.
 
@@ -61,11 +61,12 @@ FLAT = {
 }
 # Terrain surfaces (slot names of SM_ForestTerrain) -> (ambientCG id, tint, tiling). Terrain UVs repeat every 2 m.
 GROUND = {
-    "ForestFloor": ("ScatteredLeaves009", (0.62, 0.62, 0.55), 1.0),  # last year's leaves, darkened for shade
-    "LaneGrass": ("Ground037", (0.42, 0.52, 0.33), 1.0),             # short mown grass, kept dull (v2 read as lime)
-    "Gravel": ("Gravel042", (0.9, 0.9, 0.9), 1.5),
-    "DirtPath": ("Ground068", (0.85, 0.82, 0.78), 1.0),
-    "BermEarth": ("Ground076", (0.85, 0.8, 0.75), 1.0),
+    # Tints keep the ground's brightness near real soil and grass (v3 read pale, nearly white in full sun).
+    "ForestFloor": ("ScatteredLeaves009", (0.55, 0.55, 0.48), 1.0),  # last year's leaves, darkened for shade
+    "LaneGrass": ("Ground037", (0.36, 0.45, 0.28), 1.0),             # short mown grass, kept dull (v2 read as lime)
+    "Gravel": ("Gravel042", (0.62, 0.62, 0.60), 1.5),
+    "DirtPath": ("Ground068", (0.70, 0.66, 0.62), 1.0),
+    "BermEarth": ("Ground076", (0.60, 0.54, 0.48), 0.8),
 }
 
 assets = unreal.AssetToolsHelpers.get_asset_tools()
@@ -302,11 +303,12 @@ def make_ground_master():
         return n
 
     edge_noise = noise(0.9, 3, -1600)    # breaks surface borders up
-    macro_noise = noise(9.0, 2, -1300)   # slow light/dark patches and the far-texture mix
+    macro_noise = noise(7.0, 2, -1300)   # slow light/dark patches and the far-texture mix
+    swap_noise = noise(3.5, 2, -1750)    # where the turned copy of each texture takes over
 
     edge_amount = scalar("EdgeNoise", 0.7, -2200, -1900)
     contrast = scalar("EdgeSharpness", 3.0, -2200, -1800)
-    macro_mix = scalar("FarTextureMix", 0.45, -2200, -1150)
+    macro_mix = scalar("FarTextureMix", 0.6, -2200, -1150)
     macro_dark = scalar("PatchDarkness", 0.22, -2200, -1050)
     far_scale = scalar("FarTextureScale", 0.21, -2200, -950)
 
@@ -327,6 +329,13 @@ def make_ground_master():
     # Brightness patches: 1 - PatchDarkness * noise
     dark = op(unreal.MaterialExpressionMultiply, macro_noise, macro_dark, x=-1900, y=-1050)
     patches = one_input(unreal.MaterialExpressionOneMinus, dark, -1700, -1050)
+    # A turned, slightly rescaled copy of each colour texture, blended in patches: breaks the rows a
+    # single repeating texture makes on big open areas like the backstop.
+    one = E(mat, unreal.MaterialExpressionConstant, -2800, -700)
+    one.set_editor_property("r", 1.0)
+    swap = op(unreal.MaterialExpressionSubtract, swap_noise, x=-1900, y=-1750, const_b=0.3)
+    swap = op(unreal.MaterialExpressionMultiply, swap, x=-1750, y=-1750, const_b=2.5)
+    swap = one_input(unreal.MaterialExpressionSaturate, swap, -1600, -1750)
 
     layers = []
     for i, (lname, gkey, channel) in enumerate(GROUND_LAYERS):
@@ -345,14 +354,21 @@ def make_ground_master():
             con(uvs, "", s, "UVs")
             return s
 
-        col_near = sampler("Color", ST.SAMPLERTYPE_COLOR, texture(acg, "Color"), luv, y0)
+        tuv = op(unreal.MaterialExpressionMultiply, luv, x=-2600, y=y0 + 240, const_b=0.87)
+        rot = E(mat, unreal.MaterialExpressionRotator, -2450, y0 + 240)
+        rot.set_editor_property("speed", 1.1 + 0.37 * i)  # fixed angle: Time is a constant 1, not game time
+        con(tuv, "", rot, "Coordinate")
+        con(one, "", rot, "Time")
+        col_a = sampler("Color", ST.SAMPLERTYPE_COLOR, texture(acg, "Color"), luv, y0)
+        col_b = sampler("ColorTurned", ST.SAMPLERTYPE_COLOR, texture(acg, "Color"), rot, y0 + 60)
+        col_near = lerp(col_a, col_b, swap, -2050, y0, a_out="RGB", b_out="RGB")
         col_far = sampler("ColorFar", ST.SAMPLERTYPE_COLOR, texture(acg, "Color"), fuv, y0 + 150)
         rough = sampler("Roughness", ST.SAMPLERTYPE_MASKS, texture(acg, "Roughness"), luv, y0 + 300)
         nrm = sampler("Normal", ST.SAMPLERTYPE_NORMAL, texture(acg, "NormalGL"), luv, y0 + 450)
         tint_p = E(mat, unreal.MaterialExpressionVectorParameter, -2000, y0 - 100)
         tint_p.set_editor_property("parameter_name", lname + "_Tint")
         tint_p.set_editor_property("default_value", unreal.LinearColor(tint[0], tint[1], tint[2], 1))
-        col = lerp(col_near, col_far, far_mix, -1900, y0, a_out="RGB", b_out="RGB")
+        col = lerp(col_near, col_far, far_mix, -1900, y0, b_out="RGB")
         col = op(unreal.MaterialExpressionMultiply, col, tint_p, x=-1700, y=y0)
         layers.append((col, rough, nrm, alpha(channel, y0 + 200) if channel else None))
 
@@ -380,7 +396,8 @@ def ground_instance(master):
     mi = instance("MI_RangeGround", GROUND_DIR, master)
     for lname, gkey, _ in GROUND_LAYERS:
         acg, tint, tiling = GROUND[gkey]
-        for param, kind in (("Color", "Color"), ("ColorFar", "Color"), ("Roughness", "Roughness"), ("Normal", "NormalGL")):
+        for param, kind in (("Color", "Color"), ("ColorTurned", "Color"), ("ColorFar", "Color"),
+                            ("Roughness", "Roughness"), ("Normal", "NormalGL")):
             tex = texture(acg, kind)
             if tex:
                 mel.set_material_instance_texture_parameter_value(mi, "%s_%s" % (lname, param), tex)

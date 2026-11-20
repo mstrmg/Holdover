@@ -177,7 +177,7 @@ void AHoldoverForestRange::UpdateRangeShots(float DeltaSeconds)
 		{ TEXT("07_in_the_forest"), -25.f, 30.f, 1.65f, 4.f, 35.f },
 		{ TEXT("08_path_arrival"), -20.f, -12.f, 1.65f, -2.f, 15.f },
 		{ TEXT("09_canopy_up"), -30.f, -40.f, 1.65f, 55.f, 60.f },
-		{ TEXT("10_overview"), -20.f, 16.f, 14.f, -24.f, -22.f },
+		{ TEXT("10_overview"), -11.f, 0.f, 20.f, -22.f, 0.f }, // above the cleared lane, clear of tree crowns
 	};
 	constexpr int32 NumSpots = UE_ARRAY_COUNT(Spots);
 	constexpr float Settle = 6.f; // seconds for light and eye adaptation to settle after each cut

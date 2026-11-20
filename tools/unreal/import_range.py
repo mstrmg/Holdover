@@ -87,6 +87,11 @@ def fbx_options(is_terrain):
 
 
 def import_fbx(path, dest, is_terrain):
+    if is_terrain:
+        # Re-importing over the old terrain keeps its old material slots, so start from scratch.
+        old = "%s/%s" % (dest, os.path.splitext(os.path.basename(path))[0])
+        if eal.does_asset_exist(old) and not eal.delete_asset(old):
+            log("WARNING could not delete %s; its material slots may be stale" % old)
     task = unreal.AssetImportTask()
     task.filename = path
     task.destination_path = dest
