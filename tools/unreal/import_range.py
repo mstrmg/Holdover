@@ -66,8 +66,10 @@ def fbx_options(is_terrain):
     setp(ui, "import_as_skeletal", False)
     setp(ui, "mesh_type_to_import", unreal.FBXImportType.FBXIT_STATIC_MESH)
     setp(ui, "import_animations", False)
-    setp(ui, "import_materials", True)   # props carry their CC0 texture references
-    setp(ui, "import_textures", True)
+    # Materials come from make_range_materials.py (matched by slot name); importing the FBX ones
+    # only leaves unsaved checker materials behind.
+    setp(ui, "import_materials", False)
+    setp(ui, "import_textures", False)
     setp(ui, "automated_import_should_detect_type", False)
     d = ui.get_editor_property("static_mesh_import_data")
     setp(d, "combine_meshes", True)
@@ -79,6 +81,8 @@ def fbx_options(is_terrain):
     setp(d, "convert_scene", True)
     setp(d, "convert_scene_unit", True)  # Blender metres -> cm
     setp(d, "import_uniform_scale", 1.0)
+    if is_terrain:  # the terrain's vertex colours say which surface is where
+        setp(d, "vertex_color_import_option", unreal.VertexColorImportOption.REPLACE)
     return ui
 
 

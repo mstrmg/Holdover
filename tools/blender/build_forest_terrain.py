@@ -12,8 +12,10 @@ Output:
 
 Blender axes: X downrange, Y to the shooter's LEFT (FBX import into Unreal flips Y, so it
 becomes Unreal's +Y = right), Z up, 1 Blender metre = 100 Unreal units.
-Material slots are named ForestFloor, LaneGrass, Gravel, DirtPath, BermEarth; the game swaps in
-MI_<slot name> from /Game/Range/Forest/Ground when those materials exist.
+The ground has one material slot, RangeGround (the game swaps in MI_RangeGround from
+/Game/Range/Forest/Ground). Which surface lies where is painted into the vertex colours, so the
+material can blend the surfaces softly instead of cutting them along triangle edges:
+    R = lane grass, G = gravel, B = dirt path, A = berm earth, the rest = forest floor.
 """
 import math
 import os
@@ -31,13 +33,11 @@ if "berm_height" not in globals():
 
 CELL = 0.6  # metres between ground vertices
 
-SURFACES = [  # slot name, viewport/base colour (sRGB-ish, used until Megascans materials exist)
-    ("ForestFloor", (0.20, 0.16, 0.10)),
-    ("LaneGrass", (0.27, 0.36, 0.13)),
-    ("Gravel", (0.48, 0.46, 0.42)),
-    ("DirtPath", (0.36, 0.27, 0.17)),
-    ("BermEarth", (0.38, 0.27, 0.17)),
-]
+MATERIAL = "RangeGround"
+BLEND = 0.6        # metres: surfaces fade into each other over about twice this
+SAMPLE = 0.3       # metres between surface samples used for the fade
+# Vertex colour channel per surface (FOREST is whatever is left over).
+CHANNEL = {GRASS: 0, GRAVEL: 1, DIRT: 2, EARTH: 3}
 
 
 def n3(x, y, z, scale):
@@ -89,15 +89,44 @@ def ground_height(x, y):
     return h
 
 
-def material(name, color):
-    mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
-    mat.diffuse_color = (*color, 1.0)
+def material():
+    """Single ground material; shows the vertex colours in Blender's viewport."""
+    mat = bpy.data.materials.get(MATERIAL) or bpy.data.materials.new(MATERIAL)
     mat.use_nodes = True
-    bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (*color, 1.0)
+    nt = mat.node_tree
+    bsdf = nt.nodes.get("Principled BSDF")
+    if bsdf and not bsdf.inputs["Base Color"].is_linked:
+        attr = nt.nodes.new("ShaderNodeVertexColor")
+        attr.layer_name = "SurfaceWeights"
+        nt.links.new(attr.outputs["Color"], bsdf.inputs["Base Color"])
         bsdf.inputs["Roughness"].default_value = 0.95
     return mat
+
+
+def surface_weights():
+    """Per-vertex surface weights: the share of each surface within BLEND metres, on a SAMPLE grid."""
+    sx = int(round((GROUND_AHEAD + GROUND_BEHIND) / SAMPLE))
+    sy = int(round(2 * GROUND_HALF_WIDTH / SAMPLE))
+    grid = [[surface_at(-GROUND_BEHIND + i * SAMPLE, -GROUND_HALF_WIDTH + j * SAMPLE) for i in range(sx + 1)]
+            for j in range(sy + 1)]
+    r = int(round(BLEND / SAMPLE))
+    step = int(round(CELL / SAMPLE))
+
+    def weights(i, j):
+        """i, j: vertex indices; returns (R, G, B, A)."""
+        ci, cj = i * step, j * step
+        acc = [0.0, 0.0, 0.0, 0.0]
+        n = 0
+        for dj in range(-r, r + 1):
+            row = grid[min(max(cj + dj, 0), sy)]
+            for di in range(-r, r + 1):
+                srf = row[min(max(ci + di, 0), sx)]
+                n += 1
+                c = CHANNEL.get(srf)
+                if c is not None:
+                    acc[c] += 1.0
+        return tuple(a / n for a in acc)
+    return weights
 
 
 def build():
@@ -110,15 +139,12 @@ def build():
             x = -GROUND_BEHIND + i * CELL
             # Blender Y is the shooter's left, so it is minus the layout's y.
             verts.append((x, -y, ground_height(x, y)))
-    faces, mats = [], []
+    faces = []
     for j in range(ny):
         for i in range(nx):
             a = j * (nx + 1) + i
             # Rows run toward Blender -Y (layout +y), so this order is counter-clockwise from above (normal up).
             faces.append((a, a + nx + 1, a + nx + 2, a + 1))
-            x = -GROUND_BEHIND + (i + 0.5) * CELL
-            y = -GROUND_HALF_WIDTH + (j + 0.5) * CELL
-            mats.append(surface_at(x, y))
 
     old = bpy.data.objects.get("SM_ForestTerrain")
     if old:
@@ -129,10 +155,18 @@ def build():
 
     me = bpy.data.meshes.new("SM_ForestTerrain")
     me.from_pydata(verts, [], faces)
-    for name, color in SURFACES:
-        me.materials.append(material(name, color))
-    me.polygons.foreach_set("material_index", mats)
+    me.materials.append(material())
     me.polygons.foreach_set("use_smooth", [True] * len(faces))
+
+    # Surface weights in linear vertex colours (exported as-is with colors_type="LINEAR").
+    weights = surface_weights()
+    col = me.color_attributes.new(name="SurfaceWeights", type="FLOAT_COLOR", domain="POINT")
+    flat = []
+    for j in range(ny + 1):
+        for i in range(nx + 1):
+            flat.extend(weights(i, j))
+    col.data.foreach_set("color", flat)
+    me.color_attributes.active_color = col
 
     # World-space UVs: ground textures repeat every 2 m.
     uv = me.uv_layers.new(name="UVMap")
@@ -160,7 +194,8 @@ def export(ob):
     vl.objects.active = ob
     path = os.path.join(OUT_DIR, "SM_ForestTerrain.fbx")
     bpy.ops.export_scene.fbx(filepath=path, use_selection=True, object_types={"MESH"}, apply_scale_options="FBX_SCALE_ALL",
-                             axis_forward="X", axis_up="Z", mesh_smooth_type="FACE", use_tspace=True, path_mode="STRIP")
+                             axis_forward="X", axis_up="Z", mesh_smooth_type="FACE", use_tspace=True, path_mode="STRIP",
+                             colors_type="LINEAR")
     return path
 
 

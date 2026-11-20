@@ -8,11 +8,16 @@ What it does:
 2. Makes two master materials in /Game/Range/Materials: M_RangeSurface (colour, roughness, normal,
    metalness textures with tint and tiling) and M_RangeFlat (plain colour).
 3. Makes one material instance per Blender material (MI_Wood_Weathered, MI_Sign_Text...) and
-   five ground instances for the terrain (MI_ForestFloor, MI_LaneGrass, MI_Gravel, MI_DirtPath,
-   MI_BermEarth in /Game/Range/Forest/Ground, which the game picks up by name).
-4. Assigns them to every static mesh under /Game/Range by material slot name.
+   five ground instances (MI_ForestFloor, MI_LaneGrass, MI_Gravel, MI_DirtPath, MI_BermEarth in
+   /Game/Range/Forest/Ground) used by the game's own ground when there is no Blender terrain.
+4. Makes M_RangeGround, the Blender terrain's material: it blends the five ground surfaces by the
+   terrain's vertex colours (R grass, G gravel, B dirt, A berm earth, rest forest floor), breaks the
+   borders up with noise so they are not straight lines, and mixes in a large-scale copy of each
+   texture plus slow light/dark patches so the 2 m texture repeat is hard to see. Its instance is
+   MI_RangeGround in /Game/Range/Forest/Ground (the game picks it up by the terrain's slot name).
+5. Assigns them to every static mesh under /Game/Range by material slot name.
 
-Megascans surfaces can replace the ground instances later: just make MI_<Surface> point at them.
+Megascans surfaces can replace the ground textures later: change the layer textures on MI_RangeGround.
 """
 import os
 import re
@@ -57,7 +62,7 @@ FLAT = {
 # Terrain surfaces (slot names of SM_ForestTerrain) -> (ambientCG id, tint, tiling). Terrain UVs repeat every 2 m.
 GROUND = {
     "ForestFloor": ("ScatteredLeaves009", (0.62, 0.62, 0.55), 1.0),  # last year's leaves, darkened for shade
-    "LaneGrass": ("Ground037", (0.55, 0.75, 0.45), 1.0),             # short mossy grass, pushed greener
+    "LaneGrass": ("Ground037", (0.42, 0.52, 0.33), 1.0),             # short mown grass, kept dull (v2 read as lime)
     "Gravel": ("Gravel042", (0.9, 0.9, 0.9), 1.5),
     "DirtPath": ("Ground068", (0.85, 0.82, 0.78), 1.0),
     "BermEarth": ("Ground076", (0.85, 0.8, 0.75), 1.0),
@@ -225,6 +230,167 @@ def make_flat_master():
     return mat
 
 
+# ---------------------------------------------------------------- blended terrain
+# Layer order in M_RangeGround: forest floor is the base, the others are laid over it by vertex colour.
+GROUND_LAYERS = [  # (layer name, GROUND key, vertex colour channel or None for the base)
+    ("Forest", "ForestFloor", None),
+    ("Earth", "BermEarth", "A"),
+    ("Grass", "LaneGrass", "R"),
+    ("Dirt", "DirtPath", "B"),
+    ("Gravel", "Gravel", "G"),
+]
+
+
+def make_ground_master():
+    """M_RangeGround: five-surface vertex-colour blend with broken edges and anti-tiling. Rebuilt every run."""
+    mat = existing("M_RangeGround")
+    if mat:
+        mel.delete_all_material_expressions(mat)  # rebuild the graph in place; MI_RangeGround keeps pointing at it
+    else:
+        mat = new_material("M_RangeGround")
+    E = mel.create_material_expression
+    con = mel.connect_material_expressions
+    ST = unreal.MaterialSamplerType
+    shared = unreal.SamplerSourceMode.SSM_WRAP_WORLD_GROUP_SETTINGS  # 20 textures, past the 16-sampler limit
+    X = [-3000]  # running column for tidy layout
+
+    def scalar(name, value, x, y):
+        e = E(mat, unreal.MaterialExpressionScalarParameter, x, y)
+        e.set_editor_property("parameter_name", name)
+        e.set_editor_property("default_value", value)
+        return e
+
+    def op(cls, a, b=None, x=0, y=0, const_b=None, a_out="", b_out=""):
+        e = E(mat, cls, x, y)
+        con(a, a_out, e, "A")
+        if b is not None:
+            con(b, b_out, e, "B")
+        elif const_b is not None:
+            e.set_editor_property("const_b", const_b)
+        return e
+
+    def one_input(cls, src, x, y, src_out=""):
+        e = E(mat, cls, x, y)
+        con(src, src_out, e, "")
+        return e
+
+    def lerp(a, b, alpha, x, y, a_out="", b_out=""):
+        e = E(mat, unreal.MaterialExpressionLinearInterpolate, x, y)
+        con(a, a_out, e, "A")
+        con(b, b_out, e, "B")
+        con(alpha, "", e, "Alpha")
+        return e
+
+    # World position in metres (x, y) feeds the noises.
+    wp = E(mat, unreal.MaterialExpressionWorldPosition, -3000, -1400)
+    wxy = E(mat, unreal.MaterialExpressionComponentMask, -2800, -1400)
+    wxy.set_editor_property("r", True)
+    wxy.set_editor_property("g", True)
+    wxy.set_editor_property("b", False)
+    wxy.set_editor_property("a", False)
+    con(wp, "", wxy, "")
+    metres = op(unreal.MaterialExpressionDivide, wxy, x=-2600, y=-1400, const_b=100.0)
+
+    def noise(scale_m, levels, y):
+        n = E(mat, unreal.MaterialExpressionNoise, -2200, y)
+        n.set_editor_property("scale", 1.0 / scale_m)
+        n.set_editor_property("levels", levels)
+        n.set_editor_property("output_min", 0.0)
+        n.set_editor_property("output_max", 1.0)
+        n.set_editor_property("quality", 1)
+        con(metres, "", n, "Position")
+        return n
+
+    edge_noise = noise(0.9, 3, -1600)    # breaks surface borders up
+    macro_noise = noise(9.0, 2, -1300)   # slow light/dark patches and the far-texture mix
+
+    edge_amount = scalar("EdgeNoise", 0.7, -2200, -1900)
+    contrast = scalar("EdgeSharpness", 3.0, -2200, -1800)
+    macro_mix = scalar("FarTextureMix", 0.45, -2200, -1150)
+    macro_dark = scalar("PatchDarkness", 0.22, -2200, -1050)
+    far_scale = scalar("FarTextureScale", 0.21, -2200, -950)
+
+    # Alpha for a layer: saturate((w + (n - 0.5) * EdgeNoise - 0.5) * EdgeSharpness + 0.5)
+    centred = op(unreal.MaterialExpressionSubtract, edge_noise, x=-1900, y=-1600, const_b=0.5)
+    jitter = op(unreal.MaterialExpressionMultiply, centred, edge_amount, x=-1700, y=-1600)
+    vc = E(mat, unreal.MaterialExpressionVertexColor, -1900, -2000)
+
+    def alpha(channel, y):
+        a = op(unreal.MaterialExpressionAdd, vc, jitter, x=-1500, y=y, a_out=channel)
+        a = op(unreal.MaterialExpressionSubtract, a, x=-1350, y=y, const_b=0.5)
+        a = op(unreal.MaterialExpressionMultiply, a, contrast, x=-1200, y=y)
+        a = op(unreal.MaterialExpressionAdd, a, x=-1050, y=y, const_b=0.5)
+        return one_input(unreal.MaterialExpressionSaturate, a, -900, y)
+
+    uv = E(mat, unreal.MaterialExpressionTextureCoordinate, -3000, 0)
+    far_mix = op(unreal.MaterialExpressionMultiply, macro_noise, macro_mix, x=-1900, y=-1150)
+    # Brightness patches: 1 - PatchDarkness * noise
+    dark = op(unreal.MaterialExpressionMultiply, macro_noise, macro_dark, x=-1900, y=-1050)
+    patches = one_input(unreal.MaterialExpressionOneMinus, dark, -1700, -1050)
+
+    layers = []
+    for i, (lname, gkey, channel) in enumerate(GROUND_LAYERS):
+        acg, tint, tiling = GROUND[gkey]
+        y0 = i * 700
+        til = scalar(lname + "_Tiling", tiling, -2800, y0)
+        luv = op(unreal.MaterialExpressionMultiply, uv, til, x=-2600, y=y0)
+        fuv = op(unreal.MaterialExpressionMultiply, luv, far_scale, x=-2600, y=y0 + 120)
+
+        def sampler(param, stype, tex, uvs, y, _l=lname):
+            s = E(mat, unreal.MaterialExpressionTextureSampleParameter2D, -2300, y)
+            s.set_editor_property("parameter_name", "%s_%s" % (_l, param))
+            s.set_editor_property("sampler_type", stype)
+            s.set_editor_property("sampler_source", shared)
+            s.set_editor_property("texture", tex)
+            con(uvs, "", s, "UVs")
+            return s
+
+        col_near = sampler("Color", ST.SAMPLERTYPE_COLOR, texture(acg, "Color"), luv, y0)
+        col_far = sampler("ColorFar", ST.SAMPLERTYPE_COLOR, texture(acg, "Color"), fuv, y0 + 150)
+        rough = sampler("Roughness", ST.SAMPLERTYPE_MASKS, texture(acg, "Roughness"), luv, y0 + 300)
+        nrm = sampler("Normal", ST.SAMPLERTYPE_NORMAL, texture(acg, "NormalGL"), luv, y0 + 450)
+        tint_p = E(mat, unreal.MaterialExpressionVectorParameter, -2000, y0 - 100)
+        tint_p.set_editor_property("parameter_name", lname + "_Tint")
+        tint_p.set_editor_property("default_value", unreal.LinearColor(tint[0], tint[1], tint[2], 1))
+        col = lerp(col_near, col_far, far_mix, -1900, y0, a_out="RGB", b_out="RGB")
+        col = op(unreal.MaterialExpressionMultiply, col, tint_p, x=-1700, y=y0)
+        layers.append((col, rough, nrm, alpha(channel, y0 + 200) if channel else None))
+
+    base_col, base_rough, base_nrm, _ = layers[0]
+    col, rough, nrm = base_col, base_rough, base_nrm
+    rough_out, nrm_out = "R", "RGB"
+    for i, (lc, lr, ln, la) in enumerate(layers[1:], start=1):
+        x = -700 + i * 120
+        col = lerp(col, lc, la, x, -400)
+        rough = lerp(rough, lr, la, x, 0, a_out=rough_out, b_out="R")
+        nrm = lerp(nrm, ln, la, x, 400, a_out=nrm_out, b_out="RGB")
+        rough_out, nrm_out = "", ""
+    col = op(unreal.MaterialExpressionMultiply, col, patches, x=0, y=-400)
+
+    mel.connect_material_property(col, "", MP.MP_BASE_COLOR)
+    mel.connect_material_property(rough, "", MP.MP_ROUGHNESS)
+    mel.connect_material_property(nrm, "", MP.MP_NORMAL)
+    set_usages(mat)
+    mel.recompile_material(mat)
+    eal.save_loaded_asset(mat)
+    return mat
+
+
+def ground_instance(master):
+    mi = instance("MI_RangeGround", GROUND_DIR, master)
+    for lname, gkey, _ in GROUND_LAYERS:
+        acg, tint, tiling = GROUND[gkey]
+        for param, kind in (("Color", "Color"), ("ColorFar", "Color"), ("Roughness", "Roughness"), ("Normal", "NormalGL")):
+            tex = texture(acg, kind)
+            if tex:
+                mel.set_material_instance_texture_parameter_value(mi, "%s_%s" % (lname, param), tex)
+        mel.set_material_instance_vector_parameter_value(mi, lname + "_Tint", unreal.LinearColor(tint[0], tint[1], tint[2], 1))
+        mel.set_material_instance_scalar_parameter_value(mi, lname + "_Tiling", tiling)
+    mel.update_material_instance(mi)
+    eal.save_loaded_asset(mi)
+    return mi
+
+
 def instance(name, folder, parent):
     ensure_dir(folder)
     path = "%s/%s" % (folder, name)
@@ -277,6 +443,10 @@ def main():
         by_slot[name] = flat_instance("MI_" + name, MAT_DIR, flat, color, rough, metal)
     for name, (acg, tint, tiling) in GROUND.items():
         by_slot[name] = textured_instance("MI_" + name, GROUND_DIR, surface, acg, tint, tiling, 0.0)
+    if all(texture(GROUND[k][0], kind) for _, k, _ in GROUND_LAYERS for kind in ("Color", "Roughness", "NormalGL")):
+        by_slot["RangeGround"] = ground_instance(make_ground_master())
+    else:
+        log("ERROR missing ground textures, MI_RangeGround not made")
     log("made %d material instances" % len(by_slot))
 
     unmatched = set()
