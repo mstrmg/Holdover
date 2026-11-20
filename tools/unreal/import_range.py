@@ -72,7 +72,10 @@ def fbx_options(is_terrain):
     d = ui.get_editor_property("static_mesh_import_data")
     setp(d, "combine_meshes", True)
     setp(d, "auto_generate_collision", not is_terrain)
-    setp(d, "import_mesh_lo_ds", True)    # rocks, logs and stumps carry a LOD1
+    try:  # rocks, logs and stumps carry a LOD1 (the property was renamed in 5.8)
+        d.set_editor_property("import_mesh_lods", True)
+    except Exception:  # noqa
+        setp(d, "import_mesh_lo_ds", True)
     setp(d, "convert_scene", True)
     setp(d, "convert_scene_unit", True)  # Blender metres -> cm
     setp(d, "import_uniform_scale", 1.0)
