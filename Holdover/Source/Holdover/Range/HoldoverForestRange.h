@@ -156,6 +156,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
 	float EyeAdaptSpeedDown = 0.8f;
 
+	virtual void Tick(float DeltaSeconds) override;
+
 protected:
 	virtual void BuildGeometry() override;
 	virtual void SpawnLightingIfMissing() override;
@@ -194,6 +196,14 @@ private:
 	TArray<UStaticMesh*> MeshesIn(const FString& Folder) const;
 	UStaticMesh* FindMesh(const FString& Folder, const TArray<FString>& Names) const;
 	UMaterialInterface* FindMaterial(const FString& Folder, const TArray<FString>& Names) const;
+
+	// Check pictures (holdover.RangeShots)
+	void UpdateRangeShots(float DeltaSeconds);
+	float ShotClock = 0.f;
+	int32 ShotStep = 0;
+
+	UPROPERTY(Transient)
+	TObjectPtr<AActor> ShotCamera;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UProceduralMeshComponent> GroundMesh;

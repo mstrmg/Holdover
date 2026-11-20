@@ -5,7 +5,7 @@ Run headless:
 or from the editor: Tools > Execute Python Script.
 
 Source files (on Miles's PC, next to the repo):
-  art/props/*.fbx                    -> /Game/Range/Props/        (benches, stools, signs, ammo can...)
+  art/props/<prop>/*.fbx             -> /Game/Range/Props/        (benches, stools, signs, ammo can...)
   art/props/forest/*.fbx             -> /Game/Range/Forest/Kit/   (rocks, logs, stumps, branches)
   art/range/forest/SM_ForestTerrain.fbx (Blender terrain, optional) -> /Game/Range/Forest/Ground/
 
@@ -27,10 +27,11 @@ ART = os.environ.get("HOLDOVER_ART", os.path.normpath(os.path.join(HERE, "..", "
 if not os.path.isdir(ART):
     ART = r"D:\Claude area\Holdover\art"
 
+# (glob pattern, destination, is terrain). Props sit one folder deep (art/props/shooting_bench/SM_ShootingBench.fbx).
 SOURCES = [
-    (os.path.join(ART, "props"), "/Game/Range/Props", False),
-    (os.path.join(ART, "props", "forest"), "/Game/Range/Forest/Kit", False),
-    (os.path.join(ART, "range", "forest"), "/Game/Range/Forest/Ground", True),
+    (os.path.join(ART, "props", "*", "*.fbx"), "/Game/Range/Props", False),
+    (os.path.join(ART, "props", "forest", "*.fbx"), "/Game/Range/Forest/Kit", False),
+    (os.path.join(ART, "range", "forest", "*.fbx"), "/Game/Range/Forest/Ground", True),
 ]
 PLANT_FOLDERS = ["/Game/Range/Forest/Trees", "/Game/Range/Forest/Saplings",
                  "/Game/Range/Forest/Plants", "/Game/Range/Forest/Grass"]
@@ -102,6 +103,13 @@ def finish_mesh(obj_path, is_terrain):
         body = mesh.get_editor_property("body_setup")
         if body:
             setp(body, "collision_trace_flag", unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
+        # Nanite keeps the 210k-triangle ground cheap and gives Lumen a good surface to light.
+        try:
+            ns = mesh.get_editor_property("nanite_settings")
+            ns.enabled = True
+            mesh.set_editor_property("nanite_settings", ns)
+        except Exception as e:  # noqa
+            log("nanite not set on terrain: %s" % e)
     eal.save_loaded_asset(mesh)
 
 
@@ -113,10 +121,11 @@ def main():
             log("made folder " + folder)
 
     imported = []
-    for src, dest, is_terrain in SOURCES:
-        files = sorted(glob.glob(os.path.join(src, "*.fbx")))
+    for pattern, dest, is_terrain in SOURCES:
+        files = sorted(f for f in glob.glob(pattern)
+                       if dest != "/Game/Range/Props" or os.sep + "forest" + os.sep not in f)
         if not files:
-            log("nothing to import in " + src)
+            log("nothing to import for " + pattern)
             continue
         for f in files:
             for p in import_fbx(f, dest, is_terrain):

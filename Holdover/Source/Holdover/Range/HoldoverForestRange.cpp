@@ -2,6 +2,8 @@
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetRegistry/IAssetRegistry.h"
+#include "Camera/CameraActor.h"
+#include "Camera/CameraComponent.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
@@ -9,6 +11,7 @@
 #include "Components/SkyLightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
+#include "Core/HoldoverDebug.h"
 #include "Core/HoldoverShapes.h"
 #include "Core/HoldoverTypes.h"
 #include "Engine/DirectionalLight.h"
@@ -17,6 +20,13 @@
 #include "Engine/SkyLight.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
+#include "Misc/Paths.h"
+#include "UnrealClient.h"
+#if WITH_EDITOR
+#include "ShaderCompiler.h"
+#endif
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "Math/RotationMatrix.h"
@@ -124,6 +134,111 @@ AHoldoverForestRange::AHoldoverForestRange()
 {
 	// Everything here stays put: static lets Lumen and the shadow cache treat it cheaply.
 	Root->SetMobility(EComponentMobility::Static);
+
+	// Ticks only to serve holdover.RangeShots; otherwise it returns at once.
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.TickInterval = 0.1f;
+}
+
+void AHoldoverForestRange::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	UpdateRangeShots(DeltaSeconds);
+}
+
+void AHoldoverForestRange::UpdateRangeShots(float DeltaSeconds)
+{
+	const int32 Mode = HoldoverDebug::RangeShots();
+	UWorld* World = GetWorld();
+	APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+	if (Mode <= 0 || !PC)
+	{
+		return;
+	}
+#if WITH_EDITOR
+	// Wait until materials have finished compiling, or the pictures show grey stand-in materials.
+	if (GShaderCompilingManager && GShaderCompilingManager->GetNumRemainingJobs() > 0)
+	{
+		return;
+	}
+#endif
+	ShotClock += DeltaSeconds;
+
+	// Spots in metres (actor space) with eye height above the ground, and where to look.
+	struct FSpot { const TCHAR* Name; float X, Y, Up, Pitch, Yaw; };
+	static const FSpot Spots[] = {
+		{ TEXT("01_firing_line"), -1.5f, 0.f, 1.65f, -2.f, 0.f },
+		{ TEXT("02_left_signs"), -1.5f, 0.f, 1.65f, -4.f, -38.f },
+		{ TEXT("03_right_edge"), -1.5f, 0.f, 1.65f, 0.f, 55.f },
+		{ TEXT("04_benches"), -4.f, -2.f, 1.65f, -18.f, 30.f },
+		{ TEXT("05_walkway_back"), 25.f, -10.f, 1.65f, -2.f, 180.f },
+		{ TEXT("06_backstop"), 46.f, -3.f, 1.65f, 2.f, 8.f },
+		{ TEXT("07_in_the_forest"), -25.f, 30.f, 1.65f, 4.f, 35.f },
+		{ TEXT("08_path_arrival"), -20.f, -12.f, 1.65f, -2.f, 15.f },
+		{ TEXT("09_canopy_up"), -30.f, -40.f, 1.65f, 55.f, 60.f },
+		{ TEXT("10_overview"), -20.f, 16.f, 14.f, -24.f, -22.f },
+	};
+	constexpr int32 NumSpots = UE_ARRAY_COUNT(Spots);
+	constexpr float Settle = 6.f; // seconds for light and eye adaptation to settle after each cut
+
+	if (ShotStep == 0)
+	{
+		// Hide yourself (body, gun) so the pictures show only the range.
+		if (APawn* Pawn = PC->GetPawn())
+		{
+			TArray<AActor*> Attached;
+			Pawn->GetAttachedActors(Attached, true, true);
+			Pawn->SetActorHiddenInGame(true);
+			for (AActor* A : Attached)
+			{
+				A->SetActorHiddenInGame(true);
+			}
+		}
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		ACameraActor* Cam = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), FTransform::Identity, Params);
+		if (Cam)
+		{
+			Cam->GetCameraComponent()->SetFieldOfView(90.f);
+			Cam->GetCameraComponent()->SetConstraintAspectRatio(false);
+			PC->SetViewTarget(Cam);
+			ShotCamera = Cam;
+		}
+		ShotStep = 1;
+		ShotClock = 0.f;
+	}
+
+	// Step 2k-1: move the camera to spot k. Step 2k: after the settle time, take its picture.
+	const int32 Spot = (ShotStep - 1) / 2;
+	if (Spot >= NumSpots)
+	{
+		if (Mode == 1)
+		{
+			HoldoverDebug::CVarRangeShots->Set(0, ECVF_SetByConsole);
+			PC->ConsoleCommand(TEXT("quit"));
+		}
+		return;
+	}
+	const FSpot& S = Spots[Spot];
+	if ((ShotStep % 2) == 1)
+	{
+		if (ShotCamera)
+		{
+			const FVector Local(S.X * 100.f, S.Y * 100.f, GroundHeight(S.X * 100.f, S.Y * 100.f) + S.Up * 100.f);
+			ShotCamera->SetActorLocationAndRotation(GetActorTransform().TransformPosition(Local),
+				(GetActorRotation().Quaternion() * FRotator(S.Pitch, S.Yaw, 0.f).Quaternion()).Rotator());
+		}
+		ShotClock = 0.f;
+		++ShotStep;
+	}
+	else if (ShotClock >= Settle)
+	{
+		const FString File = FPaths::ProjectSavedDir() / TEXT("Screenshots/range") / (FString(S.Name) + TEXT(".png"));
+		FScreenshotRequest::RequestScreenshot(File, false, false);
+		UE_LOG(LogTemp, Log, TEXT("[Holdover] Range shot %s"), *File);
+		ShotClock = 0.f;
+		++ShotStep;
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -315,6 +430,17 @@ void AHoldoverForestRange::BuildGround()
 		C->RegisterComponent();
 		AddInstanceComponent(C);
 		ImportedGround = C;
+
+		// The Blender terrain's material slots are named after the surfaces (ForestFloor, LaneGrass...).
+		// Swap in the Megascans-based MI_<slot> materials when they exist.
+		const TArray<FStaticMaterial>& Slots = Terrain->GetStaticMaterials();
+		for (int32 i = 0; i < Slots.Num(); ++i)
+		{
+			if (UMaterialInterface* Mat = FindMaterial(GroundFolder, { TEXT("MI_") + Slots[i].MaterialSlotName.ToString() }))
+			{
+				C->SetMaterial(i, Mat);
+			}
+		}
 	}
 	else
 	{
@@ -895,8 +1021,9 @@ void AHoldoverForestRange::StandInSign(const FVector& LocM, float YawDeg, float 
 
 void AHoldoverForestRange::PlaceRangeProps()
 {
-	// The yaw that makes a prop face the shooter (its front pointing back up the range).
-	constexpr float FaceShooter = 180.f;
+	// The yaw that makes an imported prop face the shooter. The Blender props are built long along X with
+	// their front (sign faces, lettering) toward Blender -Y, which arrives in Unreal as +Y; 90 turns that to -X.
+	constexpr float FaceShooter = 90.f;
 	auto Text = [this](const FString& Label, const FVector& Where, float YawDeg, float Size, const FColor& Color)
 	{
 		UTextRenderComponent* T = NewObject<UTextRenderComponent>(this);
@@ -967,7 +1094,7 @@ void AHoldoverForestRange::PlaceRangeProps()
 	}
 
 	// Resting bench in the little clearing behind the pad.
-	if (!PlaceProp({ TEXT("SM_BenchSeat"), TEXT("SM_Seat") }, FVector(-10.f, 4.f, 0.f), 0.f))
+	if (!PlaceProp({ TEXT("SM_BenchSeat"), TEXT("SM_Seat") }, FVector(-10.f, 4.f, 0.f), FaceShooter))
 	{
 		const FVector G = OnGround(-10.f, 4.f);
 		HoldoverShapes::AddShape(this, Root, HoldoverShapes::Cube(), G + FVector(0, 0, 45.f), FRotator::ZeroRotator, FVector(35.f, 180.f, 5.f), HoldoverShapes::Wood, true);
@@ -986,20 +1113,20 @@ void AHoldoverForestRange::PlaceRangeProps()
 	{
 		const FVector At(static_cast<float>(D), -LaneHalfWidth + 1.f, 1.1f);
 		const FString Id = FString::FromInt(D);
-		if (!PlaceProp({ TEXT("SM_Sign_") + Id + TEXT("m"), TEXT("SM_DistanceSign_") + Id, TEXT("SM_Sign_") + Id }, At, FaceShooter))
+		if (!PlaceProp({ TEXT("SM_DistanceMarker_") + Id + TEXT("m"), TEXT("SM_Sign_") + Id + TEXT("m") }, FVector(At.X, At.Y, 0.f), FaceShooter))
 		{
-			Lettered(At, FaceShooter, 50.f, 35.f, HoldoverShapes::White, Id + TEXT(" m"), 22.f, FColor(10, 10, 10));
+			Lettered(At, 180.f, 50.f, 35.f, HoldoverShapes::White, Id + TEXT(" m"), 22.f, FColor(10, 10, 10));
 		}
 	}
 
 	// Range signs: FIRING LINE at the side of the pad, CEASE FIRE where the path arrives.
-	if (!PlaceProp({ TEXT("SM_Sign_FiringLine"), TEXT("SM_FiringLineSign") }, FVector(0.f, -LaneHalfWidth - 0.6f, 1.6f), FaceShooter))
+	if (!PlaceProp({ TEXT("SM_Sign_FiringLine"), TEXT("SM_FiringLineSign") }, FVector(0.f, -LaneHalfWidth - 0.6f, 0.f), FaceShooter))
 	{
-		Lettered(FVector(0.f, -LaneHalfWidth - 0.6f, 1.6f), FaceShooter, 110.f, 30.f, FLinearColor(0.75f, 0.62f, 0.05f), TEXT("FIRING LINE"), 16.f, FColor(10, 10, 10));
+		Lettered(FVector(0.f, -LaneHalfWidth - 0.6f, 1.6f), 180.f, 110.f, 30.f, FLinearColor(0.75f, 0.62f, 0.05f), TEXT("FIRING LINE"), 16.f, FColor(10, 10, 10));
 	}
-	if (!PlaceProp({ TEXT("SM_Sign_CeaseFire"), TEXT("SM_CeaseFireSign") }, FVector(-8.5f, -9.f, 1.6f), FaceShooter + 25.f))
+	if (!PlaceProp({ TEXT("SM_Sign_CeaseFire"), TEXT("SM_CeaseFireSign") }, FVector(-8.5f, -9.f, 0.f), FaceShooter + 25.f))
 	{
-		Lettered(FVector(-8.5f, -9.f, 1.6f), FaceShooter + 25.f, 100.f, 30.f, FLinearColor(0.6f, 0.04f, 0.03f), TEXT("CEASE FIRE"), 16.f, FColor(235, 235, 235));
+		Lettered(FVector(-8.5f, -9.f, 1.6f), 205.f, 100.f, 30.f, FLinearColor(0.6f, 0.04f, 0.03f), TEXT("CEASE FIRE"), 16.f, FColor(235, 235, 235));
 	}
 }
 
