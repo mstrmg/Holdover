@@ -24,6 +24,10 @@ Known rough spots: log and stump cut ends use the same bark texture as the sides
    - **Quixel Megascans** (free): a mossy forest-floor surface, a bark surface, and a few scanned rocks and logs for close-up variety.
 3. After each add, tell Claude the exact asset names so they are logged in `docs/ASSETS.md`.
 
+## Where the forest range looks for them
+
+The forest range (see [maps/FOREST_RANGE.md](maps/FOREST_RANGE.md)) uses every mesh it finds in these Unreal folders, so adding plants is just a matter of putting them there: `/Game/Range/Forest/Trees` (big trees), `Saplings` (young trees), `Plants` (ferns, bushes), `Grass` (grass clumps), `Kit` (the Blender rocks, logs and stumps above), `Ground` (terrain and ground materials). Claude can do the sorting once the Fab assets are in the project.
+
 ## Performance notes (Ryzen 5 3600, 16 GB RAM)
 
 - Keep foliage density modest and use the LOD meshes; CPU and RAM are the bottlenecks.

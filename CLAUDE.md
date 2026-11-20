@@ -55,6 +55,7 @@ Explain everything to Miles in plain language. When he must do something on his 
 - `docs/CONTROLS.md`: the key layout.
 - `docs/ROADMAP.md`: the ordered coding backlog with status.
 - `docs/DECISIONS.md`: gameplay choices made without Miles's yes, for him to review.
+- `docs/maps/FOREST_RANGE.md`: the forest range layout, how it is built, and the PC steps for its art.
 
 ## Plan
 

@@ -3,8 +3,10 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/HoldoverCharacter.h"
 #include "Player/HoldoverPlayerController.h"
+#include "Range/HoldoverForestRange.h"
 #include "Range/HoldoverRangeBuilder.h"
 #include "Weapons/HoldoverDebrisSubsystem.h"
 #include "Weapons/HoldoverLoosePiece.h"
@@ -19,6 +21,16 @@ AHoldoverGameMode::AHoldoverGameMode()
 void AHoldoverGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
+
+	const FString RangeOption = UGameplayStatics::ParseOption(Options, TEXT("Range"));
+	if (RangeOption.Equals(TEXT("Gray"), ESearchCase::IgnoreCase) || RangeOption.Equals(TEXT("Grey"), ESearchCase::IgnoreCase))
+	{
+		bForestRange = false;
+	}
+	else if (RangeOption.Equals(TEXT("Forest"), ESearchCase::IgnoreCase))
+	{
+		bForestRange = true;
+	}
 }
 
 AHoldoverRangeBuilder* AHoldoverGameMode::EnsureRange()
@@ -43,7 +55,8 @@ AHoldoverRangeBuilder* AHoldoverGameMode::EnsureRange()
 	}
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	Range = World->SpawnActor<AHoldoverRangeBuilder>(AHoldoverRangeBuilder::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
+	UClass* RangeClass = bForestRange ? AHoldoverForestRange::StaticClass() : AHoldoverRangeBuilder::StaticClass();
+	Range = World->SpawnActor<AHoldoverRangeBuilder>(RangeClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
 	return Range;
 }
 
@@ -56,7 +69,7 @@ AActor* AHoldoverGameMode::ChoosePlayerStart_Implementation(AController* Player)
 		return *It;
 	}
 
-	// Otherwise stand at the gray-box range's firing line.
+	// Otherwise stand at the built range's firing line.
 	if (AHoldoverRangeBuilder* R = EnsureRange())
 	{
 		FActorSpawnParameters Params;

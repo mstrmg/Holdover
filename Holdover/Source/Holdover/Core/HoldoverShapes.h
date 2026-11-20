@@ -18,6 +18,7 @@ namespace HoldoverShapes
 	HOLDOVER_API UStaticMesh* Cube();
 	HOLDOVER_API UStaticMesh* Cylinder(); // axis along local Z
 	HOLDOVER_API UStaticMesh* Sphere();
+	HOLDOVER_API UStaticMesh* Cone(); // apex along local +Z
 	HOLDOVER_API UMaterialInterface* BaseMaterial();
 
 	/**

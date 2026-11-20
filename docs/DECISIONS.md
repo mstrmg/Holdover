@@ -35,3 +35,16 @@ On 2026-11-19 Miles asked for a big plan worked through without waiting for him.
 ## The test range
 20. Until the forest exists, the game builds a gray range by itself in an empty map: flat ground, 3 m side walls, a dirt berm at the back, a firing line, a bench and distance posts, with sun, sky and light fog.
 21. You start standing at the firing line.
+
+## The forest range
+Asked for on 2026-11-19 ("Go" on starting the map). Layout and look are in [maps/FOREST_RANGE.md](maps/FOREST_RANGE.md).
+22. The forest range is now what you get when you press Play. The gray range is still there for testing: `open /Engine/Maps/Entry?Range=Gray`.
+23. Layout: a 26 m wide mown lane, gravel firing pad with a timber beam as the firing line, earth berms (now about 1.8 m, varying) along both sides, a 5 m backstop berm starting at 56 m, a dirt walkway down the left side to go look at targets, and a path into the woods behind-left.
+24. Targets did not change: paper at 5, 7, 10, 15, 25 and 50 m, in the same spots as the gray range.
+25. Three benches on the firing line: yours to your right with an ammo can on it, two empty bays with stools and a sandbag rest. Distance signs at 5, 10, 25 and 50 m; FIRING LINE and CEASE FIRE signs.
+26. No steel, poppers or barricade yet: they would look shootable without reacting. They come with the targets milestone.
+27. Summer mid-afternoon: sun 52 degrees high from behind-left, so you never aim into it. Real sunlight strength, slight haze with sun rays through the leaves.
+28. Eye adaptation: your view brightens in shade and darkens in sun, quicker toward bright than toward dark (2 and 0.8 stops a second). No vignette, soft bloom only.
+29. Forest: big trees about 6 m apart, 15 to 24 m tall with a few bigger old ones, bare trunks low and leafy above; young trees and ferns thickest at the sunny edge of the clearing; rocks, logs, stumps and branches on the floor. Every tree differs in size, lean and turn. The same forest grows every time.
+30. Range length (Miles asked for it 3 to 4 times longer, 2026-11-20): the backstop now starts at about 190 m instead of 56 m. To use the extra length, paper targets were added at 75, 100 and 150 m (the near ones stay), with distance signs at 75, 100 and 150 m. The gray test range is unchanged.
+31. "Not as defined" (Miles, 2026-11-20): the lane edge, side berm height and width, the backstop toe and the tree line all wander along the range instead of running straight; ground surfaces fade into each other; tall grass thins out gradually into the lane; ferns and young trees grow on the berm backs and in the strip before the tree line. The strip in front of the targets (about 8 m each side of the centre) stays clear so you can see them.
