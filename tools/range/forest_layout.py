@@ -16,7 +16,7 @@ GROUND_HALF_WIDTH = 90.0   # and Y = -90 .. +90
 LANE_HALF_WIDTH = 13.0     # mown lane floor between the side berms
 BACK_BERM_TOE = 190.0     # range lengthened 3.5x on Miles's ask (was 56)
 BACK_BERM_HEIGHT = 5.0
-SIDE_BERM_HEIGHT = 2.5
+SIDE_BERM_HEIGHT = 1.8      # lower than the first design, so the lane reads less like a corridor
 PAD_DEPTH = 7.0            # gravel pad from X = -7 to +1
 FOREST_FLOOR_ROLL = 0.7
 
@@ -27,7 +27,7 @@ DISTANCE_SIGNS = [5, 10, 25, 50, 75, 100, 150]
 CLEAR_BEHIND = -12.0
 CLEAR_SIDE_EXTRA = 5.0
 CLEAR_PAST_BERM_TOE = 10.0
-WALKWAY_Y = -10.0
+WALKWAY_Y = -8.5
 WALKWAY_HALF = 0.7
 
 ACCESS_PATH = [(-7, -7), (-12, -9.5), (-20, -11), (-30, -15), (-42, -19), (-56, -20), (-70, -18), (-95, -23)]
@@ -46,9 +46,9 @@ FOREST, GRASS, GRAVEL, DIRT, EARTH = range(5)
 # The range is carved out of the forest by hand, not with a ruler: the lane edge, the berms and the
 # tree line all wander. wobble() is a smooth wave in [-1, 1] made from three sines, so the game
 # (C++, same formula) and Blender get exactly the same shape.
-LANE_EDGE_WANDER = 1.6      # metres the lane edge drifts in and out
-BERM_WANDER = 0.3           # share the side berm height and width drift
-TREE_LINE_WANDER = 3.5      # metres the tree line drifts in and out
+LANE_EDGE_WANDER = 2.8      # metres the lane edge drifts in and out
+BERM_WANDER = 0.45          # share the side berm height and width drift
+TREE_LINE_WANDER = 6.0      # metres the tree line drifts in and out
 BACK_TOE_WANDER = 1.5       # metres the backstop toe drifts
 
 
@@ -135,5 +135,13 @@ def surface_at(x, y):
     if 1 < x < t + 0.5 and ay <= l + 0.5:
         if abs(y - WALKWAY_Y) < WALKWAY_HALF and x < t - 2:
             return DIRT
+        if leaf_litter(x, y, l - ay):
+            return FOREST
         return GRASS
     return FOREST
+
+
+def leaf_litter(x, y, from_edge):
+    """Tongues of leaf litter reaching a few metres into the lane from the forest side."""
+    reach = 1.0 + 2.5 * (0.5 + 0.5 * wobble(x * 2.3, 2.2 if y >= 0 else 5.1))
+    return from_edge < reach * (0.5 + 0.5 * wobble(x * 5.1, 0.9))

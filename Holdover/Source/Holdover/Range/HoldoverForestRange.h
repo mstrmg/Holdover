@@ -67,7 +67,7 @@ public:
 	float BackBermHeight = 5.f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float SideBermHeight = 2.5f;
+	float SideBermHeight = 1.8f;
 
 	/** Gravel firing pad, from this far behind the firing line to 1 m in front of it. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
@@ -75,15 +75,15 @@ public:
 
 	/** How far the lane edge drifts in and out along the range (m), so it looks cut by hand, not with a ruler. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float LaneEdgeWander = 1.6f;
+	float LaneEdgeWander = 2.8f;
 
 	/** Share the side berm height and width drift along the range. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float BermWander = 0.3f;
+	float BermWander = 0.45f;
 
 	/** How far the tree line drifts in and out (m). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float TreeLineWander = 3.5f;
+	float TreeLineWander = 6.f;
 
 	/** How far the backstop toe drifts across the lane (m). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")

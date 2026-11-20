@@ -39,7 +39,7 @@ On 2026-11-19 Miles asked for a big plan worked through without waiting for him.
 ## The forest range
 Asked for on 2026-11-19 ("Go" on starting the map). Layout and look are in [maps/FOREST_RANGE.md](maps/FOREST_RANGE.md).
 22. The forest range is now what you get when you press Play. The gray range is still there for testing: `open /Engine/Maps/Entry?Range=Gray`.
-23. Layout: a 26 m wide mown lane, gravel firing pad with a timber beam as the firing line, 2.5 m earth berms along both sides, a 5 m backstop berm starting at 56 m, a dirt walkway down the left side to go look at targets, and a path into the woods behind-left.
+23. Layout: a 26 m wide mown lane, gravel firing pad with a timber beam as the firing line, earth berms (now about 1.8 m, varying) along both sides, a 5 m backstop berm starting at 56 m, a dirt walkway down the left side to go look at targets, and a path into the woods behind-left.
 24. Targets did not change: paper at 5, 7, 10, 15, 25 and 50 m, in the same spots as the gray range.
 25. Three benches on the firing line: yours to your right with an ammo can on it, two empty bays with stools and a sandbag rest. Distance signs at 5, 10, 25 and 50 m; FIRING LINE and CEASE FIRE signs.
 26. No steel, poppers or barricade yet: they would look shootable without reacting. They come with the targets milestone.

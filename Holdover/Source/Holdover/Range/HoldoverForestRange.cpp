@@ -103,7 +103,7 @@ namespace ForestRange
 	constexpr float ClearPastBermToe = 10.f;
 
 	// Inspection walkway down the left side of the lane.
-	constexpr float WalkwayY = -10.f;
+	constexpr float WalkwayY = -8.5f;
 	constexpr float WalkwayHalf = 0.7f;
 
 	float BermProfile(float D, float Toe, float CrestStart, float CrestEnd, float BackToe, float Height)
@@ -185,7 +185,7 @@ void AHoldoverForestRange::UpdateRangeShots(float DeltaSeconds)
 		{ TEXT("02_left_signs"), -1.5f, 0.f, 1.65f, -4.f, -38.f },
 		{ TEXT("03_right_edge"), -1.5f, 0.f, 1.65f, 0.f, 55.f },
 		{ TEXT("04_benches"), -4.f, -2.f, 1.65f, -18.f, 30.f },
-		{ TEXT("05_walkway_back"), 95.f, -10.f, 1.65f, -2.f, 180.f },
+		{ TEXT("05_walkway_back"), 95.f, -8.5f, 1.65f, -2.f, 180.f },
 		{ TEXT("06_backstop"), 178.f, -3.f, 1.65f, 2.f, 8.f },
 		{ TEXT("07_in_the_forest"), -25.f, 30.f, 1.65f, 4.f, 35.f },
 		{ TEXT("08_path_arrival"), -20.f, -12.f, 1.65f, -2.f, 15.f },
@@ -384,6 +384,12 @@ int32 AHoldoverForestRange::SurfaceAt(float X, float Y) const
 		if (FMath::Abs(Y - WalkwayY) < WalkwayHalf && X < T - 2.f)
 		{
 			return Dirt;
+		}
+		// Tongues of leaf litter reaching a few metres into the lane from the forest side.
+		const float Reach = 1.f + 2.5f * (0.5f + 0.5f * Wobble(X * 2.3f, Y >= 0.f ? 2.2f : 5.1f));
+		if (L - AY < Reach * (0.5f + 0.5f * Wobble(X * 5.1f, 0.9f)))
+		{
+			return Forest;
 		}
 		return Grass;
 	}
@@ -761,9 +767,19 @@ void AHoldoverForestRange::GrowTrees(FRandomStream& Rng)
 			const float PX = X + Rng.FRand() * Cell;
 			const float PY = Y + Rng.FRand() * Cell;
 			const float Roll = Rng.FRand();
-			if (Roll > Keep || IsClearedForTrees(PX, PY, 0.f))
+			if (Roll > Keep)
 			{
 				continue;
+			}
+			if (IsClearedForTrees(PX, PY, 0.f))
+			{
+				// A few lone trees stand inside the clearing too, on the berm backs, well off the lane.
+				const float OffLane = FMath::Abs(PY) - LaneEdge(PX, PY);
+				if (OffLane < 4.f || IsBareGround(PX, PY) || DistanceToAccessPath(PX, PY) < 3.f || PX < 2.f || PX > BackToe(PY) - 2.f
+					|| Rng.FRand() > 0.18f)
+				{
+					continue;
+				}
 			}
 			if (TreeSet.Num() > 0)
 			{
@@ -805,8 +821,14 @@ void AHoldoverForestRange::GrowSaplings(FRandomStream& Rng)
 			const float PY = Y + Rng.FRand() * Cell;
 			// Young trees crowd the sunny edge of the clearing.
 			const bool bEdge = !IsClearedForTrees(PX, PY, 0.f) && IsClearedForTrees(PX, PY, 7.f);
-			const float Chance = (bEdge ? 0.8f : 0.4f) * SaplingDensity;
-			if (Rng.FRand() > Chance || IsClearedForTrees(PX, PY, -0.5f))
+			float Chance = (bEdge ? 0.8f : 0.4f) * SaplingDensity;
+			if (IsClearedForTrees(PX, PY, -0.5f))
+			{
+				// Young trees and shrubs creep in from the edge, never onto the lane itself.
+				const float OffLane = FMath::Abs(PY) - LaneEdge(PX, PY);
+				Chance = (OffLane < 1.5f || IsBareGround(PX, PY) || DistanceToAccessPath(PX, PY) < 2.f) ? 0.f : 0.3f * SaplingDensity;
+			}
+			if (Rng.FRand() > Chance)
 			{
 				continue;
 			}
@@ -1334,6 +1356,13 @@ void AHoldoverForestRange::FindMegaplants()
 	{
 		return;
 	}
+	// In an uncooked game run the registry is still scanning when the range is built; scan these folders now.
+	TArray<FString> ScanPaths;
+	for (const FName& P : Filter.PackagePaths)
+	{
+		ScanPaths.Add(P.ToString());
+	}
+	Registry.ScanPathsSynchronous(ScanPaths, false);
 	Filter.bRecursivePaths = true;
 	Filter.ClassPaths.Add(UStaticMesh::StaticClass()->GetClassPathName());
 	Filter.ClassPaths.Add(USkeletalMesh::StaticClass()->GetClassPathName());
@@ -1497,6 +1526,7 @@ TArray<UStaticMesh*> AHoldoverForestRange::MeshesIn(const FString& Folder) const
 		return Out;
 	}
 	IAssetRegistry& Registry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
+	Registry.ScanPathsSynchronous({ Folder }, false); // the registry may still be scanning in an uncooked game run
 	FARFilter Filter;
 	Filter.PackagePaths.Add(FName(*Folder));
 	Filter.bRecursivePaths = true;
