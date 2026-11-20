@@ -1344,7 +1344,8 @@ void AHoldoverForestRange::FindMegaplants()
 	for (const FAssetData& Asset : Found)
 	{
 		const FString Path = Asset.PackageName.ToString();
-		if (Path.Contains(TEXT("/Instances/"))) // loose branches and leaf clusters the trees are built from
+		// Skip the loose branches and leaf clusters the trees are built from, and flat far-away billboards.
+		if (Path.Contains(TEXT("/Instances/")) || Path.Contains(TEXT("Billboard")))
 		{
 			continue;
 		}
