@@ -5,6 +5,7 @@
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/DirectionalLightComponent.h"
+#include "CoreGlobals.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
@@ -229,13 +230,15 @@ void AHoldoverForestRange::UpdateRangeShots(float DeltaSeconds)
 				(GetActorRotation().Quaternion() * FRotator(S.Pitch, S.Yaw, 0.f).Quaternion()).Rotator());
 		}
 		ShotClock = 0.f;
+		ShotFrameStart = GFrameCounter;
 		++ShotStep;
 	}
 	else if (ShotClock >= Settle)
 	{
 		const FString File = FPaths::ProjectSavedDir() / TEXT("Screenshots/range") / (FString(S.Name) + TEXT(".png"));
 		FScreenshotRequest::RequestScreenshot(File, false, false);
-		UE_LOG(LogTemp, Log, TEXT("[Holdover] Range shot %s"), *File);
+		const double Fps = static_cast<double>(GFrameCounter - ShotFrameStart) / FMath::Max(ShotClock, 0.1f);
+		UE_LOG(LogTemp, Log, TEXT("[Holdover] Range shot %s, %.0f fps while settling"), *File, Fps);
 		ShotClock = 0.f;
 		++ShotStep;
 	}
@@ -658,8 +661,8 @@ void AHoldoverForestRange::StandInTree(FRandomStream& Rng, const FVector& Base, 
 	};
 
 	// Branches with leaf clusters. Forest trees are bare low down and leafy up top.
-	const float CrownStart = bSapling ? Rng.FRandRange(0.3f, 0.5f) : Rng.FRandRange(0.5f, 0.65f);
-	const int32 NumBranches = bSapling ? Rng.RandRange(2, 3) : Rng.RandRange(3, 6);
+	const float CrownStart = bSapling ? Rng.FRandRange(0.3f, 0.5f) : Rng.FRandRange(0.45f, 0.6f);
+	const int32 NumBranches = bSapling ? Rng.RandRange(2, 3) : Rng.RandRange(4, 7);
 	for (int32 b = 0; b < NumBranches; ++b)
 	{
 		const float T = FMath::Lerp(CrownStart, 0.92f, (b + Rng.FRand()) / NumBranches);
@@ -672,10 +675,10 @@ void AHoldoverForestRange::StandInTree(FRandomStream& Rng, const FVector& Base, 
 		AddLimb(From, To, FMath::Max(RadiusCm * Rng.FRandRange(0.15f, 0.28f), 1.5f), BarkTone, false);
 
 		// One or two leaf clusters at the end of the branch (few, big clusters keep the triangle count sane).
-		const int32 Blobs = bSapling ? 1 : Rng.RandRange(1, 2);
+		const int32 Blobs = bSapling ? 1 : Rng.RandRange(2, 3);
 		for (int32 k = 0; k < Blobs; ++k)
 		{
-			const float Size = Len * Rng.FRandRange(0.85f, 1.3f) * (bSapling ? 1.2f : 1.f);
+			const float Size = Len * Rng.FRandRange(1.0f, 1.5f) * (bSapling ? 1.2f : 1.f);
 			const FVector C = FMath::Lerp(From, To, Rng.FRandRange(0.6f, 1.1f)) + Rng.GetUnitVector() * Size * 0.2f;
 			const int32 Tone = (Rng.FRand() < 0.25f) ? Rng.RandRange(0, NumLeaves - 1) : LeafTone;
 			const FTransform BT(FRotator(Rng.FRandRange(-15.f, 15.f), Rng.FRandRange(0.f, 360.f), 0.f), C,
@@ -685,11 +688,11 @@ void AHoldoverForestRange::StandInTree(FRandomStream& Rng, const FVector& Base, 
 	}
 
 	// Crown top.
-	const int32 TopBlobs = bSapling ? 1 : Rng.RandRange(2, 3);
+	const int32 TopBlobs = bSapling ? 1 : Rng.RandRange(3, 4);
 	const FVector Top = Spine.Last();
 	for (int32 k = 0; k < TopBlobs; ++k)
 	{
-		const float Size = HeightCm * Rng.FRandRange(0.14f, 0.24f);
+		const float Size = HeightCm * Rng.FRandRange(0.18f, 0.28f);
 		const FVector C = Top + FVector(Rng.FRandRange(-1.f, 1.f), Rng.FRandRange(-1.f, 1.f), Rng.FRandRange(-0.6f, 0.2f)) * HeightCm * 0.08f;
 		const int32 Tone = (k == 0) ? LeafTone : Rng.RandRange(0, NumLeaves - 1);
 		const FTransform BT(FRotator(0.f, Rng.FRandRange(0.f, 360.f), 0.f), C, FVector(Size, Size * Rng.FRandRange(0.8f, 1.f), Size * Rng.FRandRange(0.6f, 0.85f)) / 100.f);
@@ -700,7 +703,7 @@ void AHoldoverForestRange::StandInTree(FRandomStream& Rng, const FVector& Base, 
 void AHoldoverForestRange::GrowTrees(FRandomStream& Rng)
 {
 	const TArray<UStaticMesh*> Meshes = MeshesIn(TreeFolder);
-	constexpr float Cell = 6.f; // about 300 trees a hectare, a mature hardwood stand
+	constexpr float Cell = 5.5f; // about 330 trees a hectare, a mature hardwood stand
 	const float Keep = FMath::Clamp(0.9f * TreeDensity, 0.f, 1.f);
 
 	for (float X = -GroundBehind; X < GroundAhead; X += Cell)
@@ -798,16 +801,21 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			}
 			else
 			{
+				// A fern: fronds rising from one crown and arching outwards, each a long thin leaf shape.
 				const FVector C = OnGround(PX, PY);
-				const int32 Fronds = Rng.RandRange(2, 4);
+				const int32 Fronds = Rng.RandRange(5, 8);
+				const float Size = Rng.FRandRange(0.6f, 1.25f);
+				const int32 Tone = Rng.RandRange(0, NumFerns - 1);
+				const float Yaw0 = Rng.FRandRange(0.f, 360.f);
 				for (int32 k = 0; k < Fronds; ++k)
 				{
-					const float W = Rng.FRandRange(40.f, 110.f);
-					const int32 Tone = Rng.RandRange(0, NumFerns - 1);
-					const FVector Off(Rng.FRandRange(-45.f, 45.f), Rng.FRandRange(-45.f, 45.f), W * 0.12f);
-					const FTransform T(FRotator(Rng.FRandRange(-12.f, 12.f), Rng.FRandRange(0.f, 360.f), 0.f), C + Off,
-						FVector(W, W * Rng.FRandRange(0.6f, 0.9f), W * Rng.FRandRange(0.3f, 0.5f)) / 100.f);
-					AddInstance(Sphere, T, ToneFern + Tone, &Ferns[Tone], false, Cull);
+					const float Len = Rng.FRandRange(55.f, 95.f) * Size;
+					const float Yaw = Yaw0 + k * (360.f / Fronds) + Rng.FRandRange(-15.f, 15.f);
+					const float Rise = Rng.FRandRange(20.f, 40.f); // frond angle above the ground
+					const FVector Dir = FRotator(Rise, Yaw, 0.f).Vector();
+					const FTransform T(FRotator(Rise, Yaw, Rng.FRandRange(-10.f, 10.f)), C + Dir * Len * 0.5f,
+						FVector(Len, Len * Rng.FRandRange(0.22f, 0.32f), 4.f) / 100.f);
+					AddInstance(Sphere, T, ToneFern + Tone, &Ferns[Tone], false, Cull * 0.7f);
 				}
 			}
 		}
@@ -1153,7 +1161,7 @@ void AHoldoverForestRange::SpawnLightingIfMissing()
 			L->bUseTemperature = true;
 			L->Temperature = SunTemperature;
 			L->SetAtmosphereSunLight(true);
-			L->VolumetricScatteringIntensity = 1.5f; // light shafts through the canopy
+			L->VolumetricScatteringIntensity = 1.0f; // light shafts through the canopy
 			L->MarkRenderStateDirty();
 		}
 		SpawnedHelpers.Add(Sun);
@@ -1183,9 +1191,9 @@ void AHoldoverForestRange::SpawnLightingIfMissing()
 		if (UExponentialHeightFogComponent* F = Fog->GetComponent())
 		{
 			F->SetFogDensity(HazeDensity);
-			F->SetFogHeightFalloff(0.25f);
+			F->SetFogHeightFalloff(0.35f);
 			F->SetVolumetricFog(true);
-			F->SetVolumetricFogScatteringDistribution(0.6f);
+			F->SetVolumetricFogScatteringDistribution(0.75f); // strongly forward: rays show when looking toward the sun
 			F->SetVolumetricFogDistance(8000.f);
 		}
 		SpawnedHelpers.Add(Fog);

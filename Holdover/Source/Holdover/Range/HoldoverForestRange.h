@@ -140,14 +140,14 @@ public:
 
 	/** Ground haze. Higher = thicker air and stronger light shafts. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
-	float HazeDensity = 0.02f;
+	float HazeDensity = 0.008f;
 
 	/** Eye adaptation range (EV100). Your eyes adjust between the sunny lane and the shade inside this range. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
-	float EyeAdaptMinEV = 6.f;
+	float EyeAdaptMinEV = 9.5f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
-	float EyeAdaptMaxEV = 16.f;
+	float EyeAdaptMaxEV = 15.f;
 
 	/** How fast eyes adjust to brighter light (stops per second) and to darker light (slower, like real eyes). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
@@ -200,6 +200,7 @@ private:
 	// Check pictures (holdover.RangeShots)
 	void UpdateRangeShots(float DeltaSeconds);
 	float ShotClock = 0.f;
+	uint64 ShotFrameStart = 0;
 	int32 ShotStep = 0;
 
 	UPROPERTY(Transient)
