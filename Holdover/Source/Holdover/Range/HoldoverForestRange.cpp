@@ -8,6 +8,8 @@
 #include "CoreGlobals.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Components/InstancedSkinnedMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -18,6 +20,7 @@
 #include "Engine/DirectionalLight.h"
 #include "Engine/ExponentialHeightFog.h"
 #include "Engine/PostProcessVolume.h"
+#include "Engine/SkeletalMesh.h"
 #include "Engine/SkyLight.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -437,6 +440,7 @@ void AHoldoverForestRange::BuildGeometry()
 	}
 	if (UStaticMesh* M = FindMesh(KitFolder, { TEXT("SM_Branches") })) { KitBranches.Add(M); }
 
+	FindMegaplants();
 	BuildGround();
 	PlaceRangeProps();
 
@@ -450,6 +454,7 @@ void AHoldoverForestRange::BuildGeometry()
 	GrowUndergrowth(UnderRng);
 	ScatterDebris(DebrisRng);
 	FlushInstances();
+	FlushSkinned();
 
 	int32 Instances = 0;
 	for (const auto& Pair : Batches)
@@ -459,8 +464,8 @@ void AHoldoverForestRange::BuildGeometry()
 			Instances += Pair.Value->GetInstanceCount();
 		}
 	}
-	UE_LOG(LogTemp, Log, TEXT("[Holdover] Forest range built in %.2f s: %d instanced pieces in %d batches, ground %s."),
-		FPlatformTime::Seconds() - Start, Instances, Batches.Num(), ImportedGround ? TEXT("imported") : TEXT("generated"));
+	UE_LOG(LogTemp, Log, TEXT("[Holdover] Forest range built in %.2f s: %d instanced pieces in %d batches, %d Megaplant components, ground %s."),
+		FPlatformTime::Seconds() - Start, Instances, Batches.Num(), SkinnedComponents.Num(), ImportedGround ? TEXT("imported") : TEXT("generated"));
 }
 
 void AHoldoverForestRange::BuildGround()
@@ -760,7 +765,15 @@ void AHoldoverForestRange::GrowTrees(FRandomStream& Rng)
 			{
 				continue;
 			}
-			if (Meshes.Num() > 0)
+			if (TreeSet.Num() > 0)
+			{
+				// Real trees (Megaplants): each its own size and turn, standing nearly straight.
+				const float S = Rng.FRandRange(0.8f, 1.2f);
+				const FTransform T(FRotator(Rng.FRandRange(-2.f, 2.f), Rng.FRandRange(0.f, 360.f), Rng.FRandRange(-2.f, 2.f)),
+					OnGround(PX, PY, 15.f), FVector(S * Rng.FRandRange(0.95f, 1.05f), S * Rng.FRandRange(0.95f, 1.05f), S));
+				PlacePlant(TreeSet, Rng, T, true, 0.f);
+			}
+			else if (Meshes.Num() > 0)
 			{
 				UStaticMesh* M = Meshes[Rng.RandRange(0, Meshes.Num() - 1)];
 				const float S = Rng.FRandRange(0.8f, 1.25f);
@@ -797,7 +810,13 @@ void AHoldoverForestRange::GrowSaplings(FRandomStream& Rng)
 			{
 				continue;
 			}
-			if (Meshes.Num() > 0)
+			if (YoungSet.Num() > 0)
+			{
+				const float S = Rng.FRandRange(0.7f, 1.25f);
+				const FTransform T(FRotator(Rng.FRandRange(-4.f, 4.f), Rng.FRandRange(0.f, 360.f), Rng.FRandRange(-4.f, 4.f)), OnGround(PX, PY, 5.f), FVector(S));
+				PlacePlant(YoungSet, Rng, T, false, SmallThingsDrawDistance * 1.5f);
+			}
+			else if (Meshes.Num() > 0)
 			{
 				UStaticMesh* M = Meshes[Rng.RandRange(0, Meshes.Num() - 1)];
 				const float S = Rng.FRandRange(0.7f, 1.3f);
@@ -842,7 +861,13 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			{
 				continue;
 			}
-			if (Plants.Num() > 0)
+			if (PlantSet.Num() > 0)
+			{
+				const float S = Rng.FRandRange(0.7f, 1.3f);
+				const FTransform T(FRotator(Rng.FRandRange(-5.f, 5.f), Rng.FRandRange(0.f, 360.f), Rng.FRandRange(-5.f, 5.f)), OnGround(PX, PY, 3.f), FVector(S));
+				PlacePlant(PlantSet, Rng, T, false, Cull);
+			}
+			else if (Plants.Num() > 0)
 			{
 				UStaticMesh* M = Plants[Rng.RandRange(0, Plants.Num() - 1)];
 				const float S = Rng.FRandRange(0.7f, 1.35f);
@@ -899,7 +924,12 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			{
 				continue;
 			}
-			if (GrassMeshes.Num() > 0)
+			if (GrassSet.Num() > 0)
+			{
+				const float S = Rng.FRandRange(0.7f, 1.3f);
+				PlacePlant(GrassSet, Rng, FTransform(FRotator(0.f, Rng.FRandRange(0.f, 360.f), 0.f), OnGround(PX, PY, 2.f), FVector(S)), false, Cull * 0.6f);
+			}
+			else if (GrassMeshes.Num() > 0)
 			{
 				UStaticMesh* M = GrassMeshes[Rng.RandRange(0, GrassMeshes.Num() - 1)];
 				const float S = Rng.FRandRange(0.7f, 1.3f);
@@ -1281,6 +1311,182 @@ void AHoldoverForestRange::SpawnLightingIfMissing()
 
 // ---------------------------------------------------------------------------
 // Assets
+
+// ---------------------------------------------------------------------------
+// Megaplants (Fab): skeletal meshes, sorted by size
+
+void AHoldoverForestRange::FindMegaplants()
+{
+	TreeSet = FPlantSet();
+	YoungSet = FPlantSet();
+	PlantSet = FPlantSet();
+	GrassSet = FPlantSet();
+	IAssetRegistry& Registry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
+	FARFilter Filter;
+	for (const FString& Folder : MegaplantFolders)
+	{
+		if (!Folder.IsEmpty())
+		{
+			Filter.PackagePaths.Add(FName(*Folder));
+		}
+	}
+	if (Filter.PackagePaths.Num() == 0)
+	{
+		return;
+	}
+	Filter.bRecursivePaths = true;
+	Filter.ClassPaths.Add(UStaticMesh::StaticClass()->GetClassPathName());
+	Filter.ClassPaths.Add(USkeletalMesh::StaticClass()->GetClassPathName());
+	TArray<FAssetData> Found;
+	Registry.GetAssets(Filter, Found);
+	Found.Sort([](const FAssetData& A, const FAssetData& B) { return A.PackageName.LexicalLess(B.PackageName); });
+
+	for (const FAssetData& Asset : Found)
+	{
+		const FString Path = Asset.PackageName.ToString();
+		if (Path.Contains(TEXT("/Instances/"))) // loose branches and leaf clusters the trees are built from
+		{
+			continue;
+		}
+		UObject* Obj = Asset.GetAsset();
+		UStaticMesh* SM = Cast<UStaticMesh>(Obj);
+		USkeletalMesh* SK = Cast<USkeletalMesh>(Obj);
+		if (!SM && !SK)
+		{
+			continue;
+		}
+		const FBoxSphereBounds B = SM ? SM->GetBounds() : SK->GetBounds();
+		const float HeightCm = static_cast<float>(B.BoxExtent.Z * 2.0);
+		const FString Name = Path.ToLower();
+		FPlantSet* Set = nullptr;
+		const TCHAR* Kind = TEXT("");
+		if (Name.Contains(TEXT("grass")) || Name.Contains(TEXT("reed")))
+		{
+			Set = &GrassSet; Kind = TEXT("grass");
+		}
+		else if (HeightCm > 1000.f)
+		{
+			Set = &TreeSet; Kind = TEXT("tree");
+		}
+		else if (HeightCm > 250.f)
+		{
+			Set = &YoungSet; Kind = TEXT("young tree or shrub");
+		}
+		else
+		{
+			Set = &PlantSet; Kind = TEXT("ground plant");
+		}
+		if (SM)
+		{
+			Set->Static.Add(SM);
+		}
+		else
+		{
+			Set->Skinned.Add(SK);
+		}
+		UE_LOG(LogTemp, Log, TEXT("[Holdover] Megaplant %s: %.1f m tall, %s mesh -> %s"), *Path, HeightCm / 100.f, SM ? TEXT("static") : TEXT("skeletal"), Kind);
+	}
+	UE_LOG(LogTemp, Log, TEXT("[Holdover] Megaplants: %d trees, %d young trees/shrubs, %d ground plants, %d grasses"),
+		TreeSet.Num(), YoungSet.Num(), PlantSet.Num(), GrassSet.Num());
+}
+
+bool AHoldoverForestRange::PlacePlant(const FPlantSet& Set, FRandomStream& Rng, const FTransform& T, bool bCollide, float CullMetres)
+{
+	const int32 N = Set.Num();
+	if (N == 0)
+	{
+		return false;
+	}
+	const int32 Pick = Rng.RandRange(0, N - 1);
+	if (Pick < Set.Static.Num())
+	{
+		AddInstance(Set.Static[Pick], T, -1, nullptr, bCollide, CullMetres);
+		return true;
+	}
+	USkeletalMesh* Mesh = Set.Skinned[Pick - Set.Static.Num()];
+	AddSkinned(Mesh, T);
+	if (bCollide)
+	{
+		// Skinned plants carry no collision: a hidden trunk stops bullets and the player.
+		const float H = static_cast<float>(Mesh->GetBounds().BoxExtent.Z * 2.0 * T.GetScale3D().Z);
+		AddTrunkCollider(T.GetLocation(), FMath::Clamp(H * 0.011f, 10.f, 45.f), FMath::Min(H * 0.4f, 600.f));
+	}
+	return true;
+}
+
+void AHoldoverForestRange::AddSkinned(USkeletalMesh* Mesh, const FTransform& T)
+{
+	if (Mesh)
+	{
+		PendingSkinned.FindOrAdd(Mesh).Add(T);
+	}
+}
+
+void AHoldoverForestRange::AddTrunkCollider(const FVector& Base, float RadiusCm, float HeightCm)
+{
+	if (!TrunkColliders)
+	{
+		TrunkColliders = NewObject<UHierarchicalInstancedStaticMeshComponent>(this, TEXT("TrunkColliders"));
+		TrunkColliders->SetStaticMesh(HoldoverShapes::Cylinder());
+		TrunkColliders->SetMobility(EComponentMobility::Static);
+		TrunkColliders->SetupAttachment(Root);
+		TrunkColliders->SetVisibility(false);
+		TrunkColliders->SetHiddenInGame(true);
+		TrunkColliders->SetCastShadow(false);
+		TrunkColliders->SetCollisionProfileName(TEXT("BlockAll"));
+		TrunkColliders->SetCollisionResponseToChannel(ECC_HoldoverBullet, ECR_Block);
+		TrunkColliders->RegisterComponent();
+		AddInstanceComponent(TrunkColliders);
+	}
+	// The engine cylinder is 100 cm across and 100 cm tall, centred on its middle.
+	PendingInstances.FindOrAdd(TrunkColliders).Add(FTransform(FRotator::ZeroRotator, Base + FVector(0.f, 0.f, HeightCm * 0.5f),
+		FVector(RadiusCm / 50.f, RadiusCm / 50.f, HeightCm / 100.f)));
+}
+
+void AHoldoverForestRange::FlushSkinned()
+{
+	for (auto& Pair : PendingSkinned)
+	{
+		USkeletalMesh* Mesh = Pair.Key;
+		if (!Mesh || Pair.Value.Num() == 0)
+		{
+			continue;
+		}
+		if (bInstancedMegaplants)
+		{
+			UInstancedSkinnedMeshComponent* C = NewObject<UInstancedSkinnedMeshComponent>(this);
+			C->SetSkinnedAssetAndUpdate(Mesh);
+			C->SetupAttachment(Root);
+			C->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			C->SetGenerateOverlapEvents(false);
+			C->RegisterComponent();
+			AddInstanceComponent(C);
+			for (const FTransform& T : Pair.Value)
+			{
+				C->AddInstance(T, 0);
+			}
+			SkinnedComponents.Add(C);
+		}
+		else
+		{
+			for (const FTransform& T : Pair.Value)
+			{
+				USkeletalMeshComponent* C = NewObject<USkeletalMeshComponent>(this);
+				C->SetSkeletalMesh(Mesh);
+				C->SetupAttachment(Root);
+				C->SetRelativeTransform(T);
+				C->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				C->SetGenerateOverlapEvents(false);
+				C->SetComponentTickEnabled(false); // no animation yet: hold the rest pose
+				C->RegisterComponent();
+				AddInstanceComponent(C);
+				SkinnedComponents.Add(C);
+			}
+		}
+	}
+	PendingSkinned.Reset();
+	FlushInstances(); // trunk colliders
+}
 
 TArray<UStaticMesh*> AHoldoverForestRange::MeshesIn(const FString& Folder) const
 {

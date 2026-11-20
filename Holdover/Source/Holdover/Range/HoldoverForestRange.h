@@ -7,6 +7,8 @@
 class UHierarchicalInstancedStaticMeshComponent;
 class UMaterialInterface;
 class UProceduralMeshComponent;
+class USceneComponent;
+class USkeletalMesh;
 class UStaticMesh;
 class UStaticMeshComponent;
 
@@ -132,6 +134,19 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Forest|Assets")
 	FString GroundFolder = TEXT("/Game/Range/Forest/Ground");
 
+	/**
+	 * Where Fab puts Megaplants and Megascans plants. Every plant found under them (except the loose branch
+	 * parts in Instances folders) is sorted by its height: over 10 m a tree, 2.5 to 10 m a young tree or
+	 * shrub, lower a ground plant; anything with grass or reed in its path is grass. They take over from
+	 * the stand-ins.
+	 */
+	UPROPERTY(EditAnywhere, Category = "Forest|Assets")
+	TArray<FString> MegaplantFolders = { TEXT("/Game/Megaplant_Library"), TEXT("/Game/Fab/Megascans") };
+
+	/** Draw Megaplants as instanced skinned meshes (fast). Off: one skeletal mesh component per plant (slow, for testing). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Assets")
+	bool bInstancedMegaplants = true;
+
 	/** Extra turn applied to every imported range prop, degrees, in case the Blender export faces another way. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Assets")
 	float PropYawOffset = 0.f;
@@ -211,6 +226,28 @@ private:
 	UHierarchicalInstancedStaticMeshComponent* Batch(UStaticMesh* Mesh, int32 Tone, const FLinearColor* Tint, bool bCollide, float CullMetres);
 	void AddInstance(UStaticMesh* Mesh, const FTransform& T, int32 Tone = -1, const FLinearColor* Tint = nullptr, bool bCollide = false, float CullMetres = 0.f);
 	void FlushInstances();
+
+	// Plants that may be static meshes (our own folders) or skeletal meshes (Megaplants)
+	struct FPlantSet
+	{
+		TArray<UStaticMesh*> Static;
+		TArray<USkeletalMesh*> Skinned;
+		int32 Num() const { return Static.Num() + Skinned.Num(); }
+	};
+	void FindMegaplants();
+	/** Places a random member of Set at T. Returns false when the set is empty. */
+	bool PlacePlant(const FPlantSet& Set, FRandomStream& Rng, const FTransform& T, bool bCollide, float CullMetres);
+	void AddSkinned(USkeletalMesh* Mesh, const FTransform& T);
+	void AddTrunkCollider(const FVector& Base, float RadiusCm, float HeightCm);
+	void FlushSkinned();
+	FPlantSet TreeSet, YoungSet, PlantSet, GrassSet;
+	TMap<USkeletalMesh*, TArray<FTransform>> PendingSkinned;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<USceneComponent>> SkinnedComponents;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> TrunkColliders;
 
 	// Assets
 	TArray<UStaticMesh*> MeshesIn(const FString& Folder) const;

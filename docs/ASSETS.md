@@ -31,6 +31,8 @@ Every asset in the game, where it came from, and its license.
 | Ground037 (1K JPG: color, roughness, normal) | ambientCG, https://ambientcg.com/a/Ground037 | CC0 1.0 (public domain) | Forest range lane and berm grass (until Megascans) |
 | Ground068 (1K JPG: color, roughness, normal) | ambientCG, https://ambientcg.com/a/Ground068 | CC0 1.0 (public domain) | Forest range dirt paths (until Megascans) |
 | Ground076 (1K JPG: color, roughness, normal) | ambientCG, https://ambientcg.com/a/Ground076 | CC0 1.0 (public domain) | Forest range backstop earth (until Megascans) |
+| Megaplants: European Hornbeam, European Beech, English Oak (trees), Elder, European Spindle (young trees and shrubs), Bracken Fern | Fab, Quixel Megaplants, added in the editor 2026-11-20 (in `/Game/Megaplant_Library/`, untracked Content on Miles's PC) | Fab Standard License (free; accepted by Miles in the Fab window) | Forest range trees, understory and ferns |
+| Wild Grass (medium quality) | Fab, Quixel Megascans, added 2026-11-20 (in `/Game/Fab/Megascans/`) | Fab Standard License (free) | Forest range tall grass along the lane and on the berms |
 
 Other ambientCG textures were downloaded to compare and are not used in any model (for example Planks040, Metal009, Wood094, Ground037). They sit in `art/textures/` and are also CC0.
 
