@@ -14,12 +14,12 @@ The shooter stands at the firing line facing downrange. All numbers live in `too
 | Firing line | A timber beam lying across the front of the pad |
 | Shooting benches | Three: yours just to your right (ammo can on it), two more at the empty bays (stools, a sandbag rest on the left one) |
 | Spent-brass bin | Behind your bench |
-| Lane | Mown grass, 26 m wide, flat, from the pad to the backstop at 56 m |
-| Paper targets | 5, 7, 10, 15, 25 and 50 m, spread 1.6 m apart sideways (same as the gray range) |
-| Distance signs | 5, 10, 25 and 50 m, on posts along the left edge, facing you |
+| Lane | Grass, about 26 m wide, flat, from the pad to the backstop at about 190 m (3.5x the first design, Miles 2026-11-20). Its edges, the berms and the tree line wander by a metre or a few, so it looks cut by hand, not ruled |
+| Paper targets | 5, 7, 10, 15, 25, 50, 75, 100 and 150 m, spread 1.6 m apart sideways (the gray range keeps 5 to 50 m) |
+| Distance signs | 5, 10, 25, 50, 75, 100 and 150 m, on posts along the left edge, facing you |
 | Walkway | Trodden dirt strip down the left side of the lane, to walk out and look at your holes |
 | Side berms | Earth banks 2.5 m high along both sides, grassed, with a 1 m flat top; the forest grows on their back slopes |
-| Backstop berm | 5 m high, about 45 degree face of bare earth starting at 56 m, flat top, back slope into the trees |
+| Backstop berm | 5 m high, about 45 degree face of bare earth starting at about 190 m, flat top, back slope into the trees |
 | Behind the pad | A small clearing with a rest bench; the CEASE FIRE sign stands where the path arrives |
 | Access path | A dirt path winding off into the woods behind-left, toward an imagined parking area |
 | Forest | Everywhere else, about 210 m by 180 m of it, so the trees go on as far as you can see |
@@ -80,7 +80,7 @@ Why trees come from Fab rather than Blender: Megaplants are free, scanned from r
 
 ## Tuning (no code needed)
 
-Named settings on the forest range; ask Claude to change any of them: `TreeDensity`, `SaplingDensity`, `UndergrowthDensity`, `DebrisDensity` (1 = designed look), `SmallThingsDrawDistance`, `Seed` (a different forest), `SunLux`, `ForestSunElevation`, `ForestSunAzimuth`, `SunTemperature`, `HazeDensity`, `EyeAdaptMinEV`, `EyeAdaptMaxEV`, `EyeAdaptSpeedUp`, `EyeAdaptSpeedDown`, and the layout numbers (`LaneHalfWidth`, `BackBermToe`, berm heights...). If imported props face the wrong way, `PropYawOffset` turns them all.
+Named settings on the forest range; ask Claude to change any of them: `TreeDensity`, `SaplingDensity`, `UndergrowthDensity`, `DebrisDensity` (1 = designed look), `SmallThingsDrawDistance`, `Seed` (a different forest), `SunLux`, `ForestSunElevation`, `ForestSunAzimuth`, `SunTemperature`, `HazeDensity`, `EyeAdaptMinEV`, `EyeAdaptMaxEV`, `EyeAdaptSpeedUp`, `EyeAdaptSpeedDown`, and the layout numbers (`LaneHalfWidth`, `BackBermToe`, berm heights, and how much the edges wander: `LaneEdgeWander`, `BermWander`, `TreeLineWander`, `BackToeWander`). If imported props face the wrong way, `PropYawOffset` turns them all.
 
 ## Performance (RX 9070 XT, Ryzen 5 3600, 16 GB)
 

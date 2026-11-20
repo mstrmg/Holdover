@@ -34,7 +34,7 @@ if "berm_height" not in globals():
 CELL = 0.6  # metres between ground vertices
 
 MATERIAL = "RangeGround"
-BLEND = 0.6        # metres: surfaces fade into each other over about twice this
+BLEND = 1.2        # metres: surfaces fade into each other over about twice this
 SAMPLE = 0.3       # metres between surface samples used for the fade
 # Vertex colour channel per surface (FOREST is whatever is left over).
 CHANNEL = {GRASS: 0, GRAVEL: 1, DIRT: 2, EARTH: 3}
@@ -46,8 +46,8 @@ def n3(x, y, z, scale):
 
 def clearing_mask(x, y):
     """0 inside the cleared range, rising to 1 eight metres into the forest (same as the game)."""
-    ahead = BACK_BERM_TOE + CLEAR_PAST_BERM_TOE
-    side = LANE_HALF_WIDTH + CLEAR_SIDE_EXTRA
+    ahead = BACK_BERM_TOE + CLEAR_PAST_BERM_TOE + TREE_LINE_WANDER * wobble(y, 9.4)
+    side = tree_line(x, y)
     dx = max(CLEAR_BEHIND - x, 0.0, x - ahead)
     dy = max(abs(y) - side, 0.0)
     m = smoothstep(0.0, 8.0, math.hypot(dx, dy))
@@ -69,7 +69,7 @@ def ground_height(x, y):
         w = smoothstep(0.02, 0.8, berm)
         h += w * (0.14 * n3(x, y, 8.5, 2.4) + 0.05 * n3(x, y, 9.5, 0.7))
         # Backstop face: shallow pockets dug out by bullets around target height.
-        if x > BACK_BERM_TOE - 1 and abs(y) < LANE_HALF_WIDTH + 2 and 0.3 < berm < 3.0:
+        if x > back_toe(y) - 1 and abs(y) < lane_edge(x, y) + 2 and 0.3 < berm < 3.0:
             h -= 0.07 * max(0.0, n3(x, y, 10.5, 0.35)) * w
 
     surf = surface_at(x, y)
@@ -83,7 +83,7 @@ def ground_height(x, y):
         h -= 0.04 * (1.0 - smoothstep(0.0, 1.1, path_distance(x, y)))
     elif surf == GRASS and berm < 0.02:
         # Lane: almost flat, but not a table top. Dead flat near targets so the stands sit right.
-        near_target = min(abs(x - d) for d in TARGET_DISTANCES) < 1.5 and abs(y) < 6
+        near_target = min(abs(x - d) for d in TARGET_DISTANCES) < 1.5 and abs(y) < 8
         if not near_target:
             h += 0.012 * n3(x, y, 14.5, 3.0)
     return h
@@ -105,27 +105,34 @@ def material():
 
 def surface_weights():
     """Per-vertex surface weights: the share of each surface within BLEND metres, on a SAMPLE grid."""
+    import numpy as np
     sx = int(round((GROUND_AHEAD + GROUND_BEHIND) / SAMPLE))
     sy = int(round(2 * GROUND_HALF_WIDTH / SAMPLE))
-    grid = [[surface_at(-GROUND_BEHIND + i * SAMPLE, -GROUND_HALF_WIDTH + j * SAMPLE) for i in range(sx + 1)]
-            for j in range(sy + 1)]
+    grid = np.zeros((sy + 1, sx + 1, 4), dtype=np.float32)
+    for j in range(sy + 1):
+        y = -GROUND_HALF_WIDTH + j * SAMPLE
+        row = grid[j]
+        for i in range(sx + 1):
+            c = CHANNEL.get(surface_at(-GROUND_BEHIND + i * SAMPLE, y))
+            if c is not None:
+                row[i, c] = 1.0
     r = int(round(BLEND / SAMPLE))
+
+    def box(a, axis):
+        """Mean over 2r+1 cells along axis, edges clamped."""
+        pad = [(0, 0)] * a.ndim
+        pad[axis] = (r + 1, r)
+        c = np.cumsum(np.pad(a, pad, mode="edge"), axis=axis)
+        hi = np.take(c, range(2 * r + 1, c.shape[axis]), axis=axis)
+        lo = np.take(c, range(0, c.shape[axis] - 2 * r - 1), axis=axis)
+        return (hi - lo) / (2 * r + 1)
+
+    blurred = box(box(grid, 0), 1)
     step = int(round(CELL / SAMPLE))
 
     def weights(i, j):
         """i, j: vertex indices; returns (R, G, B, A)."""
-        ci, cj = i * step, j * step
-        acc = [0.0, 0.0, 0.0, 0.0]
-        n = 0
-        for dj in range(-r, r + 1):
-            row = grid[min(max(cj + dj, 0), sy)]
-            for di in range(-r, r + 1):
-                srf = row[min(max(ci + di, 0), sx)]
-                n += 1
-                c = CHANNEL.get(srf)
-                if c is not None:
-                    acc[c] += 1.0
-        return tuple(a / n for a in acc)
+        return tuple(float(v) for v in blurred[min(j * step, sy), min(i * step, sx)])
     return weights
 
 

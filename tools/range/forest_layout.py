@@ -11,18 +11,18 @@ import math
 
 # ---- Layout -------------------------------------------------------------------------
 GROUND_BEHIND = 90.0       # ground built from X = -90 ...
-GROUND_AHEAD = 120.0       # ... to X = +120
+GROUND_AHEAD = 260.0       # ... to X = +260
 GROUND_HALF_WIDTH = 90.0   # and Y = -90 .. +90
 LANE_HALF_WIDTH = 13.0     # mown lane floor between the side berms
-BACK_BERM_TOE = 56.0
+BACK_BERM_TOE = 190.0     # range lengthened 3.5x on Miles's ask (was 56)
 BACK_BERM_HEIGHT = 5.0
 SIDE_BERM_HEIGHT = 2.5
 PAD_DEPTH = 7.0            # gravel pad from X = -7 to +1
 FOREST_FLOOR_ROLL = 0.7
 
-TARGET_DISTANCES = [5, 7, 10, 15, 25, 50]   # paper targets (unchanged from the gray range)
+TARGET_DISTANCES = [5, 7, 10, 15, 25, 50, 75, 100, 150]   # paper targets
 TARGET_SPACING = 1.6                        # sideways spacing, metres
-DISTANCE_SIGNS = [5, 10, 25, 50]
+DISTANCE_SIGNS = [5, 10, 25, 50, 75, 100, 150]
 
 CLEAR_BEHIND = -12.0
 CLEAR_SIDE_EXTRA = 5.0
@@ -42,6 +42,29 @@ SHOOTER = (-1.5, 0.0)
 
 FOREST, GRASS, GRAVEL, DIRT, EARTH = range(5)
 
+# ---- Irregular edges -------------------------------------------------------------------
+# The range is carved out of the forest by hand, not with a ruler: the lane edge, the berms and the
+# tree line all wander. wobble() is a smooth wave in [-1, 1] made from three sines, so the game
+# (C++, same formula) and Blender get exactly the same shape.
+LANE_EDGE_WANDER = 1.6      # metres the lane edge drifts in and out
+BERM_WANDER = 0.3           # share the side berm height and width drift
+TREE_LINE_WANDER = 3.5      # metres the tree line drifts in and out
+BACK_TOE_WANDER = 1.5       # metres the backstop toe drifts
+
+
+def wobble(t, phase):
+    return (0.55 * math.sin(t * 0.083 + phase) + 0.30 * math.sin(t * 0.197 + phase * 2.3)
+            + 0.15 * math.sin(t * 0.471 + phase * 3.7))
+
+
+def lane_edge(x, y):
+    """Lane half width at x on the side of y (the lane floor ends here and the side berm starts)."""
+    return LANE_HALF_WIDTH + LANE_EDGE_WANDER * wobble(x, 1.1 if y >= 0 else 4.2)
+
+
+def back_toe(y):
+    return BACK_BERM_TOE + BACK_TOE_WANDER * wobble(y, 6.1)
+
 
 def smoothstep(a, b, x):
     t = min(max((x - a) / (b - a), 0.0), 1.0)
@@ -59,10 +82,14 @@ def berm_profile(d, toe, crest_start, crest_end, back_toe, height):
 
 
 def berm_height(x, y):
-    ay, l = abs(y), LANE_HALF_WIDTH
-    side = berm_profile(ay, l, l + 3.5, l + 4.5, l + 8.0, SIDE_BERM_HEIGHT)
+    ay, l = abs(y), lane_edge(x, y)
+    ph = 2.9 if y >= 0 else 5.3
+    h = SIDE_BERM_HEIGHT * (1.0 + BERM_WANDER * wobble(x, ph))
+    w = 1.0 + BERM_WANDER * wobble(x, ph + 1.7)
+    side = berm_profile(ay, l, l + 3.5 * w, l + 4.5 * w, l + 8.0 * w, h)
     side *= smoothstep(-6, -3, x) * (1 - smoothstep(BACK_BERM_TOE + 10, BACK_BERM_TOE + 14, x))
-    back = berm_profile(x, BACK_BERM_TOE, BACK_BERM_TOE + 5, BACK_BERM_TOE + 6.5, BACK_BERM_TOE + 13, BACK_BERM_HEIGHT)
+    t = back_toe(y)
+    back = berm_profile(x, t, t + 5, t + 6.5, t + 13, BACK_BERM_HEIGHT)
     back *= 1 - smoothstep(l + 6, l + 12, ay)
     return max(side, back)
 
@@ -78,9 +105,14 @@ def path_distance(x, y):
     return min(_segment_distance((x, y), ACCESS_PATH[i], ACCESS_PATH[i + 1]) for i in range(len(ACCESS_PATH) - 1))
 
 
+def tree_line(x, y):
+    """How far out from the centre line the trees start at x (side of y)."""
+    return lane_edge(x, y) + CLEAR_SIDE_EXTRA + TREE_LINE_WANDER * wobble(x, 7.3 if y >= 0 else 8.9)
+
+
 def cleared_for_trees(x, y, margin=0.0):
-    if (CLEAR_BEHIND - margin < x < BACK_BERM_TOE + CLEAR_PAST_BERM_TOE + margin
-            and abs(y) < LANE_HALF_WIDTH + CLEAR_SIDE_EXTRA + margin):
+    ahead = BACK_BERM_TOE + CLEAR_PAST_BERM_TOE + TREE_LINE_WANDER * wobble(y, 9.4)
+    if CLEAR_BEHIND - margin < x < ahead + margin and abs(y) < tree_line(x, y) + margin:
         return True
     return path_distance(x, y) < 2.0 + margin
 
@@ -89,16 +121,19 @@ def surface_at(x, y):
     ay = abs(y)
     if x < -PAD_DEPTH and path_distance(x, y) < 1.1:
         return DIRT
-    if -PAD_DEPTH <= x <= 1 and ay <= LANE_HALF_WIDTH:
+    l = lane_edge(x, y)
+    pad_edge = LANE_HALF_WIDTH - 1.0 + 0.6 * wobble(y * 3.0, 0.4)
+    if -PAD_DEPTH + 0.5 * wobble(y * 2.0, 3.3) <= x <= 1 + 0.4 * wobble(y * 2.0, 1.9) and ay <= pad_edge:
         return GRAVEL
+    t = back_toe(y)
     if berm_height(x, y) > 0.25:
-        if x > BACK_BERM_TOE - 1 and ay < LANE_HALF_WIDTH + 4:
+        if x > t - 1 and ay < l + 4:
             return EARTH
-        if ay < LANE_HALF_WIDTH + 4.5:
+        if ay < l + 4.5 + 2.0 * wobble(x, 3.9 if y >= 0 else 6.6):
             return GRASS
         return FOREST
-    if 1 < x < BACK_BERM_TOE + 0.5 and ay <= LANE_HALF_WIDTH + 0.5:
-        if abs(y - WALKWAY_Y) < WALKWAY_HALF and x < BACK_BERM_TOE - 2:
+    if 1 < x < t + 0.5 and ay <= l + 0.5:
+        if abs(y - WALKWAY_Y) < WALKWAY_HALF and x < t - 2:
             return DIRT
         return GRASS
     return FOREST

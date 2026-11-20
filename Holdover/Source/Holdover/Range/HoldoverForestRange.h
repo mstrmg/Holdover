@@ -48,7 +48,7 @@ public:
 	float GroundBehind = 90.f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float GroundAhead = 120.f;
+	float GroundAhead = 260.f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
 	float GroundHalfWidth = 90.f;
@@ -57,9 +57,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
 	float LaneHalfWidth = 13.f;
 
-	/** Where the backstop berm starts to rise (its toe). */
+	/** Where the backstop berm starts to rise (its toe). 190 m: the range is about 3.5x the first design. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float BackBermToe = 56.f;
+	float BackBermToe = 190.f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
 	float BackBermHeight = 5.f;
@@ -70,6 +70,22 @@ public:
 	/** Gravel firing pad, from this far behind the firing line to 1 m in front of it. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
 	float PadDepth = 7.f;
+
+	/** How far the lane edge drifts in and out along the range (m), so it looks cut by hand, not with a ruler. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
+	float LaneEdgeWander = 1.6f;
+
+	/** Share the side berm height and width drift along the range. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
+	float BermWander = 0.3f;
+
+	/** How far the tree line drifts in and out (m). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
+	float TreeLineWander = 3.5f;
+
+	/** How far the backstop toe drifts across the lane (m). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
+	float BackToeWander = 1.5f;
 
 	/** Ground roughness of the forest floor, metres up and down. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
@@ -91,7 +107,7 @@ public:
 
 	/** Small plants, rocks and branches disappear beyond this distance (m). Trees never do. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Plants")
-	float SmallThingsDrawDistance = 70.f;
+	float SmallThingsDrawDistance = 110.f;
 
 	/** Content folders searched for meshes (put Megaplants and Megascans here). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Assets")
@@ -168,6 +184,10 @@ private:
 	void BuildProceduralGround();
 	float GroundHeightMetres(float Xm, float Ym) const;
 	float BermHeightMetres(float Xm, float Ym) const;
+	float LaneEdge(float Xm, float Ym) const;
+	float BackToe(float Ym) const;
+	float TreeLine(float Xm, float Ym) const;
+	bool IsBareGround(float Xm, float Ym) const;
 	int32 SurfaceAt(float Xm, float Ym) const;
 	float DistanceToAccessPath(float Xm, float Ym) const;
 	bool IsClearedForTrees(float Xm, float Ym, float Margin) const;
