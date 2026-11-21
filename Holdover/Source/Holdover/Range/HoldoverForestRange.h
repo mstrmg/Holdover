@@ -171,11 +171,11 @@ public:
 
 	/** Ground haze. Higher = thicker air and stronger light shafts. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
-	float HazeDensity = 0.008f;
+	float HazeDensity = 0.005f;
 
 	/** Eye adaptation range (EV100). Your eyes adjust between the sunny lane and the shade inside this range. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
-	float EyeAdaptMinEV = 9.5f;
+	float EyeAdaptMinEV = 11.f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
 	float EyeAdaptMaxEV = 15.f;

@@ -191,6 +191,7 @@ void AHoldoverForestRange::UpdateRangeShots(float DeltaSeconds)
 		{ TEXT("08_path_arrival"), -20.f, -12.f, 1.65f, -2.f, 15.f },
 		{ TEXT("09_canopy_up"), -30.f, -40.f, 1.65f, 55.f, 60.f },
 		{ TEXT("10_overview"), -11.f, 0.f, 20.f, -22.f, 0.f }, // above the cleared lane, clear of tree crowns
+		{ TEXT("11_berm_close"), 20.f, -6.f, 1.65f, -12.f, -60.f }, // close look at the left berm and its grass
 	};
 	constexpr int32 NumSpots = UE_ARRAY_COUNT(Spots);
 	constexpr float Settle = 6.f; // seconds for light and eye adaptation to settle after each cut
@@ -934,9 +935,18 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			const bool bOnBerm = BermHeightMetres(PX, PY) > 0.3f;
 			const bool bPadEdge = PX < -PadDepth + 0.8f; // behind the pad only; the view downrange stays clear
 			float Chance = FMath::Max3(0.7f * Foot * (0.6f + 0.4f * Drift), bOnBerm ? 0.35f + 0.25f * Drift : 0.f, bPadEdge ? 0.4f : 0.f);
-			if (AY < 8.f) // keep the shooting lanes in front of the targets clear
+			bool bLaneTuft = false;
+			if (AY < 8.f)
 			{
-				Chance = 0.f;
+				// The shooting lanes stay low: only sparse, short tufts the mower missed, so the lane reads as
+				// a worn meadow rather than a painted strip. None on the pad or right around a target.
+				float NearTarget = BIG_NUMBER;
+				for (const float D : TargetDistances)
+				{
+					NearTarget = FMath::Min(NearTarget, FMath::Abs(PX - D));
+				}
+				Chance = (PX > 1.f && NearTarget > 2.f) ? 0.12f * Drift : 0.f;
+				bLaneTuft = true;
 			}
 			if (SurfaceAt(PX, PY) == Earth || SurfaceAt(PX, PY) == Dirt || FMath::Abs(PY - WalkwayY) < WalkwayHalf + 0.3f)
 			{
@@ -948,7 +958,7 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			}
 			if (GrassSet.Num() > 0)
 			{
-				const float S = Rng.FRandRange(0.7f, 1.3f);
+				const float S = bLaneTuft ? Rng.FRandRange(0.45f, 0.75f) : Rng.FRandRange(0.7f, 1.3f);
 				PlacePlant(GrassSet, Rng, FTransform(FRotator(0.f, Rng.FRandRange(0.f, 360.f), 0.f), OnGround(PX, PY, 2.f), FVector(S)), false, Cull * 0.6f);
 			}
 			else if (GrassMeshes.Num() > 0)

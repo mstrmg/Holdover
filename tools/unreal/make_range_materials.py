@@ -63,7 +63,7 @@ FLAT = {
 GROUND = {
     # Tints keep the ground's brightness near real soil and grass (v3 read pale, nearly white in full sun).
     "ForestFloor": ("ScatteredLeaves009", (0.55, 0.55, 0.48), 1.0),  # last year's leaves, darkened for shade
-    "LaneGrass": ("Ground037", (0.36, 0.45, 0.28), 1.0),             # short mown grass, kept dull (v2 read as lime)
+    "LaneGrass": ("Ground037", (0.30, 0.38, 0.22), 1.0),             # short mown grass, kept dull (v2 lime, v5 pale)
     "Gravel": ("Gravel042", (0.62, 0.62, 0.60), 1.5),
     "DirtPath": ("Ground068", (0.70, 0.66, 0.62), 1.0),
     "BermEarth": ("Ground076", (0.60, 0.54, 0.48), 0.8),
@@ -309,7 +309,7 @@ def make_ground_master():
     edge_amount = scalar("EdgeNoise", 0.7, -2200, -1900)
     contrast = scalar("EdgeSharpness", 3.0, -2200, -1800)
     macro_mix = scalar("FarTextureMix", 0.6, -2200, -1150)
-    macro_dark = scalar("PatchDarkness", 0.22, -2200, -1050)
+    macro_dark = scalar("PatchDarkness", 0.32, -2200, -1050)
     far_scale = scalar("FarTextureScale", 0.21, -2200, -950)
 
     # Alpha for a layer: saturate((w + (n - 0.5) * EdgeNoise - 0.5) * EdgeSharpness + 0.5)
