@@ -958,8 +958,15 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			}
 			if (GrassSet.Num() > 0)
 			{
-				const float S = bLaneTuft ? Rng.FRandRange(0.45f, 0.75f) : Rng.FRandRange(0.7f, 1.3f);
-				PlacePlant(GrassSet, Rng, FTransform(FRotator(0.f, Rng.FRandRange(0.f, 360.f), 0.f), OnGround(PX, PY, 2.f), FVector(S)), false, Cull * 0.6f);
+				// Berms and the foot of the berms get a small cluster of clumps, so they read as grass, not paint.
+				const int32 Clumps = bLaneTuft ? 1 : (bOnBerm || Foot > 0.3f ? Rng.RandRange(2, 4) : 1);
+				for (int32 k = 0; k < Clumps; ++k)
+				{
+					const float CX = PX + (k ? Rng.FRandRange(-0.5f, 0.5f) * GrassCell : 0.f);
+					const float CY = PY + (k ? Rng.FRandRange(-0.5f, 0.5f) * GrassCell : 0.f);
+					const float S = bLaneTuft ? Rng.FRandRange(0.45f, 0.75f) : Rng.FRandRange(0.7f, 1.3f);
+					PlacePlant(GrassSet, Rng, FTransform(FRotator(0.f, Rng.FRandRange(0.f, 360.f), 0.f), OnGround(CX, CY, 2.f), FVector(S)), false, Cull * 1.2f);
+				}
 			}
 			else if (GrassMeshes.Num() > 0)
 			{
@@ -1445,6 +1452,10 @@ bool AHoldoverForestRange::PlacePlant(const FPlantSet& Set, FRandomStream& Rng, 
 	}
 	USkeletalMesh* Mesh = Set.Skinned[Pick - Set.Static.Num()];
 	AddSkinned(Mesh, T);
+	if (bCanopyShade && Mesh && Mesh->GetBounds().BoxExtent.Z * 2.0 > 250.0)
+	{
+		AddCanopyShade(Mesh, T);
+	}
 	if (bCollide)
 	{
 		// Skinned plants carry no collision: a hidden trunk stops bullets and the player.
@@ -1475,12 +1486,60 @@ void AHoldoverForestRange::AddTrunkCollider(const FVector& Base, float RadiusCm,
 		TrunkColliders->SetCastShadow(false);
 		TrunkColliders->SetCollisionProfileName(TEXT("BlockAll"));
 		TrunkColliders->SetCollisionResponseToChannel(ECC_HoldoverBullet, ECR_Block);
+		// Lumen's software tracing can't see the skinned Megaplant trunks; these hidden ones stand in for them.
+		TrunkColliders->bAffectIndirectLightingWhileHidden = bCanopyShade;
+		if (UMaterialInterface* BaseMat = HoldoverShapes::BaseMaterial())
+		{
+			if (UMaterialInstanceDynamic* MID = TrunkColliders->CreateDynamicMaterialInstance(0, BaseMat))
+			{
+				MID->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.10f, 0.09f, 0.07f));
+			}
+		}
 		TrunkColliders->RegisterComponent();
 		AddInstanceComponent(TrunkColliders);
 	}
 	// The engine cylinder is 100 cm across and 100 cm tall, centred on its middle.
 	PendingInstances.FindOrAdd(TrunkColliders).Add(FTransform(FRotator::ZeroRotator, Base + FVector(0.f, 0.f, HeightCm * 0.5f),
 		FVector(RadiusCm / 50.f, RadiusCm / 50.f, HeightCm / 100.f)));
+}
+
+void AHoldoverForestRange::AddCanopyShade(USkeletalMesh* Mesh, const FTransform& T)
+{
+	// Lumen (software tracing) doesn't see skinned meshes, so the Megaplant crowns let all the sky light
+	// through: the forest floor and trunks came out washed-out white (v5, v6). A hidden, dark-green ellipsoid
+	// a bit smaller than each crown takes their place in the bounce light only; you never see it, and the real
+	// leaves still cast the sun's shadows.
+	if (!CanopyShade)
+	{
+		CanopyShade = NewObject<UHierarchicalInstancedStaticMeshComponent>(this, TEXT("CanopyShade"));
+		CanopyShade->SetStaticMesh(HoldoverShapes::Sphere());
+		CanopyShade->SetMobility(EComponentMobility::Static);
+		CanopyShade->SetupAttachment(Root);
+		CanopyShade->SetVisibility(false);
+		CanopyShade->SetHiddenInGame(true);
+		CanopyShade->SetCastShadow(false);
+		CanopyShade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		CanopyShade->SetGenerateOverlapEvents(false);
+		CanopyShade->bAffectIndirectLightingWhileHidden = true;
+		if (UMaterialInterface* BaseMat = HoldoverShapes::BaseMaterial())
+		{
+			if (UMaterialInstanceDynamic* MID = CanopyShade->CreateDynamicMaterialInstance(0, BaseMat))
+			{
+				MID->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.04f, 0.07f, 0.02f));
+			}
+		}
+		CanopyShade->RegisterComponent();
+		AddInstanceComponent(CanopyShade);
+	}
+	const FBoxSphereBounds B = Mesh->GetBounds();
+	const float H = static_cast<float>(B.BoxExtent.Z * 2.0);
+	const float Bottom = static_cast<float>(B.Origin.Z - B.BoxExtent.Z);
+	const FVector LocalCentre(B.Origin.X, B.Origin.Y, Bottom + H * 0.64f);
+	const float R = static_cast<float>(FMath::Min(B.BoxExtent.X, B.BoxExtent.Y)) * CanopyShadeSize;
+	const FVector S = T.GetScale3D();
+	// The engine sphere is 100 cm across.
+	const FVector Scale(R * S.X / 50.f, R * S.Y / 50.f, H * 0.26f * S.Z / 50.f);
+	PendingInstances.FindOrAdd(CanopyShade).Add(FTransform(T.GetRotation(), T.TransformPosition(LocalCentre), Scale));
 }
 
 void AHoldoverForestRange::FlushSkinned()

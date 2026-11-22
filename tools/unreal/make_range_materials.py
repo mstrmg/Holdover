@@ -383,8 +383,15 @@ def make_ground_master():
         rough_out, nrm_out = "", ""
     col = op(unreal.MaterialExpressionMultiply, col, patches, x=0, y=-400)
 
+    # Soil and grass are rough and only faintly shiny: without a floor and lower specular the lane turned
+    # pale cream toward the horizon (sky reflected at a grazing angle, v6).
+    rough_floor = scalar("RoughnessFloor", 0.8, 200, 0)
+    rough = op(unreal.MaterialExpressionMax, rough, rough_floor, x=400, y=0, a_out=rough_out)
+    spec = scalar("Specular", 0.25, 400, 200)
+
     mel.connect_material_property(col, "", MP.MP_BASE_COLOR)
     mel.connect_material_property(rough, "", MP.MP_ROUGHNESS)
+    mel.connect_material_property(spec, "", MP.MP_SPECULAR)
     mel.connect_material_property(nrm, "", MP.MP_NORMAL)
     set_usages(mat)
     mel.recompile_material(mat)

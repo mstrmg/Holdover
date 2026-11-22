@@ -175,10 +175,19 @@ public:
 
 	/** Eye adaptation range (EV100). Your eyes adjust between the sunny lane and the shade inside this range. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
-	float EyeAdaptMinEV = 11.f;
+	float EyeAdaptMinEV = 10.f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
 	float EyeAdaptMaxEV = 15.f;
+
+	/** Hidden stand-ins for the Megaplant crowns and trunks in the bounce light, so the forest floor gets real
+	 *  shade (Lumen's software tracing can't see skinned meshes). Off = the forest washes out white. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Light")
+	bool bCanopyShade = true;
+
+	/** Size of each crown stand-in compared with the tree's width. Smaller = more sky light through the gaps. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Light", meta = (ClampMin = "0.2", ClampMax = "1.2"))
+	float CanopyShadeSize = 0.7f;
 
 	/** How fast eyes adjust to brighter light (stops per second) and to darker light (slower, like real eyes). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
@@ -239,6 +248,7 @@ private:
 	bool PlacePlant(const FPlantSet& Set, FRandomStream& Rng, const FTransform& T, bool bCollide, float CullMetres);
 	void AddSkinned(USkeletalMesh* Mesh, const FTransform& T);
 	void AddTrunkCollider(const FVector& Base, float RadiusCm, float HeightCm);
+	void AddCanopyShade(USkeletalMesh* Mesh, const FTransform& T);
 	void FlushSkinned();
 	FPlantSet TreeSet, YoungSet, PlantSet, GrassSet;
 	TMap<USkeletalMesh*, TArray<FTransform>> PendingSkinned;
@@ -248,6 +258,9 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> TrunkColliders;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UHierarchicalInstancedStaticMeshComponent> CanopyShade;
 
 	// Assets
 	TArray<UStaticMesh*> MeshesIn(const FString& Folder) const;
