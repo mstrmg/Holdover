@@ -1356,6 +1356,13 @@ void AHoldoverForestRange::SpawnLightingIfMissing()
 			S.bOverride_AutoExposureBiasCurve = true;
 			S.AutoExposureBiasCurve = Bias;
 		}
+		// Eyes also adapt locally: sunlit patches next to shade keep their colour instead of burning out.
+		// Local exposure compresses only the bright parts (and lifts deep shade a touch), so a sunny berm
+		// seen from the shade reads as green grass, not cream (v9: 08 and 11 were unaffected by the bias).
+		S.bOverride_LocalExposureHighlightContrastScale = true;
+		S.LocalExposureHighlightContrastScale = SunlitContrast;
+		S.bOverride_LocalExposureShadowContrastScale = true;
+		S.LocalExposureShadowContrastScale = ShadeContrast;
 		S.bOverride_VignetteIntensity = true;
 		S.VignetteIntensity = 0.f;
 		S.bOverride_BloomIntensity = true;

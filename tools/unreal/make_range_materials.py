@@ -63,7 +63,7 @@ FLAT = {
 GROUND = {
     # Tints keep the ground's brightness near real soil and grass (v3 read pale, nearly white in full sun).
     "ForestFloor": ("ScatteredLeaves009", (0.55, 0.55, 0.48), 1.0),  # last year's leaves, darkened for shade
-    "LaneGrass": ("Ground037", (0.30, 0.38, 0.22), 1.0),             # short mown grass, kept dull (v2 lime, v5 pale)
+    "LaneGrass": ("Ground037", (0.27, 0.38, 0.25), 1.0),             # short mown grass, kept dull (v2 lime, v5 pale, v9 yellow)
     "Gravel": ("Gravel042", (0.62, 0.62, 0.60), 1.5),
     "DirtPath": ("Ground068", (0.70, 0.66, 0.62), 1.0),
     "BermEarth": ("Ground076", (0.60, 0.54, 0.48), 0.8),

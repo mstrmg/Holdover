@@ -194,6 +194,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
 	TArray<FVector2D> SunBiasKeys = { FVector2D(11.f, 0.f), FVector2D(12.f, -0.7f), FVector2D(13.f, -1.4f), FVector2D(15.f, -1.6f) };
 
+	/** Local eye adaptation. Below 1, sunlit parts of a mixed view are toned down (1 = off, like a camera). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Light", meta = (ClampMin = "0.2", ClampMax = "1.0"))
+	float SunlitContrast = 0.6f;
+
+	/** Below 1, deep shade in a mixed view is lifted a little (1 = off). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Light", meta = (ClampMin = "0.2", ClampMax = "1.0"))
+	float ShadeContrast = 0.9f;
+
 	/** How fast eyes adjust to brighter light (stops per second) and to darker light (slower, like real eyes). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
 	float EyeAdaptSpeedUp = 2.f;
