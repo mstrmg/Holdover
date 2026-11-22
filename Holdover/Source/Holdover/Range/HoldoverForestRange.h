@@ -187,7 +187,7 @@ public:
 
 	/** Size of each crown stand-in compared with the tree's width. Smaller = more sky light through the gaps. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light", meta = (ClampMin = "0.2", ClampMax = "1.2"))
-	float CanopyShadeSize = 0.7f;
+	float CanopyShadeSize = 0.55f;
 
 	/** How fast eyes adjust to brighter light (stops per second) and to darker light (slower, like real eyes). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")

@@ -959,12 +959,14 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			if (GrassSet.Num() > 0)
 			{
 				// Berms and the foot of the berms get a small cluster of clumps, so they read as grass, not paint.
-				const int32 Clumps = bLaneTuft ? 1 : (bOnBerm || Foot > 0.3f ? Rng.RandRange(2, 4) : 1);
+				// v7 still read as a mown slope with 2-4 clumps, so the uncut berms get a thick, taller patch.
+				const bool bUncut = !bLaneTuft && (bOnBerm || Foot > 0.3f);
+				const int32 Clumps = bLaneTuft ? 1 : (bUncut ? Rng.RandRange(6, 10) : 1);
 				for (int32 k = 0; k < Clumps; ++k)
 				{
 					const float CX = PX + (k ? Rng.FRandRange(-0.5f, 0.5f) * GrassCell : 0.f);
 					const float CY = PY + (k ? Rng.FRandRange(-0.5f, 0.5f) * GrassCell : 0.f);
-					const float S = bLaneTuft ? Rng.FRandRange(0.45f, 0.75f) : Rng.FRandRange(0.7f, 1.3f);
+					const float S = bLaneTuft ? Rng.FRandRange(0.45f, 0.75f) : (bUncut ? Rng.FRandRange(0.9f, 1.7f) : Rng.FRandRange(0.7f, 1.3f));
 					PlacePlant(GrassSet, Rng, FTransform(FRotator(0.f, Rng.FRandRange(0.f, 360.f), 0.f), OnGround(CX, CY, 2.f), FVector(S)), false, Cull * 1.2f);
 				}
 			}
