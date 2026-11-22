@@ -62,11 +62,11 @@ FLAT = {
 # Terrain surfaces (slot names of SM_ForestTerrain) -> (ambientCG id, tint, tiling). Terrain UVs repeat every 2 m.
 GROUND = {
     # Tints keep the ground's brightness near real soil and grass (v3 read pale, nearly white in full sun).
-    "ForestFloor": ("ScatteredLeaves009", (0.55, 0.55, 0.48), 1.0),  # last year's leaves, darkened for shade
-    "LaneGrass": ("Ground037", (0.27, 0.38, 0.25), 1.0),             # short mown grass, kept dull (v2 lime, v5 pale, v9 yellow)
-    "Gravel": ("Gravel042", (0.62, 0.62, 0.60), 1.5),
-    "DirtPath": ("Ground068", (0.70, 0.66, 0.62), 1.0),
-    "BermEarth": ("Ground076", (0.60, 0.54, 0.48), 0.8),
+    "ForestFloor": ("ScatteredLeaves009", (0.36, 0.34, 0.27), 1.0),  # last year's leaves, darkened for shade
+    "LaneGrass": ("Ground037", (0.17, 0.27, 0.14), 1.0),             # short mown grass, kept dull (v2 lime, v5 pale, v9 yellow; Miles asked darker 2026-11-22)
+    "Gravel": ("Gravel042", (0.50, 0.50, 0.49), 1.5),
+    "DirtPath": ("Ground068", (0.42, 0.37, 0.31), 1.0),
+    "BermEarth": ("Ground076", (0.38, 0.32, 0.26), 0.8),
 }
 
 assets = unreal.AssetToolsHelpers.get_asset_tools()

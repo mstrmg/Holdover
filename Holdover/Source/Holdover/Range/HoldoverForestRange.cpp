@@ -420,7 +420,43 @@ bool AHoldoverForestRange::IsBareGround(float X, float Y) const
 	{
 		return true;
 	}
-	return X > ClearBehind && X < BackToe(Y) + 1.f && FMath::Abs(Y) < LaneEdge(X, Y) + 1.f;
+	const bool bInLane = X > ClearBehind && X < BackToe(Y) + 1.f && FMath::Abs(Y) < LaneEdge(X, Y) + 1.f;
+	// Plants may wander into the lane (Miles, 2026-11-22), just never into a line of fire.
+	return bInLane && (!bPlantsIntoLane || KeepClearForShooting(X, Y, 2.5f));
+}
+
+bool AHoldoverForestRange::KeepClearForShooting(float X, float Y, float Margin) const
+{
+	if (X < 2.f + Margin)
+	{
+		return true; // the firing pad and just in front of it
+	}
+	if (FMath::Abs(Y - WalkwayY) < WalkwayHalf + Margin)
+	{
+		return true; // the walkway down to the targets
+	}
+	if (X > BackToe(Y) - 3.f)
+	{
+		return true; // the backstop face, where bullets land
+	}
+	// From the bench to every target (spread across the lane exactly as the targets are placed), plus a few
+	// metres behind it.
+	const int32 Count = TargetDistances.Num();
+	for (int32 i = 0; i < Count; ++i)
+	{
+		const float D = TargetDistances[i];
+		if (X > D + 3.f)
+		{
+			continue;
+		}
+		const float TY = (i - (Count - 1) * 0.5f) * TargetSpacing / 100.f;
+		const float LineY = TY * (X + 1.5f) / (D + 1.5f);
+		if (FMath::Abs(Y - LineY) < Margin + 0.6f)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -775,10 +811,12 @@ void AHoldoverForestRange::GrowTrees(FRandomStream& Rng)
 			}
 			if (IsClearedForTrees(PX, PY, 0.f))
 			{
-				// A few lone trees stand inside the clearing too, on the berm backs, well off the lane.
+				// Lone trees stand inside the clearing too: on the berm backs, and a few metres into the lane itself
+				// where no line of fire passes.
 				const float OffLane = FMath::Abs(PY) - LaneEdge(PX, PY);
-				if (OffLane < 4.f || IsBareGround(PX, PY) || DistanceToAccessPath(PX, PY) < 3.f || PX < 2.f || PX > BackToe(PY) - 2.f
-					|| Rng.FRand() > 0.18f)
+				const float Reach = bPlantsIntoLane ? LaneTreeReach : -4.f;
+				if (OffLane < -Reach || IsBareGround(PX, PY) || KeepClearForShooting(PX, PY, 3.5f) || DistanceToAccessPath(PX, PY) < 3.f
+					|| PX < 2.f || PX > BackToe(PY) - 2.f || Rng.FRand() > (OffLane < 0.f ? 0.22f : 0.18f))
 				{
 					continue;
 				}
@@ -826,9 +864,13 @@ void AHoldoverForestRange::GrowSaplings(FRandomStream& Rng)
 			float Chance = (bEdge ? 0.8f : 0.4f) * SaplingDensity;
 			if (IsClearedForTrees(PX, PY, -0.5f))
 			{
-				// Young trees and shrubs creep in from the edge, never onto the lane itself.
+				// Young trees and shrubs creep in from the edge and well into the lane, thinning out the further in,
+				// but never into a line of fire.
 				const float OffLane = FMath::Abs(PY) - LaneEdge(PX, PY);
-				Chance = (OffLane < 1.5f || IsBareGround(PX, PY) || DistanceToAccessPath(PX, PY) < 2.f) ? 0.f : 0.3f * SaplingDensity;
+				const float Reach = bPlantsIntoLane ? LaneBushReach : -1.5f;
+				const float Depth = OffLane < 0.f ? FMath::Clamp(1.f + OffLane / FMath::Max(Reach, 0.1f), 0.f, 1.f) : 1.f;
+				Chance = (OffLane < -Reach || IsBareGround(PX, PY) || KeepClearForShooting(PX, PY, 3.f) || DistanceToAccessPath(PX, PY) < 2.f)
+					? 0.f : (OffLane < 0.f ? 0.45f * Depth : 0.3f) * SaplingDensity;
 			}
 			if (Rng.FRand() > Chance)
 			{
@@ -879,7 +921,9 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			float Chance = (bEdge ? 0.9f : 0.25f + 0.5f * Patch) * UndergrowthDensity;
 			if (bInClearing)
 			{
-				Chance = IsBareGround(PX, PY) || DistanceToAccessPath(PX, PY) < 1.5f ? 0.f : (0.15f + 0.35f * Patch) * UndergrowthDensity;
+				const float OffLane = FMath::Abs(PY) - LaneEdge(PX, PY);
+				const float Depth = OffLane < 0.f ? FMath::Clamp(1.f + OffLane / FMath::Max(LaneBushReach, 0.1f), 0.f, 1.f) : 1.f;
+				Chance = IsBareGround(PX, PY) || DistanceToAccessPath(PX, PY) < 1.5f ? 0.f : (0.15f + 0.35f * Patch) * Depth * UndergrowthDensity;
 			}
 			if (Rng.FRand() > Chance)
 			{
@@ -937,17 +981,31 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			const bool bPadEdge = PX < -PadDepth + 0.8f; // behind the pad only; the view downrange stays clear
 			float Chance = FMath::Max3(0.7f * Foot * (0.6f + 0.4f * Drift), bOnBerm ? 0.35f + 0.25f * Drift : 0.f, bPadEdge ? 0.4f : 0.f);
 			bool bLaneTuft = false;
-			if (AY < 8.f)
+			bool bLanePatch = false;
+			if (FromEdge > 1.5f && PX > 1.f)
 			{
-				// The shooting lanes stay low: only sparse, short tufts the mower missed, so the lane reads as
-				// a worn meadow rather than a painted strip. None on the pad or right around a target.
-				float NearTarget = BIG_NUMBER;
-				for (const float D : TargetDistances)
+				if (bPlantsIntoLane && !KeepClearForShooting(PX, PY, 0.8f))
 				{
-					NearTarget = FMath::Min(NearTarget, FMath::Abs(PX - D));
+					// Uncut patches of long grass drift across the lane between the lines of fire.
+					const float Patchy = FMath::Clamp((Drift - 0.35f) * 2.f, 0.f, 1.f);
+					Chance = FMath::Max(Chance, 0.15f + 0.75f * Patchy);
+					bLanePatch = true;
 				}
-				Chance = (PX > 1.f && NearTarget > 2.f) ? 0.12f * Drift : 0.f;
-				bLaneTuft = true;
+				else
+				{
+					// In the lines of fire only sparse, short tufts the mower missed. None right around a target.
+					float NearTarget = BIG_NUMBER;
+					for (const float D : TargetDistances)
+					{
+						NearTarget = FMath::Min(NearTarget, FMath::Abs(PX - D));
+					}
+					Chance = NearTarget > 2.f ? 0.15f * Drift : 0.f;
+					bLaneTuft = true;
+				}
+			}
+			else if (FromEdge > 1.5f)
+			{
+				Chance = 0.f; // the firing pad
 			}
 			if (SurfaceAt(PX, PY) == Earth || SurfaceAt(PX, PY) == Dirt || FMath::Abs(PY - WalkwayY) < WalkwayHalf + 0.3f)
 			{
@@ -961,14 +1019,14 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			{
 				// Berms and the foot of the berms get a small cluster of clumps, so they read as grass, not paint.
 				// v7 still read as a mown slope with 2-4 clumps, so the uncut berms get a thick, taller patch.
-				const bool bUncut = !bLaneTuft && (bOnBerm || Foot > 0.3f);
+				const bool bUncut = !bLaneTuft && (bOnBerm || Foot > 0.3f || bLanePatch);
 				const int32 Clumps = bLaneTuft ? 1 : (bUncut ? Rng.RandRange(6, 10) : 1);
 				for (int32 k = 0; k < Clumps; ++k)
 				{
 					const float CX = PX + (k ? Rng.FRandRange(-0.5f, 0.5f) * GrassCell : 0.f);
 					const float CY = PY + (k ? Rng.FRandRange(-0.5f, 0.5f) * GrassCell : 0.f);
 					const float S = bLaneTuft ? Rng.FRandRange(0.45f, 0.75f) : (bUncut ? Rng.FRandRange(0.9f, 1.7f) : Rng.FRandRange(0.7f, 1.3f));
-					PlacePlant(GrassSet, Rng, FTransform(FRotator(0.f, Rng.FRandRange(0.f, 360.f), 0.f), OnGround(CX, CY, 2.f), FVector(S)), false, Cull * 1.2f);
+					PlacePlant(GrassSet, Rng, FTransform(FRotator(0.f, Rng.FRandRange(0.f, 360.f), 0.f), OnGround(CX, CY, 2.f), FVector(S)), false, Cull * 1.8f);
 				}
 			}
 			else if (GrassMeshes.Num() > 0)
@@ -1320,6 +1378,7 @@ void AHoldoverForestRange::SpawnLightingIfMissing()
 		if (UExponentialHeightFogComponent* F = Fog->GetComponent())
 		{
 			F->SetFogDensity(HazeDensity);
+			F->SetFogInscatteringColor(FLinearColor(0.32f, 0.38f, 0.42f)); // humid, blue-grey air between the trees
 			F->SetFogHeightFalloff(0.35f);
 			F->SetVolumetricFog(true);
 			F->SetVolumetricFogScatteringDistribution(0.75f); // strongly forward: rays show when looking toward the sun
@@ -1363,6 +1422,14 @@ void AHoldoverForestRange::SpawnLightingIfMissing()
 		S.LocalExposureHighlightContrastScale = SunlitContrast;
 		S.bOverride_LocalExposureShadowContrastScale = true;
 		S.LocalExposureShadowContrastScale = ShadeContrast;
+		// Mood (Miles, 2026-11-22: darker, like his reference photo, "more like New Jersey than Alabama"):
+		// a shadier, cooler, slightly less saturated-yellow forest.
+		S.bOverride_AutoExposureBias = true;
+		S.AutoExposureBias = MoodExposure;
+		S.bOverride_WhiteTemp = true;
+		S.WhiteTemp = MoodWhiteBalance;
+		S.bOverride_ColorSaturationHighlights = true;
+		S.ColorSaturationHighlights = FVector4(1.f, 1.f, 1.f, 0.85f); // sunlit leaves less yellow-bright
 		S.bOverride_VignetteIntensity = true;
 		S.VignetteIntensity = 0.f;
 		S.bOverride_BloomIntensity = true;
@@ -1446,13 +1513,19 @@ void AHoldoverForestRange::FindMegaplants()
 		{
 			Set = &PlantSet; Kind = TEXT("ground plant");
 		}
-		if (SM)
+		// Oaks have the dark bark of Miles's reference forest: give them three times the share of the paler
+		// beech and hornbeam.
+		const int32 Weight = (Set == &TreeSet && Name.Contains(TEXT("oak"))) ? 3 : 1;
+		for (int32 w = 0; w < Weight; ++w)
 		{
-			Set->Static.Add(SM);
-		}
-		else
-		{
-			Set->Skinned.Add(SK);
+			if (SM)
+			{
+				Set->Static.Add(SM);
+			}
+			else
+			{
+				Set->Skinned.Add(SK);
+			}
 		}
 		UE_LOG(LogTemp, Log, TEXT("[Holdover] Megaplant %s: %.1f m tall, %s mesh -> %s"), *Path, HeightCm / 100.f, SM ? TEXT("static") : TEXT("skeletal"), Kind);
 	}

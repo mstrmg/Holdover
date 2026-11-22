@@ -96,13 +96,13 @@ public:
 	// ---------- Forest (densities are multipliers, 1 = the designed look) ----------
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Plants", meta = (ClampMin = "0", ClampMax = "3"))
-	float TreeDensity = 1.f;
+	float TreeDensity = 1.35f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Plants", meta = (ClampMin = "0", ClampMax = "3"))
-	float SaplingDensity = 1.f;
+	float SaplingDensity = 1.5f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Plants", meta = (ClampMin = "0", ClampMax = "3"))
-	float UndergrowthDensity = 1.f;
+	float UndergrowthDensity = 1.6f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Plants", meta = (ClampMin = "0", ClampMax = "3"))
 	float DebrisDensity = 1.f;
@@ -163,15 +163,15 @@ public:
 
 	/** Sunlight, lux (clear summer afternoon, a little hazy). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
-	float SunLux = 75000.f;
+	float SunLux = 55000.f;
 
 	/** Sun colour temperature, kelvin. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
-	float SunTemperature = 5500.f;
+	float SunTemperature = 6000.f;
 
 	/** Ground haze. Higher = thicker air and stronger light shafts. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
-	float HazeDensity = 0.005f;
+	float HazeDensity = 0.012f;
 
 	/** Eye adaptation range (EV100). Your eyes adjust between the sunny lane and the shade inside this range. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
@@ -179,6 +179,18 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
 	float EyeAdaptMaxEV = 15.f;
+
+	/** Let grass, bushes and trees grow into the lane (never into a line of fire), so the range isn't a ruled strip. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
+	bool bPlantsIntoLane = true;
+
+	/** How far trees may stand inside the lane edge, metres. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
+	float LaneTreeReach = 5.f;
+
+	/** How far bushes, young trees and ferns may creep into the lane, metres (thinning out the further in). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
+	float LaneBushReach = 8.f;
 
 	/** Hidden stand-ins for the Megaplant crowns and trunks in the bounce light, so the forest floor gets real
 	 *  shade (Lumen's software tracing can't see skinned meshes). Off = the forest washes out white. */
@@ -193,6 +205,14 @@ public:
 	 *  Holds sunlit, mixed views darker so sunny grass keeps its colour; 0 leaves shade views as they are. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
 	TArray<FVector2D> SunBiasKeys = { FVector2D(10.f, 0.f), FVector2D(11.f, -0.4f), FVector2D(12.f, -0.9f), FVector2D(13.f, -1.5f), FVector2D(15.f, -1.7f) };
+
+	/** Overall mood, stops. Below 0 = a darker, shadier forest (Miles's reference photo); 0 = neutral. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Light")
+	float MoodExposure = -0.6f;
+
+	/** White balance, kelvin. Below 6500 = cooler, greener and less sun-baked; above = warmer. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Light")
+	float MoodWhiteBalance = 5900.f;
 
 	/** Local eye adaptation. Below 1, sunlit parts of a mixed view are toned down (1 = off, like a camera). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light", meta = (ClampMin = "0.2", ClampMax = "1.0"))
@@ -228,6 +248,8 @@ private:
 	int32 SurfaceAt(float Xm, float Ym) const;
 	float DistanceToAccessPath(float Xm, float Ym) const;
 	bool IsClearedForTrees(float Xm, float Ym, float Margin) const;
+	/** True where nothing tall may grow: the pad, the walkway, the backstop face and every line of fire. */
+	bool KeepClearForShooting(float Xm, float Ym, float Margin) const;
 	FVector OnGround(float Xm, float Ym, float Sink = 0.f) const;
 
 	// Plants
