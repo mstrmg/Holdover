@@ -189,6 +189,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Forest|Light", meta = (ClampMin = "0.2", ClampMax = "1.2"))
 	float CanopyShadeSize = 0.55f;
 
+	/** Exposure correction by how bright the view is on average (X = scene brightness in EV100, Y = stops).
+	 *  Holds sunlit, mixed views darker so sunny grass keeps its colour; 0 leaves shade views as they are. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Light")
+	TArray<FVector2D> SunBiasKeys = { FVector2D(11.f, 0.f), FVector2D(12.f, -0.7f), FVector2D(13.f, -1.4f), FVector2D(15.f, -1.6f) };
+
 	/** How fast eyes adjust to brighter light (stops per second) and to darker light (slower, like real eyes). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Light")
 	float EyeAdaptSpeedUp = 2.f;

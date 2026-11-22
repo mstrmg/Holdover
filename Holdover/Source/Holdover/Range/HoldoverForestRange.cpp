@@ -12,6 +12,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/SkyLightComponent.h"
+#include "Curves/CurveFloat.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Core/HoldoverDebug.h"
@@ -1342,6 +1343,19 @@ void AHoldoverForestRange::SpawnLightingIfMissing()
 		S.AutoExposureSpeedUp = EyeAdaptSpeedUp;
 		S.bOverride_AutoExposureSpeedDown = true;
 		S.AutoExposureSpeedDown = EyeAdaptSpeedDown;
+		// Like your eyes, it settles somewhere between sun and shade when you look at both: from the firing
+		// line the dark forest walls pulled the exposure up and the sunlit lane came out pale cream (v8 lane
+		// measured about sRGB 224/220/160, real sunlit grass sits near 110/130/60). Bright, mixed views are
+		// therefore held darker; dim views inside the forest (which already looked right) are left alone.
+		if (UCurveFloat* Bias = NewObject<UCurveFloat>(PP))
+		{
+			for (const FVector2D& K : SunBiasKeys)
+			{
+				Bias->FloatCurve.AddKey(K.X, K.Y);
+			}
+			S.bOverride_AutoExposureBiasCurve = true;
+			S.AutoExposureBiasCurve = Bias;
+		}
 		S.bOverride_VignetteIntensity = true;
 		S.VignetteIntensity = 0.f;
 		S.bOverride_BloomIntensity = true;
