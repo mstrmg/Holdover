@@ -356,7 +356,7 @@ float AHoldoverForestRange::Valley(float X, float Y) const
 {
 	// Same as valley() in tools/range/forest_layout.py.
 	const float T = FMath::Max(X - 2.f, 0.f) / (BackBermToe - 2.f);
-	const float Far = FarRise * FMath::Pow(T, FarRisePower);
+	const float Far = FarRise * FMath::Pow(T, FarRisePower) + BeyondRise * FMath::SmoothStep(BackBermToe + 10.f, GroundAhead - 5.f, X);
 	const float Behind = BehindRise * FMath::SmoothStep(0.f, GroundBehind + ClearBehind, ClearBehind - X);
 	const float Out = FMath::Max(FMath::Abs(Y) - TreeLine(X, Y), 0.f);
 	const float Side = SideRise * (1.f + 0.35f * Wobble(X * 0.9f, Y >= 0.f ? 1.4f : 3.6f)) * FMath::SmoothStep(0.f, SideRiseRun, Out);
@@ -382,10 +382,33 @@ float AHoldoverForestRange::FireDistance(float X, float Y) const
 
 float AHoldoverForestRange::MoundWeight(float X, float Y) const
 {
-	float W = FMath::SmoothStep(2.f, 8.f, X) * FMath::SmoothStep(1.5f, 5.f, FireDistance(X, Y));
+	float W = FMath::SmoothStep(2.f, 8.f, X) * FMath::SmoothStep(1.2f, 4.f, FireDistance(X, Y));
 	W *= 1.f - FMath::SmoothStep(BackToe(Y) - 8.f, BackToe(Y) - 3.f, X);
 	W *= FMath::SmoothStep(0.4f, 2.5f, FMath::Abs(Y - WalkwayCentre(X)));
 	return W;
+}
+
+float AHoldoverForestRange::SignY(float D) const
+{
+	// By the left lane edge, 1 m in. If a nearer target would stand in the line of sight from the bench (v14: the
+	// 5 m target hid the 10 m sign), the sign moves outward until that line passes 1.2 m clear.
+	float SY = -LaneEdge(D, -1.f) + 1.f;
+	const int32 Count = TargetDistances.Num();
+	for (int32 i = 0; i < Count; ++i)
+	{
+		const float TD = TargetDistances[i];
+		if (TD >= D - 1.f)
+		{
+			continue;
+		}
+		const float TY = (i - (Count - 1) * 0.5f) * TargetSpacing / 100.f;
+		const float K = (TD + 1.5f) / (D + 1.5f); // the sight line's Y at the target is SY * K
+		if (FMath::Abs(SY * K - TY) < 1.2f)
+		{
+			SY = FMath::Min(SY, (TY - 1.2f) / K); // outward, off the walkway
+		}
+	}
+	return SY;
 }
 
 float AHoldoverForestRange::WalkwayCentre(float X) const
@@ -558,7 +581,7 @@ bool AHoldoverForestRange::KeepClearForShooting(float X, float Y, float Margin) 
 	for (const int32 SignD : SignDistances)
 	{
 		const float SX = static_cast<float>(SignD);
-		const float SY = -LaneEdge(SX, -1.f) + 1.f;
+		const float SY = SignY(SX);
 		if (FVector2D::Distance(FVector2D(X, Y), FVector2D(SX, SY)) < 1.f + Margin * 0.5f)
 		{
 			return true;
@@ -1265,7 +1288,7 @@ void AHoldoverForestRange::ScatterDebris(FRandomStream& Rng)
 			{
 				if (UStaticMesh* M = Pick(KitBranches))
 				{
-					AddInstance(M, FTransform(FRotator(0.f, Yaw, 0.f), OnGround(PX, PY, 1.f), FVector(Rng.FRandRange(0.8f, 1.3f))), -1, nullptr, false, Cull);
+					AddInstance(M, FTransform(FRotator(0.f, Yaw, 0.f), OnLowGround(PX, PY, 0.6f, 1.f), FVector(Rng.FRandRange(0.8f, 1.3f))), -1, nullptr, false, Cull);
 				}
 				else
 				{
@@ -1446,7 +1469,7 @@ void AHoldoverForestRange::PlaceRangeProps()
 	// Distance signs along the left edge, facing you.
 	for (const int32 D : SignDistances)
 	{
-		const FVector At(static_cast<float>(D), -LaneEdge(static_cast<float>(D), -1.f) + 1.f, 1.1f);
+		const FVector At(static_cast<float>(D), SignY(static_cast<float>(D)), 1.1f);
 		const FString Id = FString::FromInt(D);
 		if (!PlaceProp({ TEXT("SM_DistanceMarker_") + Id + TEXT("m"), TEXT("SM_Sign_") + Id + TEXT("m") }, FVector(At.X, At.Y, 0.f), FaceShooter))
 		{

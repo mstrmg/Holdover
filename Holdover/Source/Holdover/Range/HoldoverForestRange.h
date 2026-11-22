@@ -106,10 +106,14 @@ public:
 
 	/** Metres the ground climbs from the firing line to the backstop, steepening toward it. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
-	float FarRise = 6.f;
+	float FarRise = 9.f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
 	float FarRisePower = 1.6f;
+
+	/** Metres a wooded hill climbs behind the backstop, so the far end reads clearly higher than you. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
+	float BeyondRise = 6.f;
 
 	/** Metres the ground climbs behind the pad, to the back of the map. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
@@ -131,7 +135,7 @@ public:
 
 	/** Low mounds and hollows in the lane and clearing, kept off the lines of fire (m). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
-	float LaneMound = 0.7f;
+	float LaneMound = 1.1f;
 
 	// ---------- Forest (densities are multipliers, 1 = the designed look) ----------
 
@@ -305,6 +309,8 @@ private:
 	/** 0..1, where the lane and clearing may have mounds. */
 	float MoundWeight(float Xm, float Ym) const;
 	float WalkwayCentre(float Xm) const;
+	/** Where the distance sign for D metres stands across the lane: by the left edge, but never behind a nearer target. */
+	float SignY(float D) const;
 	bool OnWalkway(float Xm, float Ym) const;
 	/** True near a picture spot of holdover.RangeShots or in front of its lens, so plants don't block the view. */
 	bool BlocksShotSpot(float Xm, float Ym, float Radius, float ConeLength) const;

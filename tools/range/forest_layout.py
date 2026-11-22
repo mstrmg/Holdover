@@ -35,14 +35,15 @@ WALKWAY_HALF = 0.5         # half width where it is most worn; it narrows and fa
 # The range sits in the bottom of a shallow valley: the ground climbs gently downrange to the backstop
 # and keeps climbing behind it, climbs into the forest on both sides, and a little behind the pad. The
 # forest is hilly; the lane and clearing get low mounds and hollows, kept off the lines of fire.
-FAR_RISE = 6.0             # metres the ground climbs from the firing line to the backstop toe
+FAR_RISE = 9.0             # metres the ground climbs from the firing line to the backstop toe (v14's 6 m hardly showed)
 FAR_RISE_POWER = 1.6       # > 1: the climb steepens toward the backstop, so it never humps into a line of sight
+BEYOND_RISE = 6.0          # a wooded hill rising behind the backstop, so the far end reads clearly higher
 BEHIND_RISE = 3.5          # climb behind the pad, out to the back of the map
 SIDE_RISE = 8.0            # climb from the tree line to the map's side edges
 SIDE_RISE_RUN = 60.0       # over this many metres
 HILL_HEIGHT = 3.5          # rolling hills in the forest
 HILL_SCALE = 55.0          # metres across a hill
-LANE_MOUND = 0.7           # low mounds and hollows in the lane and clearing, away from the lines of fire
+LANE_MOUND = 1.1           # low mounds and hollows in the lane and clearing, away from the lines of fire
 
 ACCESS_PATH = [(-7, -7), (-12, -9.5), (-20, -11), (-30, -15), (-42, -19), (-56, -20), (-70, -18), (-95, -23)]
 
@@ -116,7 +117,7 @@ def berm_height(x, y):
 def valley(x, y):
     """Large-scale climb of the ground (metres) around the range; 0 on the firing pad."""
     t = max(x - 2.0, 0.0) / (BACK_BERM_TOE - 2.0)
-    far = FAR_RISE * t ** FAR_RISE_POWER
+    far = FAR_RISE * t ** FAR_RISE_POWER + BEYOND_RISE * smoothstep(BACK_BERM_TOE + 10.0, GROUND_AHEAD - 5.0, x)
     behind = BEHIND_RISE * smoothstep(0.0, GROUND_BEHIND + CLEAR_BEHIND, CLEAR_BEHIND - x)
     out = max(abs(y) - tree_line(x, y), 0.0)
     side = SIDE_RISE * (1.0 + 0.35 * wobble(x * 0.9, 1.4 if y >= 0 else 3.6)) * smoothstep(0.0, SIDE_RISE_RUN, out)
@@ -137,7 +138,7 @@ def fire_distance(x, y):
 
 def mound_weight(x, y):
     """0..1: where the lane may have mounds. None on the pad, near lines of fire, on the walkway or the backstop face."""
-    w = smoothstep(2.0, 8.0, x) * smoothstep(1.5, 5.0, fire_distance(x, y))
+    w = smoothstep(2.0, 8.0, x) * smoothstep(1.2, 4.0, fire_distance(x, y))
     w *= 1.0 - smoothstep(back_toe(y) - 8.0, back_toe(y) - 3.0, x)
     w *= smoothstep(0.4, 2.5, abs(y - walkway_y(x)))
     return w
