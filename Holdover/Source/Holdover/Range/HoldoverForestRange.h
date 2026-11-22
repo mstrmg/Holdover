@@ -75,7 +75,15 @@ public:
 
 	/** How far the lane edge drifts in and out along the range (m), so it looks cut by hand, not with a ruler. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float LaneEdgeWander = 2.8f;
+	float LaneEdgeWander = 4.f;
+
+	/** A shorter ripple on top of the wander, so no stretch of the lane edge runs straight. Keep equal to LANE_EDGE_RIPPLE in tools/range/forest_layout.py. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
+	float LaneEdgeRipple = 1.2f;
+
+	/** The lane edge never comes closer to the centre than this, metres (targets stand within 6.4 m). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
+	float LaneEdgeMin = 9.5f;
 
 	/** Share the side berm height and width drift along the range. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
@@ -83,7 +91,7 @@ public:
 
 	/** How far the tree line drifts in and out (m). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float TreeLineWander = 6.f;
+	float TreeLineWander = 8.f;
 
 	/** How far the backstop toe drifts across the lane (m). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
@@ -186,11 +194,11 @@ public:
 
 	/** How far trees may stand inside the lane edge, metres. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float LaneTreeReach = 5.f;
+	float LaneTreeReach = 20.f;
 
 	/** How far bushes, young trees and ferns may creep into the lane, metres (thinning out the further in). */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float LaneBushReach = 8.f;
+	float LaneBushReach = 20.f;
 
 	/** Hidden stand-ins for the Megaplant crowns and trunks in the bounce light, so the forest floor gets real
 	 *  shade (Lumen's software tracing can't see skinned meshes). Off = the forest washes out white. */

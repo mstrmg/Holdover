@@ -25,7 +25,7 @@ TARGET_SPACING = 1.6                        # sideways spacing, metres
 DISTANCE_SIGNS = [5, 10, 25, 50, 75, 100, 150]
 
 CLEAR_BEHIND = -12.0
-CLEAR_SIDE_EXTRA = 5.0
+CLEAR_SIDE_EXTRA = 3.0
 CLEAR_PAST_BERM_TOE = 10.0
 WALKWAY_Y = -8.5
 WALKWAY_HALF = 0.7
@@ -46,9 +46,11 @@ FOREST, GRASS, GRAVEL, DIRT, EARTH = range(5)
 # The range is carved out of the forest by hand, not with a ruler: the lane edge, the berms and the
 # tree line all wander. wobble() is a smooth wave in [-1, 1] made from three sines, so the game
 # (C++, same formula) and Blender get exactly the same shape.
-LANE_EDGE_WANDER = 2.8      # metres the lane edge drifts in and out
+LANE_EDGE_WANDER = 4.0      # metres the lane edge drifts in and out (Miles: no straight border, 2026-11-22)
+LANE_EDGE_RIPPLE = 1.2      # plus a shorter ripple, so no stretch of the edge runs straight
+LANE_EDGE_MIN = 9.5         # never closer to the centre than this (targets stand within 6.4 m)
 BERM_WANDER = 0.45          # share the side berm height and width drift
-TREE_LINE_WANDER = 6.0      # metres the tree line drifts in and out
+TREE_LINE_WANDER = 8.0      # metres the tree line drifts in and out
 BACK_TOE_WANDER = 1.5       # metres the backstop toe drifts
 
 
@@ -59,7 +61,9 @@ def wobble(t, phase):
 
 def lane_edge(x, y):
     """Lane half width at x on the side of y (the lane floor ends here and the side berm starts)."""
-    return LANE_HALF_WIDTH + LANE_EDGE_WANDER * wobble(x, 1.1 if y >= 0 else 4.2)
+    ph = 1.1 if y >= 0 else 4.2
+    e = LANE_HALF_WIDTH + LANE_EDGE_WANDER * wobble(x * 1.9, ph) + LANE_EDGE_RIPPLE * wobble(x * 4.3, ph + 2.0)
+    return max(e, LANE_EDGE_MIN)
 
 
 def back_toe(y):
@@ -88,10 +92,21 @@ def berm_height(x, y):
     w = 1.0 + BERM_WANDER * wobble(x, ph + 1.7)
     side = berm_profile(ay, l, l + 3.5 * w, l + 4.5 * w, l + 8.0 * w, h)
     side *= smoothstep(-6, -3, x) * (1 - smoothstep(BACK_BERM_TOE + 10, BACK_BERM_TOE + 14, x))
+    side *= berm_gate(x, y)
     t = back_toe(y)
     back = berm_profile(x, t, t + 5, t + 6.5, t + 13, BACK_BERM_HEIGHT)
     back *= 1 - smoothstep(l + 6, l + 12, ay)
     return max(side, back)
+
+
+def berm_gate(x, y):
+    """The side berms come and go: in long stretches they flatten out and the forest meets the lane directly."""
+    return smoothstep(-0.35, 0.25, wobble(x * 1.4, (2.9 if y >= 0 else 5.3) + 0.6))
+
+
+def litter_island(x, y):
+    """Patches of leaf litter out in the lane, so the mown grass isn't one clean strip."""
+    return wobble(x * 3.1 + y * 0.7, 1.3) * wobble(y * 2.9 - x * 0.4, 2.6) > 0.22
 
 
 def _segment_distance(p, a, b):
@@ -107,7 +122,7 @@ def path_distance(x, y):
 
 def tree_line(x, y):
     """How far out from the centre line the trees start at x (side of y)."""
-    return lane_edge(x, y) + CLEAR_SIDE_EXTRA + TREE_LINE_WANDER * wobble(x, 7.3 if y >= 0 else 8.9)
+    return lane_edge(x, y) + CLEAR_SIDE_EXTRA + TREE_LINE_WANDER * wobble(x * 1.6, 7.3 if y >= 0 else 8.9)
 
 
 def cleared_for_trees(x, y, margin=0.0):
@@ -137,11 +152,13 @@ def surface_at(x, y):
             return DIRT
         if leaf_litter(x, y, l - ay):
             return FOREST
+        if x > 3 and abs(y - WALKWAY_Y) > WALKWAY_HALF + 0.5 and litter_island(x, y):
+            return FOREST
         return GRASS
     return FOREST
 
 
 def leaf_litter(x, y, from_edge):
     """Tongues of leaf litter reaching a few metres into the lane from the forest side."""
-    reach = 1.0 + 2.5 * (0.5 + 0.5 * wobble(x * 2.3, 2.2 if y >= 0 else 5.1))
+    reach = 1.5 + 5.0 * (0.5 + 0.5 * wobble(x * 2.3, 2.2 if y >= 0 else 5.1))
     return from_edge < reach * (0.5 + 0.5 * wobble(x * 5.1, 0.9))

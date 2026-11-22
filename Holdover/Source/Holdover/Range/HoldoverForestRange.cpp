@@ -100,7 +100,7 @@ namespace ForestRange
 
 	// Cleared range area (no trees): behind the pad to past the back berm, out to the side berm crests.
 	constexpr float ClearBehind = -12.f;
-	constexpr float ClearSideExtra = 5.f;   // beyond the lane half width
+	constexpr float ClearSideExtra = 3.f;   // beyond the lane half width
 	constexpr float ClearPastBermToe = 10.f;
 
 	// Inspection walkway down the left side of the lane.
@@ -264,7 +264,10 @@ void AHoldoverForestRange::UpdateRangeShots(float DeltaSeconds)
 
 float AHoldoverForestRange::LaneEdge(float X, float Y) const
 {
-	return LaneHalfWidth + LaneEdgeWander * Wobble(X, Y >= 0.f ? 1.1f : 4.2f);
+	// Same as lane_edge() in tools/range/forest_layout.py (the ground is built from that).
+	const float Ph = Y >= 0.f ? 1.1f : 4.2f;
+	const float E = LaneHalfWidth + LaneEdgeWander * Wobble(X * 1.9f, Ph) + LaneEdgeRipple * Wobble(X * 4.3f, Ph + 2.f);
+	return FMath::Max(E, LaneEdgeMin);
 }
 
 float AHoldoverForestRange::BackToe(float Y) const
@@ -274,7 +277,7 @@ float AHoldoverForestRange::BackToe(float Y) const
 
 float AHoldoverForestRange::TreeLine(float X, float Y) const
 {
-	return LaneEdge(X, Y) + ClearSideExtra + TreeLineWander * Wobble(X, Y >= 0.f ? 7.3f : 8.9f);
+	return LaneEdge(X, Y) + ClearSideExtra + TreeLineWander * Wobble(X * 1.6f, Y >= 0.f ? 7.3f : 8.9f);
 }
 
 float AHoldoverForestRange::BermHeightMetres(float X, float Y) const
@@ -289,6 +292,8 @@ float AHoldoverForestRange::BermHeightMetres(float X, float Y) const
 	float Side = BermProfile(AY, L, L + 3.5f * W, L + 4.5f * W, L + 8.f * W, H);
 	Side *= FMath::SmoothStep(-6.f, -3.f, X);
 	Side *= 1.f - FMath::SmoothStep(BackBermToe + 10.f, BackBermToe + 14.f, X);
+	// The side berms come and go: in long stretches they flatten out and the forest meets the lane directly.
+	Side *= FMath::SmoothStep(-0.35f, 0.25f, Wobble(X * 1.4f, Ph + 0.6f));
 
 	// Backstop berm: about 45 degrees on the face, 1.5 m crest, back slope.
 	const float T = BackToe(Y);
@@ -388,8 +393,14 @@ int32 AHoldoverForestRange::SurfaceAt(float X, float Y) const
 			return Dirt;
 		}
 		// Tongues of leaf litter reaching a few metres into the lane from the forest side.
-		const float Reach = 1.f + 2.5f * (0.5f + 0.5f * Wobble(X * 2.3f, Y >= 0.f ? 2.2f : 5.1f));
+		const float Reach = 1.5f + 5.f * (0.5f + 0.5f * Wobble(X * 2.3f, Y >= 0.f ? 2.2f : 5.1f));
 		if (L - AY < Reach * (0.5f + 0.5f * Wobble(X * 5.1f, 0.9f)))
+		{
+			return Forest;
+		}
+		// Patches of leaf litter out in the lane.
+		if (X > 3.f && FMath::Abs(Y - WalkwayY) > WalkwayHalf + 0.5f
+			&& Wobble(X * 3.1f + Y * 0.7f, 1.3f) * Wobble(Y * 2.9f - X * 0.4f, 2.6f) > 0.22f)
 		{
 			return Forest;
 		}
@@ -814,9 +825,11 @@ void AHoldoverForestRange::GrowTrees(FRandomStream& Rng)
 				// Lone trees stand inside the clearing too: on the berm backs, and a few metres into the lane itself
 				// where no line of fire passes.
 				const float OffLane = FMath::Abs(PY) - LaneEdge(PX, PY);
+				// In groves: some stretches of the lane get several trees, others none.
+				const float Grove = 0.5f + 0.5f * FMath::PerlinNoise2D(FVector2D(PX / 18.f + 7.7f, PY / 18.f - 1.9f));
 				const float Reach = bPlantsIntoLane ? LaneTreeReach : -4.f;
 				if (OffLane < -Reach || IsBareGround(PX, PY) || KeepClearForShooting(PX, PY, 3.5f) || DistanceToAccessPath(PX, PY) < 3.f
-					|| PX < 2.f || PX > BackToe(PY) - 2.f || Rng.FRand() > (OffLane < 0.f ? 0.22f : 0.18f))
+					|| PX < 2.f || PX > BackToe(PY) - 2.f || Rng.FRand() > (OffLane < 0.f ? 0.1f + 0.6f * Grove * Grove : 0.3f))
 				{
 					continue;
 				}
@@ -868,9 +881,10 @@ void AHoldoverForestRange::GrowSaplings(FRandomStream& Rng)
 				// but never into a line of fire.
 				const float OffLane = FMath::Abs(PY) - LaneEdge(PX, PY);
 				const float Reach = bPlantsIntoLane ? LaneBushReach : -1.5f;
-				const float Depth = OffLane < 0.f ? FMath::Clamp(1.f + OffLane / FMath::Max(Reach, 0.1f), 0.f, 1.f) : 1.f;
+				// Thickets: bushes and young trees bunch up in patches anywhere in the lane.
+				const float Thicket = 0.5f + 0.5f * FMath::PerlinNoise2D(FVector2D(PX / 11.f - 4.4f, PY / 11.f + 2.2f));
 				Chance = (OffLane < -Reach || IsBareGround(PX, PY) || KeepClearForShooting(PX, PY, 3.f) || DistanceToAccessPath(PX, PY) < 2.f)
-					? 0.f : (OffLane < 0.f ? 0.45f * Depth : 0.3f) * SaplingDensity;
+					? 0.f : (OffLane < 0.f ? 0.1f + 0.8f * Thicket * Thicket : 0.4f) * SaplingDensity;
 			}
 			if (Rng.FRand() > Chance)
 			{
@@ -922,8 +936,8 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			if (bInClearing)
 			{
 				const float OffLane = FMath::Abs(PY) - LaneEdge(PX, PY);
-				const float Depth = OffLane < 0.f ? FMath::Clamp(1.f + OffLane / FMath::Max(LaneBushReach, 0.1f), 0.f, 1.f) : 1.f;
-				Chance = IsBareGround(PX, PY) || DistanceToAccessPath(PX, PY) < 1.5f ? 0.f : (0.15f + 0.35f * Patch) * Depth * UndergrowthDensity;
+				const float Depth = (OffLane < 0.f && OffLane < -LaneBushReach) ? 0.f : 1.f;
+				Chance = IsBareGround(PX, PY) || DistanceToAccessPath(PX, PY) < 1.5f ? 0.f : (0.15f + 0.45f * Patch) * Depth * UndergrowthDensity;
 			}
 			if (Rng.FRand() > Chance)
 			{
@@ -968,7 +982,7 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 	constexpr float GrassCell = 1.2f;
 	for (float X = -PadDepth - 2.f; X < BackBermToe + 4.f; X += GrassCell)
 	{
-		for (float Y = -LaneHalfWidth - 6.f; Y < LaneHalfWidth + 6.f; Y += GrassCell)
+		for (float Y = -LaneHalfWidth - 11.f; Y < LaneHalfWidth + 11.f; Y += GrassCell)
 		{
 			const float PX = X + Rng.FRand() * GrassCell;
 			const float PY = Y + Rng.FRand() * GrassCell;
