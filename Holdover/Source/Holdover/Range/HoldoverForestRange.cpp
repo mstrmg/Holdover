@@ -103,9 +103,30 @@ namespace ForestRange
 	constexpr float ClearSideExtra = 3.f;   // beyond the lane half width
 	constexpr float ClearPastBermToe = 10.f;
 
-	// Inspection walkway down the left side of the lane.
-	constexpr float WalkwayY = -8.5f;
-	constexpr float WalkwayHalf = 0.7f;
+	// Worn path down the left side of the lane to the targets: it wanders, narrows and fades out in places.
+	constexpr float WalkwayY = -9.f;
+	constexpr float WalkwayWander = 1.6f;
+	constexpr float WalkwayHalf = 0.5f;
+
+	// Spots in metres (actor space) with eye height above the ground, and where to look, for holdover.RangeShots.
+	struct FShotSpot { const TCHAR* Name; float X, Y, Up, Pitch, Yaw; bool bOnWalkway; };
+	const FShotSpot ShotSpots[] = {
+		{ TEXT("01_firing_line"), -1.5f, 0.f, 1.65f, -2.f, 0.f, false },
+		{ TEXT("02_left_signs"), -1.5f, 0.f, 1.65f, -4.f, -38.f, false },
+		{ TEXT("03_right_edge"), -1.5f, 0.f, 1.65f, 0.f, 55.f, false },
+		{ TEXT("04_benches"), -4.f, -2.f, 1.65f, -18.f, 30.f, false },
+		{ TEXT("05_walkway_back"), 95.f, 0.f, 1.65f, -2.f, 180.f, true }, // Y: on the walkway
+		{ TEXT("06_backstop"), 178.f, -3.f, 1.65f, 2.f, 8.f, false },
+		{ TEXT("07_in_the_forest"), -25.f, 30.f, 1.65f, 4.f, 35.f, false },
+		{ TEXT("08_path_arrival"), -20.f, -12.f, 1.65f, -2.f, 15.f, false },
+		{ TEXT("09_canopy_up"), -30.f, -40.f, 1.65f, 55.f, 60.f, false },
+		{ TEXT("10_overview"), -11.f, 0.f, 20.f, -22.f, 0.f, false }, // above the cleared lane, clear of tree crowns
+		{ TEXT("11_berm_close"), 20.f, -6.f, 1.65f, -12.f, -60.f, false }, // close look at the left berm and its grass
+	};
+	constexpr int32 NumShotSpots = UE_ARRAY_COUNT(ShotSpots);
+
+	// Distance signs along the left edge of the lane.
+	const int32 SignDistances[] = { 5, 10, 25, 50, 75, 100, 150 };
 
 	float BermProfile(float D, float Toe, float CrestStart, float CrestEnd, float BackToe, float Height)
 	{
@@ -179,22 +200,6 @@ void AHoldoverForestRange::UpdateRangeShots(float DeltaSeconds)
 #endif
 	ShotClock += DeltaSeconds;
 
-	// Spots in metres (actor space) with eye height above the ground, and where to look.
-	struct FSpot { const TCHAR* Name; float X, Y, Up, Pitch, Yaw; };
-	static const FSpot Spots[] = {
-		{ TEXT("01_firing_line"), -1.5f, 0.f, 1.65f, -2.f, 0.f },
-		{ TEXT("02_left_signs"), -1.5f, 0.f, 1.65f, -4.f, -38.f },
-		{ TEXT("03_right_edge"), -1.5f, 0.f, 1.65f, 0.f, 55.f },
-		{ TEXT("04_benches"), -4.f, -2.f, 1.65f, -18.f, 30.f },
-		{ TEXT("05_walkway_back"), 95.f, -8.5f, 1.65f, -2.f, 180.f },
-		{ TEXT("06_backstop"), 178.f, -3.f, 1.65f, 2.f, 8.f },
-		{ TEXT("07_in_the_forest"), -25.f, 30.f, 1.65f, 4.f, 35.f },
-		{ TEXT("08_path_arrival"), -20.f, -12.f, 1.65f, -2.f, 15.f },
-		{ TEXT("09_canopy_up"), -30.f, -40.f, 1.65f, 55.f, 60.f },
-		{ TEXT("10_overview"), -11.f, 0.f, 20.f, -22.f, 0.f }, // above the cleared lane, clear of tree crowns
-		{ TEXT("11_berm_close"), 20.f, -6.f, 1.65f, -12.f, -60.f }, // close look at the left berm and its grass
-	};
-	constexpr int32 NumSpots = UE_ARRAY_COUNT(Spots);
 	constexpr float Settle = 6.f; // seconds for light and eye adaptation to settle after each cut
 
 	if (ShotStep == 0)
@@ -226,7 +231,7 @@ void AHoldoverForestRange::UpdateRangeShots(float DeltaSeconds)
 
 	// Step 2k-1: move the camera to spot k. Step 2k: after the settle time, take its picture.
 	const int32 Spot = (ShotStep - 1) / 2;
-	if (Spot >= NumSpots)
+	if (Spot >= NumShotSpots)
 	{
 		if (Mode == 1)
 		{
@@ -235,12 +240,13 @@ void AHoldoverForestRange::UpdateRangeShots(float DeltaSeconds)
 		}
 		return;
 	}
-	const FSpot& S = Spots[Spot];
+	const FShotSpot& S = ShotSpots[Spot];
 	if ((ShotStep % 2) == 1)
 	{
 		if (ShotCamera)
 		{
-			const FVector Local(S.X * 100.f, S.Y * 100.f, GroundHeight(S.X * 100.f, S.Y * 100.f) + S.Up * 100.f);
+			const float SY = S.bOnWalkway ? WalkwayCentre(S.X) : S.Y;
+			const FVector Local(S.X * 100.f, SY * 100.f, GroundHeight(S.X * 100.f, SY * 100.f) + S.Up * 100.f);
 			ShotCamera->SetActorLocationAndRotation(GetActorTransform().TransformPosition(Local),
 				(GetActorRotation().Quaternion() * FRotator(S.Pitch, S.Yaw, 0.f).Quaternion()).Rotator());
 		}
@@ -333,7 +339,89 @@ float AHoldoverForestRange::GroundHeightMetres(float X, float Y) const
 		FMath::PerlinNoise2D(FVector2D(X / 9.f + 17.3f, Y / 9.f - 4.1f)) * 0.25f +
 		FMath::PerlinNoise2D(FVector2D(X / 2.5f - 7.7f, Y / 2.5f + 2.2f)) * 0.05f;
 
-	return Berm + Roll * ForestFloorRoll * Mask;
+	// Hills in the forest, the valley around the range, and low mounds in the lane off the lines of fire.
+	// (The imported ground uses Blender's noise for these, so this generated stand-in is close but not identical.)
+	const float Hills = 0.65f * FMath::PerlinNoise2D(FVector2D(X / HillScale + 3.1f, Y / HillScale - 0.7f))
+		+ 0.35f * FMath::PerlinNoise2D(FVector2D(X / (HillScale * 0.45f) - 5.3f, Y / (HillScale * 0.45f) + 1.7f));
+	const float Mounds = 0.6f * FMath::PerlinNoise2D(FVector2D(X / 8.f - 1.3f, Y / 8.f + 4.9f))
+		+ 0.5f * FMath::PerlinNoise2D(FVector2D(X / 15.f + 8.2f, Y / 15.f - 2.6f));
+	const float Swell = 0.25f * FMath::PerlinNoise2D(FVector2D(X / 22.f - 6.6f, Y / 22.f + 3.3f)) * FMath::SmoothStep(2.f, 10.f, X);
+	const float Clear = 1.f - Mask;
+
+	return Valley(X, Y) + Berm + Roll * ForestFloorRoll * Mask + HillHeight * Hills * FMath::SmoothStep(0.f, 1.f, Mask * 1.6f)
+		+ Clear * (LaneMound * 1.4f * Mounds * MoundWeight(X, Y) + Swell);
+}
+
+float AHoldoverForestRange::Valley(float X, float Y) const
+{
+	// Same as valley() in tools/range/forest_layout.py.
+	const float T = FMath::Max(X - 2.f, 0.f) / (BackBermToe - 2.f);
+	const float Far = FarRise * FMath::Pow(T, FarRisePower);
+	const float Behind = BehindRise * FMath::SmoothStep(0.f, GroundBehind + ClearBehind, ClearBehind - X);
+	const float Out = FMath::Max(FMath::Abs(Y) - TreeLine(X, Y), 0.f);
+	const float Side = SideRise * (1.f + 0.35f * Wobble(X * 0.9f, Y >= 0.f ? 1.4f : 3.6f)) * FMath::SmoothStep(0.f, SideRiseRun, Out);
+	return Far + Behind + Side;
+}
+
+float AHoldoverForestRange::FireDistance(float X, float Y) const
+{
+	float Best = BIG_NUMBER;
+	const int32 Count = TargetDistances.Num();
+	for (int32 i = 0; i < Count; ++i)
+	{
+		const float D = TargetDistances[i];
+		if (X > D + 3.f)
+		{
+			continue;
+		}
+		const float TY = (i - (Count - 1) * 0.5f) * TargetSpacing / 100.f;
+		Best = FMath::Min(Best, FMath::Abs(Y - TY * (X + 1.5f) / (D + 1.5f)));
+	}
+	return Best;
+}
+
+float AHoldoverForestRange::MoundWeight(float X, float Y) const
+{
+	float W = FMath::SmoothStep(2.f, 8.f, X) * FMath::SmoothStep(1.5f, 5.f, FireDistance(X, Y));
+	W *= 1.f - FMath::SmoothStep(BackToe(Y) - 8.f, BackToe(Y) - 3.f, X);
+	W *= FMath::SmoothStep(0.4f, 2.5f, FMath::Abs(Y - WalkwayCentre(X)));
+	return W;
+}
+
+float AHoldoverForestRange::WalkwayCentre(float X) const
+{
+	return WalkwayY + WalkwayWander * Wobble(X * 2.6f, 0.8f);
+}
+
+bool AHoldoverForestRange::OnWalkway(float X, float Y) const
+{
+	const float Worn = 0.5f + 0.5f * Wobble(X * 3.4f, 2.f);
+	return Worn > 0.3f && FMath::Abs(Y - WalkwayCentre(X)) < WalkwayHalf * (0.4f + 0.8f * Worn);
+}
+
+bool AHoldoverForestRange::BlocksShotSpot(float X, float Y, float Radius, float ConeLength) const
+{
+	for (const FShotSpot& S : ShotSpots)
+	{
+		const FVector2D Spot(S.X, S.bOnWalkway ? WalkwayCentre(S.X) : S.Y);
+		const FVector2D To = FVector2D(X, Y) - Spot;
+		const float D = static_cast<float>(To.Size());
+		if (D < Radius)
+		{
+			return true;
+		}
+		// In front of a lens looking roughly level: nothing within the first few metres of the view.
+		if (D < ConeLength && S.Pitch < 20.f && S.Up < 3.f)
+		{
+			const float Rad = FMath::DegreesToRadians(S.Yaw);
+			const FVector2D Dir(FMath::Cos(Rad), FMath::Sin(Rad));
+			if (FVector2D::DotProduct(To, Dir) > D * 0.87f) // within 30 degrees
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 float AHoldoverForestRange::GroundHeight(float X, float Y) const
@@ -356,6 +444,17 @@ float AHoldoverForestRange::GroundHeight(float X, float Y) const
 FVector AHoldoverForestRange::OnGround(float Xm, float Ym, float Sink) const
 {
 	return FVector(Xm * 100.f, Ym * 100.f, GroundHeight(Xm * 100.f, Ym * 100.f) - Sink);
+}
+
+FVector AHoldoverForestRange::OnLowGround(float Xm, float Ym, float RadiusM, float Sink) const
+{
+	float Low = GroundHeight(Xm * 100.f, Ym * 100.f);
+	for (int32 k = 0; k < 6; ++k)
+	{
+		const float A = k * (UE_TWO_PI / 6.f);
+		Low = FMath::Min(Low, GroundHeight((Xm + RadiusM * FMath::Cos(A)) * 100.f, (Ym + RadiusM * FMath::Sin(A)) * 100.f));
+	}
+	return FVector(Xm * 100.f, Ym * 100.f, Low - Sink);
 }
 
 int32 AHoldoverForestRange::SurfaceAt(float X, float Y) const
@@ -388,7 +487,7 @@ int32 AHoldoverForestRange::SurfaceAt(float X, float Y) const
 	}
 	if (X > 1.f && X < T + 0.5f && AY <= L + 0.5f)
 	{
-		if (FMath::Abs(Y - WalkwayY) < WalkwayHalf && X < T - 2.f)
+		if (X < T - 2.f && OnWalkway(X, Y))
 		{
 			return Dirt;
 		}
@@ -399,7 +498,7 @@ int32 AHoldoverForestRange::SurfaceAt(float X, float Y) const
 			return Forest;
 		}
 		// Patches of leaf litter out in the lane.
-		if (X > 3.f && FMath::Abs(Y - WalkwayY) > WalkwayHalf + 0.5f
+		if (X > 3.f && FMath::Abs(Y - WalkwayCentre(X)) > WalkwayHalf + 0.5f
 			&& Wobble(X * 3.1f + Y * 0.7f, 1.3f) * Wobble(Y * 2.9f - X * 0.4f, 2.6f) > 0.22f)
 		{
 			return Forest;
@@ -442,13 +541,36 @@ bool AHoldoverForestRange::KeepClearForShooting(float X, float Y, float Margin) 
 	{
 		return true; // the firing pad and just in front of it
 	}
-	if (FMath::Abs(Y - WalkwayY) < WalkwayHalf + Margin)
+	if (X < BackToe(Y) - 2.f && FMath::Abs(Y - WalkwayCentre(X)) < WalkwayHalf + FMath::Min(Margin, 1.f))
 	{
-		return true; // the walkway down to the targets
+		return true; // the walkway down to the targets (plants may lean over its edges)
 	}
 	if (X > BackToe(Y) - 3.f)
 	{
 		return true; // the backstop face, where bullets land
+	}
+	// The backstop stays in view from the bench, behind and around the far targets.
+	if (X > 60.f && FMath::Abs(Y) < 1.5f + 0.045f * (X + 1.5f))
+	{
+		return true;
+	}
+	// The distance signs, and a line of sight from the bench to each.
+	for (const int32 SignD : SignDistances)
+	{
+		const float SX = static_cast<float>(SignD);
+		const float SY = -LaneEdge(SX, -1.f) + 1.f;
+		if (FVector2D::Distance(FVector2D(X, Y), FVector2D(SX, SY)) < 1.f + Margin * 0.5f)
+		{
+			return true;
+		}
+		if (X > 2.f && X < SX)
+		{
+			const float LineY = SY * (X + 1.5f) / (SX + 1.5f);
+			if (FMath::Abs(Y - LineY) < 0.4f + Margin * 0.5f)
+			{
+				return true;
+			}
+		}
 	}
 	// From the bench to every target (spread across the lane exactly as the targets are placed), plus a few
 	// metres behind it.
@@ -807,7 +929,7 @@ void AHoldoverForestRange::GrowTrees(FRandomStream& Rng)
 {
 	const TArray<UStaticMesh*> Meshes = MeshesIn(TreeFolder);
 	constexpr float Cell = 5.5f; // about 330 trees a hectare, a mature hardwood stand
-	const float Keep = FMath::Clamp(0.9f * TreeDensity, 0.f, 1.f);
+	const float Keep = FMath::Clamp(0.9f * TreeDensity, 0.f, 1.f) * ForestDensity;
 
 	for (float X = -GroundBehind; X < GroundAhead; X += Cell)
 	{
@@ -816,7 +938,7 @@ void AHoldoverForestRange::GrowTrees(FRandomStream& Rng)
 			const float PX = X + Rng.FRand() * Cell;
 			const float PY = Y + Rng.FRand() * Cell;
 			const float Roll = Rng.FRand();
-			if (Roll > Keep)
+			if (Roll > Keep || BlocksShotSpot(PX, PY, 3.f, 8.f))
 			{
 				continue;
 			}
@@ -839,7 +961,7 @@ void AHoldoverForestRange::GrowTrees(FRandomStream& Rng)
 				// Real trees (Megaplants): each its own size and turn, standing nearly straight.
 				const float S = Rng.FRandRange(0.8f, 1.2f);
 				const FTransform T(FRotator(Rng.FRandRange(-2.f, 2.f), Rng.FRandRange(0.f, 360.f), Rng.FRandRange(-2.f, 2.f)),
-					OnGround(PX, PY, 15.f), FVector(S * Rng.FRandRange(0.95f, 1.05f), S * Rng.FRandRange(0.95f, 1.05f), S));
+					OnLowGround(PX, PY, 0.6f, 15.f), FVector(S * Rng.FRandRange(0.95f, 1.05f), S * Rng.FRandRange(0.95f, 1.05f), S));
 				PlacePlant(TreeSet, Rng, T, true, 0.f);
 			}
 			else if (Meshes.Num() > 0)
@@ -886,7 +1008,7 @@ void AHoldoverForestRange::GrowSaplings(FRandomStream& Rng)
 				Chance = (OffLane < -Reach || IsBareGround(PX, PY) || KeepClearForShooting(PX, PY, 3.f) || DistanceToAccessPath(PX, PY) < 2.f)
 					? 0.f : (OffLane < 0.f ? 0.1f + 0.8f * Thicket * Thicket : 0.4f) * SaplingDensity;
 			}
-			if (Rng.FRand() > Chance)
+			if (Rng.FRand() > FMath::Min(Chance, 1.f) * ForestDensity || BlocksShotSpot(PX, PY, 2.5f, 5.f))
 			{
 				continue;
 			}
@@ -939,7 +1061,7 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 				const float Depth = (OffLane < 0.f && OffLane < -LaneBushReach) ? 0.f : 1.f;
 				Chance = IsBareGround(PX, PY) || DistanceToAccessPath(PX, PY) < 1.5f ? 0.f : (0.15f + 0.45f * Patch) * Depth * UndergrowthDensity;
 			}
-			if (Rng.FRand() > Chance)
+			if (Rng.FRand() > FMath::Min(Chance, 1.f) * ForestDensity || BlocksShotSpot(PX, PY, 1.f, 0.f))
 			{
 				continue;
 			}
@@ -1021,7 +1143,7 @@ void AHoldoverForestRange::GrowUndergrowth(FRandomStream& Rng)
 			{
 				Chance = 0.f; // the firing pad
 			}
-			if (SurfaceAt(PX, PY) == Earth || SurfaceAt(PX, PY) == Dirt || FMath::Abs(PY - WalkwayY) < WalkwayHalf + 0.3f)
+			if (SurfaceAt(PX, PY) == Earth || SurfaceAt(PX, PY) == Dirt || FMath::Abs(PY - WalkwayCentre(PX)) < WalkwayHalf + 0.3f)
 			{
 				Chance *= 0.15f;
 			}
@@ -1090,15 +1212,18 @@ void AHoldoverForestRange::ScatterDebris(FRandomStream& Rng)
 			{
 				if (UStaticMesh* M = Pick(KitRocks))
 				{
+					// Settled into the ground: sunk below the lowest ground under it, by a share of its height.
 					const float S = Rng.FRandRange(0.7f, 1.4f);
-					AddInstance(M, FTransform(FRotator(Rng.FRandRange(-10.f, 10.f), Yaw, Rng.FRandRange(-10.f, 10.f)), OnGround(PX, PY, 8.f * S), FVector(S)), -1, nullptr, true, Cull * 1.3f);
+					const FVector3f Ext = FVector3f(M->GetBounds().BoxExtent) * S;
+					const float Reach = 0.7f * FMath::Max(Ext.X, Ext.Y) / 100.f;
+					AddInstance(M, FTransform(FRotator(Rng.FRandRange(-10.f, 10.f), Yaw, Rng.FRandRange(-10.f, 10.f)), OnLowGround(PX, PY, Reach, 0.2f * Ext.Z), FVector(S)), -1, nullptr, true, Cull * 1.3f);
 				}
 				else
 				{
 					const float W = Rng.FRandRange(30.f, 140.f);
 					const int32 Tone = Rng.RandRange(0, NumRocks - 1);
 					const FVector Size(W, W * Rng.FRandRange(0.6f, 0.95f), W * Rng.FRandRange(0.45f, 0.7f));
-					AddInstance(Sphere, FTransform(FRotator(Rng.FRandRange(-12.f, 12.f), Yaw, 0.f), OnGround(PX, PY, Size.Z * 0.25f), Size / 100.f),
+					AddInstance(Sphere, FTransform(FRotator(Rng.FRandRange(-12.f, 12.f), Yaw, 0.f), OnLowGround(PX, PY, static_cast<float>(Size.X) / 200.f, static_cast<float>(Size.Z) * 0.25f), Size / 100.f),
 						ToneRock + Tone, &Rocks[Tone], true, Cull * 1.3f);
 				}
 			}
@@ -1107,7 +1232,8 @@ void AHoldoverForestRange::ScatterDebris(FRandomStream& Rng)
 				if (UStaticMesh* M = Pick(KitLogs))
 				{
 					const float S = Rng.FRandRange(0.8f, 1.3f);
-					AddInstance(M, FTransform(FRotator(Rng.FRandRange(-4.f, 4.f), Yaw, 0.f), OnGround(PX, PY, 5.f), FVector(S)), -1, nullptr, true, Cull * 1.3f);
+					const FVector3f Ext = FVector3f(M->GetBounds().BoxExtent) * S;
+					AddInstance(M, FTransform(FRotator(Rng.FRandRange(-4.f, 4.f), Yaw, 0.f), OnLowGround(PX, PY, 0.5f * FMath::Max(Ext.X, Ext.Y) / 100.f, 5.f + 0.15f * Ext.Z), FVector(S)), -1, nullptr, true, Cull * 1.3f);
 				}
 				else
 				{
@@ -1124,7 +1250,7 @@ void AHoldoverForestRange::ScatterDebris(FRandomStream& Rng)
 				if (UStaticMesh* M = Pick(KitStumps))
 				{
 					const float S = Rng.FRandRange(0.8f, 1.3f);
-					AddInstance(M, FTransform(FRotator(0.f, Yaw, 0.f), OnGround(PX, PY, 4.f), FVector(S)), -1, nullptr, true, Cull * 1.3f);
+					AddInstance(M, FTransform(FRotator(0.f, Yaw, 0.f), OnLowGround(PX, PY, 0.4f * S, 4.f), FVector(S)), -1, nullptr, true, Cull * 1.3f);
 				}
 				else
 				{
@@ -1318,7 +1444,7 @@ void AHoldoverForestRange::PlaceRangeProps()
 		FVector(15.f, LaneHalfWidth * 200.f, 12.f), FLinearColor(0.11f, 0.09f, 0.065f), true);
 
 	// Distance signs along the left edge, facing you.
-	for (const int32 D : { 5, 10, 25, 50, 75, 100, 150 })
+	for (const int32 D : SignDistances)
 	{
 		const FVector At(static_cast<float>(D), -LaneEdge(static_cast<float>(D), -1.f) + 1.f, 1.1f);
 		const FString Id = FString::FromInt(D);

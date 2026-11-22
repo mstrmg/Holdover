@@ -59,10 +59,21 @@ def ground_height(x, y):
     berm = berm_height(x, y)
     mask = clearing_mask(x, y)
 
-    # Rolling forest floor, the same scales as the game, plus finer lumps (roots, old stumps, hollows).
+    # The valley the range sits in: climbing downrange, into the forest on both sides, and behind the pad.
+    h = valley(x, y)
+    # Hills in the forest, rising out of the clearing.
+    hills = 0.65 * n3(x, y, 20.5, HILL_SCALE) + 0.35 * n3(x - 31.0, y + 12.0, 21.5, HILL_SCALE * 0.45)
+    h += HILL_HEIGHT * hills * smoothstep(0.0, 1.0, mask * 1.6)
+    # Rolling forest floor, plus finer lumps (roots, old stumps, hollows).
     roll = (0.80 * n3(x, y, 0.5, 30.0) + 0.25 * n3(x + 17.3, y - 4.1, 1.5, 9.0) + 0.05 * n3(x, y, 2.5, 2.5))
-    lumps = 0.06 * n3(x, y, 4.5, 1.1) + 0.03 * n3(x, y, 6.5, 0.45)
-    h = berm + roll * FOREST_FLOOR_ROLL * mask + lumps * mask
+    lumps = 0.08 * n3(x, y, 4.5, 1.1) + 0.03 * n3(x, y, 6.5, 0.45)
+    h += berm + roll * FOREST_FLOOR_ROLL * mask + lumps * mask
+    # Lane and clearing: low mounds and hollows where no line of fire passes, and a long gentle swell everywhere
+    # past the pad (too low to hide a target).
+    clear = 1.0 - mask
+    mounds = 0.6 * n3(x + 5.0, y - 9.0, 16.5, 8.0) + 0.5 * n3(x, y, 17.5, 15.0)
+    h += clear * (LANE_MOUND * 1.4 * mounds * mound_weight(x, y)
+                  + 0.25 * n3(x, y, 18.5, 22.0) * smoothstep(2.0, 10.0, x))
 
     # Berms: lumpy, settled earth rather than perfect ramps.
     if berm > 0.02:
@@ -77,7 +88,7 @@ def ground_height(x, y):
         h += 0.015 + 0.006 * n3(x, y, 12.5, 0.3)  # pad sits a touch proud, crunchy surface
     elif surf == DIRT and x > 0:
         # Walkway: trodden a few centimetres into the grass, two faint ruts.
-        d = abs(y - WALKWAY_Y)
+        d = abs(y - walkway_y(x))
         h -= 0.035 * (1.0 - smoothstep(0.0, WALKWAY_HALF, d)) + 0.01 * math.cos(d * 7.0)
     elif surf == DIRT:
         h -= 0.04 * (1.0 - smoothstep(0.0, 1.1, path_distance(x, y)))

@@ -99,9 +99,45 @@ public:
 
 	/** Ground roughness of the forest floor, metres up and down. */
 	UPROPERTY(EditAnywhere, Category = "Forest|Layout")
-	float ForestFloorRoll = 0.7f;
+	float ForestFloorRoll = 1.2f;
+
+	// ---------- Landform: the range sits in the bottom of a shallow valley (Miles, 2026-11-22) ----------
+	// Same numbers as tools/range/forest_layout.py; the imported ground is built from those.
+
+	/** Metres the ground climbs from the firing line to the backstop, steepening toward it. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
+	float FarRise = 6.f;
+
+	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
+	float FarRisePower = 1.6f;
+
+	/** Metres the ground climbs behind the pad, to the back of the map. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
+	float BehindRise = 3.5f;
+
+	/** Metres the ground climbs from the tree line out to the map's sides, over SideRiseRun metres. */
+	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
+	float SideRise = 8.f;
+
+	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
+	float SideRiseRun = 60.f;
+
+	/** Rolling hills in the forest: height (m) and size across (m). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
+	float HillHeight = 3.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
+	float HillScale = 55.f;
+
+	/** Low mounds and hollows in the lane and clearing, kept off the lines of fire (m). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Landform")
+	float LaneMound = 0.7f;
 
 	// ---------- Forest (densities are multipliers, 1 = the designed look) ----------
+
+	/** Thins trees, young trees and undergrowth everywhere (1 = the 2026-11-22 v15 forest; Miles asked for 20% less). */
+	UPROPERTY(EditAnywhere, Category = "Forest|Plants", meta = (ClampMin = "0", ClampMax = "1.5"))
+	float ForestDensity = 0.8f;
 
 	UPROPERTY(EditAnywhere, Category = "Forest|Plants", meta = (ClampMin = "0", ClampMax = "3"))
 	float TreeDensity = 1.35f;
@@ -242,6 +278,7 @@ public:
 protected:
 	virtual void BuildGeometry() override;
 	virtual void SpawnLightingIfMissing() override;
+	virtual float TargetGroundZ(float X, float Y) const override { return GroundHeight(X, Y); }
 
 private:
 	// Ground
@@ -259,6 +296,18 @@ private:
 	/** True where nothing tall may grow: the pad, the walkway, the backstop face and every line of fire. */
 	bool KeepClearForShooting(float Xm, float Ym, float Margin) const;
 	FVector OnGround(float Xm, float Ym, float Sink = 0.f) const;
+	/** Like OnGround, at the lowest ground within RadiusM, so things on a slope don't float on the downhill side. */
+	FVector OnLowGround(float Xm, float Ym, float RadiusM, float Sink = 0.f) const;
+	/** The valley the range sits in (metres): climbs downrange, into the forest at the sides and behind the pad. */
+	float Valley(float Xm, float Ym) const;
+	/** Metres sideways to the nearest line of fire. */
+	float FireDistance(float Xm, float Ym) const;
+	/** 0..1, where the lane and clearing may have mounds. */
+	float MoundWeight(float Xm, float Ym) const;
+	float WalkwayCentre(float Xm) const;
+	bool OnWalkway(float Xm, float Ym) const;
+	/** True near a picture spot of holdover.RangeShots or in front of its lens, so plants don't block the view. */
+	bool BlocksShotSpot(float Xm, float Ym, float Radius, float ConeLength) const;
 
 	// Plants
 	void GrowTrees(FRandomStream& Rng);

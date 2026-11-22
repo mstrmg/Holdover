@@ -64,6 +64,9 @@ protected:
 	/** Adds sun, sky and fog unless the level already has a sun. */
 	virtual void SpawnLightingIfMissing();
 
+	/** Height of the ground (cm, actor space) under a target at X, Y (cm). The gray range is flat. */
+	virtual float TargetGroundZ(float X, float Y) const { return 0.f; }
+
 	/** True when the level already has its own directional light. */
 	bool LevelHasSun() const;
 

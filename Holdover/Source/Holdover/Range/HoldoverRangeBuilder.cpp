@@ -129,7 +129,7 @@ void AHoldoverRangeBuilder::SpawnTargets()
 		const float X = TargetDistances[i] * 100.f;
 		// Spread targets across the lane so near ones do not hide far ones.
 		const float Y = (i - (Count - 1) * 0.5f) * TargetSpacing;
-		const FVector Loc = GetActorTransform().TransformPosition(FVector(X, Y, 0.f));
+		const FVector Loc = GetActorTransform().TransformPosition(FVector(X, Y, TargetGroundZ(X, Y)));
 		// Target's +X faces the shooter.
 		const FRotator Rot = (GetActorRotation().Quaternion() * FRotator(0.f, 180.f, 0.f).Quaternion()).Rotator();
 

@@ -14,10 +14,11 @@ The shooter stands at the firing line facing downrange. All numbers live in `too
 | Firing line | A timber beam lying across the front of the pad |
 | Shooting benches | Three: yours just to your right (ammo can on it), two more at the empty bays (stools, a sandbag rest on the left one) |
 | Spent-brass bin | Behind your bench |
-| Lane | Grass, about 26 m wide, flat, from the pad to the backstop at about 190 m (3.5x the first design, Miles 2026-11-20). Its edges, the berms and the tree line wander by a metre or a few, so it looks cut by hand, not ruled |
+| Lane | Grass, about 26 m wide, from the pad to the backstop at about 190 m (3.5x the first design, Miles 2026-11-20). Its edges, the berms and the tree line wander by a metre or a few, so it looks cut by hand, not ruled |
 | Paper targets | 5, 7, 10, 15, 25, 50, 75, 100 and 150 m, spread 1.6 m apart sideways (the gray range keeps 5 to 50 m) |
 | Distance signs | 5, 10, 25, 50, 75, 100 and 150 m, on posts along the left edge, facing you |
-| Walkway | Trodden dirt strip down the left side of the lane, to walk out and look at your holes |
+| Walkway | Worn path down the left side of the lane, to walk out and look at your holes. It wanders, narrows and fades out under the grass in places |
+| Landform | The range sits at the bottom of a shallow valley: the ground climbs about 6 m to the backstop and keeps climbing behind it, climbs into hilly forest on both sides and a little behind the pad. Low mounds and hollows in the lane stay off the lines of fire |
 | Side berms | Earth banks 2.5 m high along both sides, grassed, with a 1 m flat top; the forest grows on their back slopes |
 | Backstop berm | 5 m high, about 45 degree face of bare earth starting at about 190 m, flat top, back slope into the trees |
 | Behind the pad | A small clearing with a rest bench; the CEASE FIRE sign stands where the path arrives |
