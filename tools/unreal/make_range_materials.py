@@ -39,7 +39,7 @@ GROUND_DIR = "/Game/Range/Forest/Ground"
 TEXTURED = {
     "Wood_Weathered": ("Wood049", (1.0, 1.0, 1.0), 1.0, 0.0),
     "Steel_Plate": ("Metal038", (1.0, 1.0, 1.0), 1.0, 1.0),
-    "Rock_Mossy": ("Rock063", (1.0, 1.0, 1.0), 1.0, 0.0),
+    "Rock_Mossy": ("Rock063", (0.8, 0.85, 2.0), 1.0, 0.0),  # Rock063 averages olive-yellow; pulled toward grey stone (v6 read gold)
     "Ground_Leaves": ("ScatteredLeaves009", (1.0, 1.0, 1.0), 1.0, 0.0),
     "Cardboard": ("Cardboard002", (1.0, 1.0, 1.0), 1.0, 0.0),
     "Bark_Hardwood": ("Bark014", (1.0, 1.0, 1.0), 1.0, 0.0),
