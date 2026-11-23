@@ -739,26 +739,30 @@ bool UHoldoverBodyRig::UpdateArmsFromHold(UPoseableMeshComponent* ArmsMesh, cons
 	FTransform HandLWorld = Hold.HandLInGun * GunTM;
 	HandLWorld.SetScale3D(FVector::OneVector);
 
-	// If a hand is out of reach (gun pushed out, recoil), slide the body toward it just enough.
+	// If a hand is out of reach (gun pushed out, recoil), slide the body toward it just enough. An arm the pose
+	// holds nearly straight (the pistol's isosceles) may stay as straight as posed, so its elbow and wrist keep
+	// the posed angles.
 	const float Upper = FVector::Dist(CS[RightArm.Upper].GetLocation(), CS[RightArm.Lower].GetLocation());
 	const float Lower = FVector::Dist(CS[RightArm.Lower].GetLocation(), CS[RightArm.Hand].GetLocation());
 	const float Reach = (Upper + Lower) * ArmsMaxReach;
-	auto SlideToReach = [&](int32 UpperBone, const FVector& Target)
+	auto SlideToReach = [&](const FArmBones& Arm, const FVector& Target)
 	{
-		const FVector Shoulder = ArmsLoc + ArmsRot.RotateVector(CS[UpperBone].GetLocation());
+		const float PosedReach = FVector::Dist(CS[Arm.Upper].GetLocation(), CS[Arm.Hand].GetLocation()) + 0.5f;
+		const float Limit = FMath::Min(FMath::Max(Reach, PosedReach), Upper + Lower - 0.05f);
+		const FVector Shoulder = ArmsLoc + ArmsRot.RotateVector(CS[Arm.Upper].GetLocation());
 		const FVector ToHand = Target - Shoulder;
-		if (ToHand.Size() > Reach)
+		if (ToHand.Size() > Limit)
 		{
-			ArmsLoc += ToHand.GetSafeNormal() * (ToHand.Size() - Reach);
+			ArmsLoc += ToHand.GetSafeNormal() * (ToHand.Size() - Limit);
 		}
 	};
 	UHoldoverGunAnimator* Anim = Animator.Get();
 	const bool bLeftFromTimeline = Anim && Anim->IsBusy();
-	SlideToReach(RightArm.Upper, HandRWorld.GetLocation());
+	SlideToReach(RightArm, HandRWorld.GetLocation());
 	if (!bLeftFromTimeline)
 	{
-		SlideToReach(LeftArm.Upper, HandLWorld.GetLocation());
-		SlideToReach(RightArm.Upper, HandRWorld.GetLocation());
+		SlideToReach(LeftArm, HandLWorld.GetLocation());
+		SlideToReach(RightArm, HandRWorld.GetLocation());
 	}
 	ArmsMesh->SetWorldTransform(FTransform(ArmsRot, ArmsLoc));
 
