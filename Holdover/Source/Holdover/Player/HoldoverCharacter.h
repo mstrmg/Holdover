@@ -139,6 +139,27 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Body")
 	TSoftObjectPtr<UAnimSequence> RifleArmsIdle;
 
+	/**
+	 * Hold the gun at the distance the first-person arms' animation holds it (closer to the eyes than the gun data's
+	 * ready offset and eye relief), so the arms keep their natural bent shape. Off = use the gun data's values.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	bool bHoldAtArmsDistance = true;
+
+	/** Shooting-hand grip point at the ready, relative to the eyes (cm, X forward, Y right, Z up). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	FVector PistolReadyGrip = FVector(32.f, 6.f, -18.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	FVector RifleReadyGrip = FVector(24.f, 10.f, -24.f);
+
+	/** How far ahead of the eyes the shooting hand is when aiming (cm); the sights still line up with the eye. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	float PistolAimGripForward = 40.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	float RifleAimGripForward = 22.f;
+
 	// ---------- Guns ----------
 
 	/** Gun data per slot. An empty slot uses the built-in preset (slot 0 M9-style pistol, slot 1 AK-style rifle). */

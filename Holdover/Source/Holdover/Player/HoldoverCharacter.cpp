@@ -527,7 +527,18 @@ void AHoldoverCharacter::UpdateDebugView()
 	{
 		return;
 	}
-	if (View <= 0)
+	// Close-ups (4, 5) show only the first-person arms and the gun.
+	const bool bArmsOnly = View >= 4;
+	BodyVisible->SetVisibility(!bArmsOnly);
+	BodyShadow->SetVisibility(!bArmsOnly);
+	// 7 = the normal eye view with the full body hidden (to tell which mesh is which); 8 = eyes with the arms hidden.
+	ArmsMesh->SetVisibility(View != 8);
+	if (View == 8)
+	{
+		BodyVisible->SetVisibility(true);
+		BodyShadow->SetVisibility(true);
+	}
+	if (View <= 0 || View >= 7)
 	{
 		if (AppliedDebugView != 0)
 		{
@@ -550,10 +561,22 @@ void AHoldoverCharacter::UpdateDebugView()
 	}
 	// Placed relative to the eyes, looking at the hands: 1 = from the right side, 2 = from the front, 3 = from behind and above.
 	const FTransform Eyes = Camera->GetComponentTransform();
-	const FVector Look = Eyes.TransformPosition(FVector(30.f, 0.f, -18.f));
+	FVector Look = Eyes.TransformPosition(FVector(30.f, 0.f, -18.f));
+	float CloseDist = 45.f;
+	if (bArmsOnly && Gun && Gun->GetData())
+	{
+		// Between the two hands, far enough back to see both.
+		const FVector Grip = Gun->GetSocketWorldTransform(Gun->GetData()->GripHandSocket).GetLocation();
+		const FVector Support = Gun->GetSocketWorldTransform(Gun->GetData()->SupportHandSocket).GetLocation();
+		Look = 0.5f * (Grip + Support);
+		CloseDist += FVector::Dist(Grip, Support);
+	}
 	FVector From;
 	switch (View)
 	{
+	case 4: From = Look + Eyes.GetRotation().RotateVector(FVector(10.f, CloseDist, 10.f)); break;  // close, right side
+	case 5: From = Look + Eyes.GetRotation().RotateVector(FVector(10.f, -CloseDist, 10.f)); break; // close, left side
+	case 6: From = Look + Eyes.GetRotation().RotateVector(FVector(15.f, -10.f, -CloseDist)); break; // close, from below left
 	case 2: From = Eyes.TransformPosition(FVector(170.f, 25.f, 0.f)); break;
 	case 3: From = Eyes.TransformPosition(FVector(-70.f, 45.f, 35.f)); break;
 	default: From = Eyes.TransformPosition(FVector(35.f, 150.f, 5.f)); break;
@@ -580,6 +603,32 @@ void AHoldoverCharacter::LogArmDiagnostics(const FString& Label) const
 		const FVector W = Src->GetBoneLocationByName(Name, EBoneSpaces::WorldSpace);
 		return Eyes.InverseTransformPosition(W).ToCompactString();
 	};
+	if (Gun && Gun->GetData() && Src && Src->GetBoneIndex(TEXT("hand_l")) != INDEX_NONE)
+	{
+		// Support hand: where the gun timelines want the palm, and where the left wrist actually ended up (gun space, cm).
+		const FTransform GunTM = Gun->GetActorTransform();
+		const FTransform Target = Animator->GetHandInCamera(true) * Eyes;
+		const FVector WristWant = Target.GetLocation() - Target.GetRotation().GetAxisX() * BodyRig->PalmToWrist - Target.GetRotation().GetAxisZ() * BodyRig->PalmDepth;
+		const FVector WristGot = Src->GetBoneLocationByName(TEXT("hand_l"), EBoneSpaces::WorldSpace);
+		UE_LOG(LogHoldover, Log, TEXT("[Arms %s] left palm target %s fingers %s palm %s | wrist want %s got %s miss %.1f cm | grip %s support %s"), *Label,
+			*GunTM.InverseTransformPosition(Target.GetLocation()).ToCompactString(),
+			*GunTM.InverseTransformVector(Target.GetRotation().GetAxisX()).ToCompactString(),
+			*GunTM.InverseTransformVector(Target.GetRotation().GetAxisZ()).ToCompactString(),
+			*GunTM.InverseTransformPosition(WristWant).ToCompactString(), *GunTM.InverseTransformPosition(WristGot).ToCompactString(),
+			FVector::Dist(WristWant, WristGot),
+			*Gun->GetSocketLocal(Gun->GetData()->GripHandSocket).ToCompactString(), *Gun->GetSocketLocal(Gun->GetData()->SupportHandSocket).ToCompactString());
+		// Which way the solved left hand really faces: fingers = wrist to middle knuckle, palm from the knuckle line,
+		// thumb = wrist to thumb tip joint. Compare with the target above.
+		auto W = [Src](const TCHAR* N) { return Src->GetBoneLocationByName(N, EBoneSpaces::WorldSpace); };
+		const FVector Fingers = (W(TEXT("middle_01_l")) - WristGot).GetSafeNormal();
+		const FVector Across = (W(TEXT("index_01_l")) - W(TEXT("pinky_01_l"))).GetSafeNormal();
+		const FVector PalmA = FVector::CrossProduct(Fingers, Across).GetSafeNormal();
+		const FVector Thumb = (W(TEXT("thumb_02_l")) - WristGot).GetSafeNormal();
+		UE_LOG(LogHoldover, Log, TEXT("[Arms %s] left hand actual fingers %s fingersxacross %s thumb %s | middle_03 %s"), *Label,
+			*GunTM.InverseTransformVector(Fingers).ToCompactString(), *GunTM.InverseTransformVector(PalmA).ToCompactString(),
+			*GunTM.InverseTransformVector(Thumb).ToCompactString(),
+			*GunTM.InverseTransformPosition(W(TEXT("middle_03_l"))).ToCompactString());
+	}
 	if (Gun && Gun->GetData())
 	{
 		UE_LOG(LogHoldover, Log, TEXT("[Arms %s] weapon_r %s gun GripHand %s SupportHand %s"), *Label, *Bone(TEXT("weapon_r")),
@@ -604,7 +653,7 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 	TestTime += DeltaSeconds;
 
 	// Each step happens at its time; a screenshot is taken one step after the view is set so the frame shows it.
-	struct FStep { float T; int32 Slot; int32 Aim; int32 View; const TCHAR* Shot; };
+	struct FStep { float T; int32 Slot; int32 Aim; int32 View; const TCHAR* Shot; int32 Do = 0; }; // Do: 1/2 = press/release rack, 3/4/5 = look down 45/70/level, 6/7 = press/release trigger
 	static const FStep Steps[] = {
 		{ 4.0f, 0, 0, 0, nullptr },
 		{ 4.5f, 0, 0, 0, TEXT("pistol_ready_eyes") },
@@ -612,20 +661,57 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		{ 5.5f, 0, 0, 1, TEXT("pistol_ready_side") },
 		{ 6.0f, 0, 0, 3, nullptr },
 		{ 6.5f, 0, 0, 3, TEXT("pistol_ready_behind") },
+		{ 6.6f, 0, 0, 4, nullptr },
+		{ 6.75f, 0, 0, 4, TEXT("pistol_ready_closeR") },
+		{ 6.85f, 0, 0, 5, nullptr },
+		{ 6.95f, 0, 0, 5, TEXT("pistol_ready_closeL") },
 		{ 7.0f, 0, 1, 0, nullptr },
 		{ 9.0f, 0, 1, 0, TEXT("pistol_aim_eyes") },
 		{ 9.5f, 0, 1, 1, nullptr },
 		{ 10.0f, 0, 1, 1, TEXT("pistol_aim_side") },
-		{ 10.5f, 0, 0, 0, nullptr },
-		{ 11.0f, 1, 0, 0, nullptr },
-		{ 14.0f, 1, 0, 0, TEXT("rifle_ready_eyes") },
-		{ 14.5f, 1, 0, 1, nullptr },
-		{ 15.0f, 1, 0, 1, TEXT("rifle_ready_side") },
-		{ 15.5f, 1, 1, 0, nullptr },
-		{ 17.5f, 1, 1, 0, TEXT("rifle_aim_eyes") },
-		{ 18.0f, 1, 1, 1, nullptr },
-		{ 18.5f, 1, 1, 1, TEXT("rifle_aim_side") },
-		{ 19.5f, 1, 0, 0, nullptr },
+		{ 10.2f, 0, 1, 4, nullptr },
+		{ 10.4f, 0, 1, 4, TEXT("pistol_aim_closeR") },
+		{ 10.6f, 0, 1, 5, nullptr },
+		{ 10.8f, 0, 1, 5, TEXT("pistol_aim_closeL") },
+		{ 10.9f, 0, 1, 6, nullptr },
+		{ 10.98f, 0, 1, 6, TEXT("pistol_aim_below") },
+		{ 11.0f, 0, 0, 0, nullptr, 1 },
+		{ 11.3f, 0, 0, 0, TEXT("pistol_rack_eyes") },
+		{ 11.35f, 0, 0, 5, nullptr },
+		{ 11.45f, 0, 0, 5, TEXT("pistol_rack_closeL"), 2 },
+		{ 12.0f, 0, 1, 0, nullptr },
+		{ 12.15f, 0, 1, 0, TEXT("pistol_aimin_eyes") },
+		{ 12.8f, 0, 1, 0, nullptr, 6 },
+		{ 12.86f, 0, 1, 0, TEXT("pistol_recoil_eyes"), 7 },
+		{ 13.3f, 0, 0, 0, nullptr, 3 },
+		{ 13.8f, 0, 0, 0, TEXT("pistol_down45_eyes") },
+		{ 13.9f, 0, 0, 0, nullptr, 4 },
+		{ 14.4f, 0, 0, 0, TEXT("pistol_down70_eyes") },
+		{ 14.6f, 0, 0, 7, nullptr },
+		{ 14.9f, 0, 0, 7, TEXT("pistol_down70_nobody") },
+		{ 15.2f, 0, 0, 8, nullptr },
+		{ 15.5f, 0, 0, 8, TEXT("pistol_down70_noarms") },
+		{ 15.8f, 0, 0, 0, nullptr, 5 },
+		{ 15.0f, 1, 0, 0, nullptr },
+		{ 17.0f, 1, 0, 0, TEXT("rifle_ready_eyes") },
+		{ 17.5f, 1, 0, 1, nullptr },
+		{ 18.0f, 1, 0, 1, TEXT("rifle_ready_side") },
+		{ 18.5f, 1, 1, 0, nullptr },
+		{ 18.7f, 1, 1, 0, TEXT("rifle_aimin_eyes") },
+		{ 20.5f, 1, 1, 0, TEXT("rifle_aim_eyes") },
+		{ 21.0f, 1, 1, 1, nullptr },
+		{ 21.5f, 1, 1, 1, TEXT("rifle_aim_side") },
+		{ 21.7f, 1, 1, 4, nullptr },
+		{ 21.9f, 1, 1, 4, TEXT("rifle_aim_closeR") },
+		{ 22.1f, 1, 1, 5, nullptr },
+		{ 22.3f, 1, 1, 5, TEXT("rifle_aim_closeL") },
+		{ 22.4f, 1, 1, 6, nullptr },
+		{ 22.48f, 1, 1, 6, TEXT("rifle_aim_below") },
+		{ 22.6f, 1, 0, 0, nullptr, 3 },
+		{ 23.1f, 1, 0, 0, TEXT("rifle_down45_eyes") },
+		{ 23.2f, 1, 0, 0, nullptr, 4 },
+		{ 23.7f, 1, 0, 0, TEXT("rifle_down70_eyes") },
+		{ 23.8f, 1, 0, 0, nullptr, 5 },
 	};
 	constexpr int32 NumSteps = UE_ARRAY_COUNT(Steps);
 	while (TestStep < NumSteps && TestTime >= Steps[TestStep].T)
@@ -637,12 +723,25 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		{
 			SelectGun(S.Slot);
 		}
+		if (S.Do == 1) { OnRackPressed(); }
+		if (S.Do == 6) { OnTriggerPressed(); }
+		if (S.Do >= 3 && S.Do <= 5)
+		{
+			if (Controller)
+			{
+				FRotator R = Controller->GetControlRotation();
+				R.Pitch = S.Do == 3 ? -45.f : (S.Do == 4 ? -70.f : 0.f);
+				Controller->SetControlRotation(R);
+			}
+		}
 		if (S.Shot)
 		{
 			const FString File = FPaths::ProjectSavedDir() / TEXT("Screenshots/test") / (FString(S.Shot) + TEXT(".png"));
 			FScreenshotRequest::RequestScreenshot(File, false, false);
 			LogArmDiagnostics(S.Shot);
 		}
+		if (S.Do == 2) { OnRackReleased(); }
+		if (S.Do == 7) { OnTriggerReleased(); }
 	}
 	if (TestStep >= NumSteps && Mode == 1)
 	{
@@ -799,14 +898,26 @@ void AHoldoverCharacter::UpdateHold(float DeltaSeconds)
 	const float RotA = 1.f - FMath::Pow(1.f - A, FMath::Max(D->AimRotationLead, 1.f));
 
 	// Low ready.
-	const FTransform Ready(D->ReadyRotation, D->ReadyOffset);
+	FTransform Ready(D->ReadyRotation, D->ReadyOffset);
 
 	// Aimed: rear sight on the eye line at the eye relief, sight line straight ahead.
 	FVector Rear, Front;
 	Gun->GetSightsLocal(Rear, Front);
 	const FVector SightDir = (Front - Rear).GetSafeNormal();
 	const FQuat AimRot = SightDir.IsNearlyZero() ? FQuat::Identity : FQuat::FindBetweenNormals(SightDir, FVector::ForwardVector);
-	const FTransform Aimed(AimRot, FVector(D->AimEyeRelief, 0.f, 0.f) - AimRot.RotateVector(Rear));
+	float EyeRelief = D->AimEyeRelief;
+
+	if (bHoldAtArmsDistance && ArmsMesh && ArmsMesh->GetSkinnedAsset())
+	{
+		// Hold the gun where the first-person arms' animation holds it, so the arms keep their natural bent
+		// shape instead of stretching out to a gun held far away.
+		const FVector GripLocal0 = Gun->GetSocketLocal(D->GripHandSocket);
+		const FVector ReadyGrip = D->bIsPistol ? PistolReadyGrip : RifleReadyGrip;
+		Ready.SetLocation(ReadyGrip - Ready.GetRotation().RotateVector(GripLocal0));
+		const float AimGripX = D->bIsPistol ? PistolAimGripForward : RifleAimGripForward;
+		EyeRelief = AimGripX - AimRot.RotateVector(GripLocal0 - Rear).X;
+	}
+	const FTransform Aimed(AimRot, FVector(EyeRelief, 0.f, 0.f) - AimRot.RotateVector(Rear));
 
 	FTransform Hold;
 	// Straight line from ready to the eye, bowed out by the arc (zero at both ends).
