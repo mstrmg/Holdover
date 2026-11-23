@@ -917,6 +917,12 @@ void AHoldoverCharacter::UpdateHold(float DeltaSeconds)
 		const float AimGripX = D->bIsPistol ? PistolAimGripForward : RifleAimGripForward;
 		EyeRelief = AimGripX - AimRot.RotateVector(GripLocal0 - Rear).X;
 	}
+	// The hand-made hold pose was posed with the gun at this distance from the eye: aim the gun there.
+	const float HoldRelief = (BodyRig && Gun->UsesSkeletalMesh()) ? BodyRig->GetHoldEyeRelief(D->bIsPistol) : 0.f;
+	if (HoldRelief > 0.f)
+	{
+		EyeRelief = HoldRelief;
+	}
 	const FTransform Aimed(AimRot, FVector(EyeRelief, 0.f, 0.f) - AimRot.RotateVector(Rear));
 
 	FTransform Hold;

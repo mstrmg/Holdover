@@ -114,6 +114,12 @@ public:
 	/** World transform of a socket or bone; falls back to gray-box marker points. */
 	FTransform GetSocketWorldTransform(FName Socket) const;
 
+	/** True when the gun shows its imported skeletal model (false for the gray-box stand-in). */
+	bool UsesSkeletalMesh() const { return bUseSkeletal; }
+
+	/** World transform of the gun model (the imported mesh's own frame), or the actor's for the gray box. */
+	FTransform GetMeshWorldTransform() const;
+
 	/** Socket position in the gun's own space (cm, X forward). */
 	FVector GetSocketLocal(FName Socket) const;
 
