@@ -126,22 +126,30 @@ def valley(x, y):
 
 def fire_distance(x, y):
     """Metres from (x, y) sideways to the nearest line of fire (bench to each target, on to 3 m past it)."""
+    # Past the end of a line (3 m behind its target) the distance keeps growing smoothly; a hard cut there put
+    # a cliff in the ground at every target distance (v15: black shadow shapes across the lane).
     best = 1e9
     n = len(TARGET_DISTANCES)
     for i, d in enumerate(TARGET_DISTANCES):
-        if x > d + 3.0:
-            continue
         ty = (i - (n - 1) * 0.5) * TARGET_SPACING
-        best = min(best, abs(y - ty * (x - SHOOTER[0]) / (d - SHOOTER[0])))
+        end = d + 3.0
+        xc = min(x, end)
+        side = abs(y - ty * (xc - SHOOTER[0]) / (d - SHOOTER[0]))
+        best = min(best, math.hypot(side, max(x - end, 0.0)))
     return best
 
 
 def mound_weight(x, y):
     """0..1: where the lane may have mounds. None on the pad, near lines of fire, on the walkway or the backstop face."""
-    w = smoothstep(2.0, 8.0, x) * smoothstep(1.2, 4.0, fire_distance(x, y))
+    w = smoothstep(2.0, 8.0, x) * smoothstep(1.2, 6.0, fire_distance(x, y))
     w *= 1.0 - smoothstep(back_toe(y) - 8.0, back_toe(y) - 3.0, x)
-    w *= smoothstep(0.4, 2.5, abs(y - walkway_y(x)))
+    w *= smoothstep(0.6, 4.0, abs(y - walkway_y(x)))
     return w
+
+
+def mound_shape(m):
+    """Mounds rise fully; hollows only a third as deep, so no dark trenches open up beside the lines of fire."""
+    return m if m > 0.0 else 0.35 * m
 
 
 def walkway_y(x):

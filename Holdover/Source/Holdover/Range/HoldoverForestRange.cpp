@@ -349,7 +349,7 @@ float AHoldoverForestRange::GroundHeightMetres(float X, float Y) const
 	const float Clear = 1.f - Mask;
 
 	return Valley(X, Y) + Berm + Roll * ForestFloorRoll * Mask + HillHeight * Hills * FMath::SmoothStep(0.f, 1.f, Mask * 1.6f)
-		+ Clear * (LaneMound * 1.4f * Mounds * MoundWeight(X, Y) + Swell);
+		+ Clear * (LaneMound * 1.4f * (Mounds > 0.f ? Mounds : 0.35f * Mounds) * MoundWeight(X, Y) + Swell);
 }
 
 float AHoldoverForestRange::Valley(float X, float Y) const
@@ -369,22 +369,22 @@ float AHoldoverForestRange::FireDistance(float X, float Y) const
 	const int32 Count = TargetDistances.Num();
 	for (int32 i = 0; i < Count; ++i)
 	{
+		// Past the end of a line the distance keeps growing smoothly (a hard cut put a cliff in the ground, v15).
 		const float D = TargetDistances[i];
-		if (X > D + 3.f)
-		{
-			continue;
-		}
+		const float End = D + 3.f;
+		const float XC = FMath::Min(X, End);
 		const float TY = (i - (Count - 1) * 0.5f) * TargetSpacing / 100.f;
-		Best = FMath::Min(Best, FMath::Abs(Y - TY * (X + 1.5f) / (D + 1.5f)));
+		const float Side = FMath::Abs(Y - TY * (XC + 1.5f) / (D + 1.5f));
+		Best = FMath::Min(Best, FMath::Sqrt(Side * Side + FMath::Square(FMath::Max(X - End, 0.f))));
 	}
 	return Best;
 }
 
 float AHoldoverForestRange::MoundWeight(float X, float Y) const
 {
-	float W = FMath::SmoothStep(2.f, 8.f, X) * FMath::SmoothStep(1.2f, 4.f, FireDistance(X, Y));
+	float W = FMath::SmoothStep(2.f, 8.f, X) * FMath::SmoothStep(1.2f, 6.f, FireDistance(X, Y));
 	W *= 1.f - FMath::SmoothStep(BackToe(Y) - 8.f, BackToe(Y) - 3.f, X);
-	W *= FMath::SmoothStep(0.4f, 2.5f, FMath::Abs(Y - WalkwayCentre(X)));
+	W *= FMath::SmoothStep(0.6f, 4.f, FMath::Abs(Y - WalkwayCentre(X)));
 	return W;
 }
 

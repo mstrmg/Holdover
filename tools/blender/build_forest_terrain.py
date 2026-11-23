@@ -72,7 +72,7 @@ def ground_height(x, y):
     # past the pad (too low to hide a target).
     clear = 1.0 - mask
     mounds = 0.6 * n3(x + 5.0, y - 9.0, 16.5, 8.0) + 0.5 * n3(x, y, 17.5, 15.0)
-    h += clear * (LANE_MOUND * 1.4 * mounds * mound_weight(x, y)
+    h += clear * (LANE_MOUND * 1.4 * mound_shape(mounds) * mound_weight(x, y)
                   + 0.25 * n3(x, y, 18.5, 22.0) * smoothstep(2.0, 10.0, x))
 
     # Berms: lumpy, settled earth rather than perfect ramps.
