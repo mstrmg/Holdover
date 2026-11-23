@@ -119,23 +119,47 @@ void UHoldoverBodyRig::UpdateArms(const FTransform& CamTM)
 	HandRWorld.SetScale3D(FVector::OneVector);
 
 	// Body of the arms: facing where the eyes look (mesh forward is +Y), head bone just behind the eyes.
-	const FQuat ArmsRot = CamTM.GetRotation() * FRotator(0.f, -90.f, 0.f).Quaternion();
+	// The body stays upright (turns with the view left and right only), like a real torso; tilting it with the
+	// view would swing the shoulders and back into sight when looking down. The arms reach up or down with IK.
+	const FRotator ViewRot = CamTM.Rotator();
+	const FQuat UprightView = FRotator(ViewRot.Pitch * ArmsBodyPitchFollow, ViewRot.Yaw, 0.f).Quaternion();
+	const FQuat ArmsRot = UprightView * FRotator(0.f, -90.f, 0.f).Quaternion();
 	const FVector HeadLocal = CS.IsValidIndex(HeadIndex) ? CS[HeadIndex].GetLocation() : FVector(0.f, 0.f, 160.f);
-	FVector ArmsLoc = CamTM.TransformPosition(ArmsHeadInCamera) - ArmsRot.RotateVector(HeadLocal);
+	FVector ArmsLoc = CamTM.GetLocation() + UprightView.RotateVector(Data->bIsPistol ? PistolArmsHeadInCamera : RifleArmsHeadInCamera)
+		- ArmsRot.RotateVector(HeadLocal);
+	if (Data->bIsPistol ? bPistolArmsFollowGrip : bRifleArmsFollowGrip)
+	{
+		// Move the arms as one piece so the animation's hand lands on the grip: the arms keep the animation's
+		// exact shape (no stretched forearms); the IK below then only fixes small turns.
+		ArmsLoc = WeaponWorld.GetLocation() - ArmsRot.RotateVector(WeaponInArms.GetLocation());
+	}
 
 	// If the grip is out of reach, slide the arms toward it just enough.
 	const float Upper = FVector::Dist(CS[RightArm.Upper].GetLocation(), CS[RightArm.Lower].GetLocation());
 	const float Lower = FVector::Dist(CS[RightArm.Lower].GetLocation(), CS[RightArm.Hand].GetLocation());
 	const float Reach = (Upper + Lower) * ArmsMaxReach;
-	const FVector Shoulder = ArmsLoc + ArmsRot.RotateVector(CS[RightArm.Upper].GetLocation());
-	const FVector ToHand = HandRWorld.GetLocation() - Shoulder;
-	if (ToHand.Size() > Reach)
+	auto SlideToReach = [&](int32 UpperBone, const FVector& Target)
 	{
-		ArmsLoc += ToHand.GetSafeNormal() * (ToHand.Size() - Reach);
+		const FVector Shoulder = ArmsLoc + ArmsRot.RotateVector(CS[UpperBone].GetLocation());
+		const FVector ToHand = Target - Shoulder;
+		if (ToHand.Size() > Reach)
+		{
+			ArmsLoc += ToHand.GetSafeNormal() * (ToHand.Size() - Reach);
+		}
+	};
+	SlideToReach(RightArm.Upper, HandRWorld.GetLocation());
+	if (LeftArm.bValid && Animator.IsValid() && CS.IsValidIndex(LeftArm.Upper))
+	{
+		// The support hand must reach the handguard too (wrist a little behind the palm target).
+		const FTransform LeftTarget = Animator->GetHandInCamera(true) * CamTM;
+		SlideToReach(LeftArm.Upper, LeftTarget.GetLocation() - LeftTarget.GetRotation().GetAxisX() * PalmToWrist);
+		SlideToReach(RightArm.Upper, HandRWorld.GetLocation());
 	}
 	ArmsMesh->SetWorldTransform(FTransform(ArmsRot, ArmsLoc));
 
+	bElbowFromHand = true;
 	SolveArmTo(ArmsMesh, RightArm, HandRWorld.GetLocation(), HandRWorld.GetRotation(), false, WeaponWorld);
+	bElbowFromHand = false;
 
 	// Support hand: onto the gun's support-hand target (and wherever the gun timelines take it), or where the
 	// idle animation holds it relative to the gun.
@@ -155,11 +179,19 @@ void UHoldoverBodyRig::UpdateArms(const FTransform& CamTM)
 			LeftOnGun.SetLocation(L);
 		}
 		const FTransform HandLWorld = LeftOnGun * WeaponWorld;
+		bElbowFromHand = true;
 		SolveArmTo(ArmsMesh, LeftArm, HandLWorld.GetLocation(), HandLWorld.GetRotation(), true, HandLWorld);
+		bElbowFromHand = false;
 	}
 	if (bLeftIK)
 	{
-		SolveArm(ArmsMesh, LeftArm, Anim->GetHandInCamera(true) * CamTM, true);
+		// The support elbow hangs down under the gun rather than out to the side, so the forearm stays out of view.
+		const float SavedOutward = ElbowOutward;
+		ElbowOutward = ArmsLeftElbowOutward;
+		FTransform LeftTarget = Anim->GetHandInCamera(true) * CamTM;
+		LeftTarget.AddToTranslation(GunTM.GetRotation().RotateVector(Data->bIsPistol ? PistolLeftHandOffset : RifleLeftHandOffset));
+		SolveArm(ArmsMesh, LeftArm, LeftTarget, true);
+		ElbowOutward = SavedOutward;
 		if (bLeftHandCurlFromTimeline)
 		{
 			CurlFingers(ArmsMesh, LeftArm, Anim->GetFingerWeights(true), true);
@@ -232,6 +264,10 @@ void UHoldoverBodyRig::CacheBones()
 		}
 		Arm.LocalFingers = HandCS.GetRotation().UnrotateVector(FingersCS);
 		Arm.LocalPalm = HandCS.GetRotation().UnrotateVector(PalmCS);
+		if (Side == 0 && bFlipLeftPalm)
+		{
+			Arm.LocalPalm = -Arm.LocalPalm;
+		}
 	}
 }
 
@@ -321,7 +357,19 @@ void UHoldoverBodyRig::SolveArmTo(UPoseableMeshComponent* Mesh, const FArmBones&
 	const AActor* Owner = GetOwner();
 	const FVector Right = Owner ? Owner->GetActorRightVector() : FVector::RightVector;
 	const FVector Fwd = Owner ? Owner->GetActorForwardVector() : FVector::ForwardVector;
-	const FVector Hint = FVector(0.f, 0.f, -1.f) + Right * (bLeft ? -ElbowOutward : ElbowOutward) - Fwd * 0.2f;
+	FVector Hint = FVector(0.f, 0.f, -1.f) + Right * (bLeft ? -ElbowOutward : ElbowOutward) - Fwd * 0.2f;
+	if (bElbowFromHand)
+	{
+		// Put the elbow where the source pose's forearm points from this hand, so the wrist keeps its natural bend
+		// (a sharply bent wrist tears the skin around it).
+		const FVector ForearmInHand = HandW.GetRotation().UnrotateVector(B - C).GetSafeNormal();
+		const FVector WantedElbow = Wrist + HandRot.RotateVector(ForearmInHand) * L2;
+		const FVector ToElbow = WantedElbow - A;
+		if (!ToElbow.IsNearlyZero())
+		{
+			Hint = ToElbow;
+		}
+	}
 	FVector N = Hint - U * FVector::DotProduct(Hint, U);
 	if (!N.Normalize())
 	{
@@ -344,6 +392,26 @@ void UHoldoverBodyRig::SolveArmTo(UPoseableMeshComponent* Mesh, const FArmBones&
 	FTransform NewHand = HandW;
 	NewHand.SetRotation(HandRot);
 	NewHand.SetLocation(HandPos);
+
+	// Roll the forearm about its own length so the wrist keeps the twist it had in the source pose; otherwise
+	// the forearm skin wrings like a candy wrapper when the hand is turned a long way.
+	{
+		const FQuat SourceRel = LowerW.GetRotation().Inverse() * HandW.GetRotation();
+		const FQuat NewRel = NewLower.GetRotation().Inverse() * HandRot;
+		const FQuat Delta = (NewRel * SourceRel.Inverse()).GetNormalized();
+		const FVector Axis = NewLower.GetRotation().UnrotateVector(HandPos - Elbow).GetSafeNormal();
+		if (!Axis.IsNearlyZero())
+		{
+			const FVector V(Delta.X, Delta.Y, Delta.Z);
+			const FVector P = Axis * FVector::DotProduct(V, Axis);
+			FQuat Twist(P.X, P.Y, P.Z, Delta.W);
+			if (Twist.SizeSquared() > KINDA_SMALL_NUMBER)
+			{
+				Twist.Normalize();
+				NewLower.SetRotation((NewLower.GetRotation() * Twist).GetNormalized());
+			}
+		}
+	}
 
 	// Back to parent-relative transforms (the clavicle above the upper arm is unchanged).
 	const FTransform InvComp = CompTM.Inverse();
