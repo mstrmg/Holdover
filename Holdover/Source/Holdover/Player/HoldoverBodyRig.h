@@ -180,6 +180,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
 	FVector FingerCurlAxisLeft = FVector(0.f, 0.f, -1.f);
 
+	/**
+	 * Hold the gun with the hand-made poses in Data/HoldPoses (both hands and fingers posed in Blender around each
+	 * gun model). The hands are locked to the gun; the elbows bend to reach it. Off = the old idle animation plus IK.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bUseHoldPoses = true;
+
+	/** Eye relief (cm, eye to rear sight) of the hold pose for this kind of gun, or 0 when there is no hold pose. */
+	float GetHoldEyeRelief(bool bPistol) const;
+
 	/** Named finger poses used by the gun timelines. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
 	TMap<FName, FHoldoverHandPose> HandPoses;
@@ -196,7 +206,22 @@ private:
 		bool bValid = false;
 	};
 
+	/** A hold pose from Data/HoldPoses, turned into the arms mesh's bone transforms. */
+	struct FHoldPose
+	{
+		bool bValid = false;
+		TArray<FTransform> Local;   // parent-relative, one per bone of the arms mesh
+		FTransform HandRInGun;      // hand_r relative to the gun mesh
+		FTransform HandLInGun;      // hand_l relative to the gun mesh
+		FVector Eye = FVector::ZeroVector; // the eye, in the mesh's component space (cm)
+		float EyeRelief = 0.f;
+	};
+
 	void CacheBones();
+	void LoadHoldPoses();
+	bool LoadHoldPose(const FString& Name, FHoldPose& Out) const;
+	bool UpdateArmsFromHold(UPoseableMeshComponent* ArmsMesh, const class AHoldoverGun* Gun, const class UHoldoverGunData* Data,
+		const FTransform& CamTM);
 	void PoseCopy(UPoseableMeshComponent* Mesh, bool bHideHead);
 	void SolveArm(UPoseableMeshComponent* Mesh, const FArmBones& Arm, const FTransform& TargetWorld, bool bLeft);
 	/** Two-bone IK putting the hand bone at Wrist with rotation HandRot (world). */
@@ -222,4 +247,7 @@ private:
 	int32 HiddenIndex = INDEX_NONE;
 	const void* CachedFor = nullptr;
 	TArray<int32> Parents;
+	FHoldPose PistolHold;
+	FHoldPose RifleHold;
+	const void* HoldCachedFor = nullptr;
 };

@@ -1176,6 +1176,11 @@ FTransform AHoldoverGun::GetSocketWorldTransform(FName Socket) const
 	return GetActorTransform();
 }
 
+FTransform AHoldoverGun::GetMeshWorldTransform() const
+{
+	return (bUseSkeletal && Mesh) ? Mesh->GetComponentTransform() : GetActorTransform();
+}
+
 FVector AHoldoverGun::GetSocketLocal(FName Socket) const
 {
 	return GetActorTransform().InverseTransformPosition(GetSocketWorldTransform(Socket).GetLocation());

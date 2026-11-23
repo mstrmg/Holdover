@@ -13,6 +13,12 @@
 #include "Player/HoldoverCharacter.h"
 #include "Weapons/HoldoverGun.h"
 #include "Weapons/HoldoverGunData.h"
+#include "Holdover.h"
+#include "Dom/JsonObject.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 static const TCHAR* GFingerNames[5] = { TEXT("thumb"), TEXT("index"), TEXT("middle"), TEXT("ring"), TEXT("pinky") };
 
@@ -88,6 +94,12 @@ void UHoldoverBodyRig::UpdateArms(const FTransform& CamTM)
 	const UHoldoverGunData* Data = Gun ? Gun->GetData() : nullptr;
 	if (!ArmsMesh || !Src || !Data || !ArmsMesh->GetSkinnedAsset() || !Src->GetSkeletalMeshAsset()
 		|| ArmsMesh->BoneSpaceTransforms.Num() == 0 || ArmsMesh->GetSkinnedAsset() != CachedFor)
+	{
+		return;
+	}
+
+	LoadHoldPoses();
+	if (UpdateArmsFromHold(ArmsMesh, Gun, Data, CamTM))
 	{
 		return;
 	}
@@ -573,4 +585,205 @@ void UHoldoverBodyRig::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 
 	UpdateArms(CamTM);
+}
+
+// =====================================================================
+// Hold poses (Data/HoldPoses/<Pistol|Rifle>.json, posed in Blender around each gun model)
+// =====================================================================
+
+namespace
+{
+	bool ReadVec(const TSharedPtr<FJsonObject>& Obj, const TCHAR* Field, FVector& Out)
+	{
+		const TArray<TSharedPtr<FJsonValue>>* Arr = nullptr;
+		if (!Obj.IsValid() || !Obj->TryGetArrayField(Field, Arr) || !Arr || Arr->Num() != 3)
+		{
+			return false;
+		}
+		Out = FVector((*Arr)[0]->AsNumber(), (*Arr)[1]->AsNumber(), (*Arr)[2]->AsNumber());
+		return true;
+	}
+
+	/** Rotation from its three turned axes (where X, Y and Z end up). */
+	FQuat QuatFromAxes(const FVector& X, const FVector& Y, const FVector& Z)
+	{
+		return FQuat(FMatrix(X, Y, Z, FVector::ZeroVector)).GetNormalized();
+	}
+}
+
+float UHoldoverBodyRig::GetHoldEyeRelief(bool bPistol) const
+{
+	const FHoldPose& Hold = bPistol ? PistolHold : RifleHold;
+	return (bUseHoldPoses && Hold.bValid) ? Hold.EyeRelief : 0.f;
+}
+
+void UHoldoverBodyRig::LoadHoldPoses()
+{
+	const UPoseableMeshComponent* ArmsMesh = Arms.Get();
+	const USkinnedAsset* Asset = ArmsMesh ? ArmsMesh->GetSkinnedAsset() : nullptr;
+	if (!Asset || HoldCachedFor == Asset)
+	{
+		return;
+	}
+	HoldCachedFor = Asset;
+	PistolHold = FHoldPose();
+	RifleHold = FHoldPose();
+	LoadHoldPose(TEXT("Pistol"), PistolHold);
+	LoadHoldPose(TEXT("Rifle"), RifleHold);
+}
+
+bool UHoldoverBodyRig::LoadHoldPose(const FString& Name, FHoldPose& Out) const
+{
+	const UPoseableMeshComponent* ArmsMesh = Arms.Get();
+	const USkinnedAsset* Asset = ArmsMesh ? ArmsMesh->GetSkinnedAsset() : nullptr;
+	if (!Asset)
+	{
+		return false;
+	}
+	const FString Path = FPaths::Combine(FPaths::ProjectDir(), TEXT("Data"), TEXT("HoldPoses"), Name + TEXT(".json"));
+	FString Text;
+	TSharedPtr<FJsonObject> Root;
+	if (!FFileHelper::LoadFileToString(Text, *Path) || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text), Root) || !Root.IsValid())
+	{
+		UE_LOG(LogHoldover, Warning, TEXT("Hold pose %s not found or unreadable; the arms use the idle animation."), *Path);
+		return false;
+	}
+	const TSharedPtr<FJsonObject>* Bones = nullptr;
+	const TSharedPtr<FJsonObject>* GunObj = nullptr;
+	FVector Eye;
+	if (!Root->TryGetObjectField(TEXT("bones"), Bones) || !Root->TryGetObjectField(TEXT("gun"), GunObj) || !ReadVec(Root, TEXT("eye"), Eye))
+	{
+		UE_LOG(LogHoldover, Warning, TEXT("Hold pose %s is missing bones, gun or eye."), *Path);
+		return false;
+	}
+
+	// Component space: each bone turned from its reference pose by the stored rotation, at the stored place.
+	const FReferenceSkeleton& Ref = Asset->GetRefSkeleton();
+	const TArray<FTransform>& RefPose = Ref.GetRefBonePose();
+	const int32 Num = Ref.GetNum();
+	TArray<FTransform> RefCS, CS;
+	RefCS.SetNum(Num);
+	CS.SetNum(Num);
+	for (int32 i = 0; i < Num; ++i)
+	{
+		const int32 P = Ref.GetParentIndex(i);
+		RefCS[i] = P == INDEX_NONE ? RefPose[i] : RefPose[i] * RefCS[P];
+		const TSharedPtr<FJsonObject>* B = nullptr;
+		FVector Loc, DX, DY, DZ;
+		if ((*Bones)->TryGetObjectField(Ref.GetBoneName(i).ToString(), B) && ReadVec(*B, TEXT("loc"), Loc)
+			&& ReadVec(*B, TEXT("dx"), DX) && ReadVec(*B, TEXT("dy"), DY) && ReadVec(*B, TEXT("dz"), DZ))
+		{
+			CS[i] = FTransform((QuatFromAxes(DX, DY, DZ) * RefCS[i].GetRotation()).GetNormalized(), Loc);
+		}
+		else
+		{
+			CS[i] = P == INDEX_NONE ? RefPose[i] : RefPose[i] * CS[P];
+			CS[i].SetScale3D(FVector::OneVector);
+		}
+	}
+	Out.Local.SetNum(Num);
+	for (int32 i = 0; i < Num; ++i)
+	{
+		const int32 P = Ref.GetParentIndex(i);
+		Out.Local[i] = P == INDEX_NONE ? CS[i] : CS[i].GetRelativeTransform(CS[P]);
+		Out.Local[i].SetScale3D(FVector::OneVector);
+	}
+
+	FVector GLoc, GX, GY, GZ;
+	if (!ReadVec(*GunObj, TEXT("loc"), GLoc) || !ReadVec(*GunObj, TEXT("x"), GX) || !ReadVec(*GunObj, TEXT("y"), GY) || !ReadVec(*GunObj, TEXT("z"), GZ))
+	{
+		return false;
+	}
+	const FTransform GunCS(QuatFromAxes(GX, GY, GZ), GLoc);
+	const int32 HandR = Ref.FindBoneIndex(TEXT("hand_r"));
+	const int32 HandL = Ref.FindBoneIndex(TEXT("hand_l"));
+	if (HandR == INDEX_NONE || HandL == INDEX_NONE)
+	{
+		return false;
+	}
+	Out.HandRInGun = CS[HandR].GetRelativeTransform(GunCS);
+	Out.HandLInGun = CS[HandL].GetRelativeTransform(GunCS);
+	Out.Eye = Eye;
+	Out.EyeRelief = static_cast<float>(Root->GetNumberField(TEXT("eye_relief_cm")));
+	Out.bValid = true;
+	UE_LOG(LogHoldover, Log, TEXT("Loaded hold pose %s (eye relief %.1f cm)."), *Path, Out.EyeRelief);
+	return true;
+}
+
+bool UHoldoverBodyRig::UpdateArmsFromHold(UPoseableMeshComponent* ArmsMesh, const AHoldoverGun* Gun, const UHoldoverGunData* Data,
+	const FTransform& CamTM)
+{
+	const FHoldPose& Hold = Data->bIsPistol ? PistolHold : RifleHold;
+	if (!bUseHoldPoses || !Hold.bValid || !Gun->UsesSkeletalMesh() || Hold.Local.Num() != ArmsMesh->BoneSpaceTransforms.Num()
+		|| !RightArm.bValid || !LeftArm.bValid)
+	{
+		return false;
+	}
+
+	// The whole hand-made pose: body, arms, hands and fingers.
+	ArmsMesh->BoneSpaceTransforms = Hold.Local;
+	ScaleBonesToNothing(ArmsMesh, ArmsHiddenBones);
+	TArray<FTransform> CS;
+	ComputeComponentSpace(ArmsMesh, CS);
+
+	// Body upright and facing where the eyes look (mesh forward is +Y), with the pose's eye at the camera.
+	const FRotator ViewRot = CamTM.Rotator();
+	const FQuat UprightView = FRotator(ViewRot.Pitch * ArmsBodyPitchFollow, ViewRot.Yaw, 0.f).Quaternion();
+	const FQuat ArmsRot = UprightView * FRotator(0.f, -90.f, 0.f).Quaternion();
+	FVector ArmsLoc = CamTM.GetLocation() - ArmsRot.RotateVector(Hold.Eye);
+
+	// Both hands exactly where the pose has them on the gun.
+	const FTransform GunTM = Gun->GetMeshWorldTransform();
+	FTransform HandRWorld = Hold.HandRInGun * GunTM;
+	HandRWorld.SetScale3D(FVector::OneVector);
+	FTransform HandLWorld = Hold.HandLInGun * GunTM;
+	HandLWorld.SetScale3D(FVector::OneVector);
+
+	// If a hand is out of reach (gun pushed out, recoil), slide the body toward it just enough.
+	const float Upper = FVector::Dist(CS[RightArm.Upper].GetLocation(), CS[RightArm.Lower].GetLocation());
+	const float Lower = FVector::Dist(CS[RightArm.Lower].GetLocation(), CS[RightArm.Hand].GetLocation());
+	const float Reach = (Upper + Lower) * ArmsMaxReach;
+	auto SlideToReach = [&](int32 UpperBone, const FVector& Target)
+	{
+		const FVector Shoulder = ArmsLoc + ArmsRot.RotateVector(CS[UpperBone].GetLocation());
+		const FVector ToHand = Target - Shoulder;
+		if (ToHand.Size() > Reach)
+		{
+			ArmsLoc += ToHand.GetSafeNormal() * (ToHand.Size() - Reach);
+		}
+	};
+	UHoldoverGunAnimator* Anim = Animator.Get();
+	const bool bLeftFromTimeline = Anim && Anim->IsBusy();
+	SlideToReach(RightArm.Upper, HandRWorld.GetLocation());
+	if (!bLeftFromTimeline)
+	{
+		SlideToReach(LeftArm.Upper, HandLWorld.GetLocation());
+		SlideToReach(RightArm.Upper, HandRWorld.GetLocation());
+	}
+	ArmsMesh->SetWorldTransform(FTransform(ArmsRot, ArmsLoc));
+
+	bElbowFromHand = true;
+	SolveArmTo(ArmsMesh, RightArm, HandRWorld.GetLocation(), HandRWorld.GetRotation(), false, HandRWorld);
+	if (!bLeftFromTimeline)
+	{
+		SolveArmTo(ArmsMesh, LeftArm, HandLWorld.GetLocation(), HandLWorld.GetRotation(), true, HandLWorld);
+	}
+	bElbowFromHand = false;
+
+	if (bLeftFromTimeline)
+	{
+		// Reloads, racking and checks: the support hand follows the gun timelines.
+		const float SavedOutward = ElbowOutward;
+		ElbowOutward = ArmsLeftElbowOutward;
+		FTransform LeftTarget = Anim->GetHandInCamera(true) * CamTM;
+		LeftTarget.AddToTranslation(GunTM.GetRotation().RotateVector(Data->bIsPistol ? PistolLeftHandOffset : RifleLeftHandOffset));
+		SolveArm(ArmsMesh, LeftArm, LeftTarget, true);
+		ElbowOutward = SavedOutward;
+		if (bLeftHandCurlFromTimeline)
+		{
+			CurlFingers(ArmsMesh, LeftArm, Anim->GetFingerWeights(true), true);
+		}
+	}
+	ArmsMesh->MarkRefreshTransformDirty();
+	return true;
 }
