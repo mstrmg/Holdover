@@ -681,6 +681,11 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		UpdateFireTest();
 		return;
 	}
+	if (Mode == 4)
+	{
+		UpdateActionTest();
+		return;
+	}
 
 	// Each step happens at its time; a screenshot is taken one step after the view is set so the frame shows it.
 	struct FStep { float T; int32 Slot; int32 Aim; int32 View; const TCHAR* Shot; int32 Do = 0; }; // Do: 1/2 = press/release rack, 3/4/5 = look down 45/70/level, 6/7 = press/release trigger
@@ -774,6 +779,98 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		if (S.Do == 7) { OnTriggerReleased(); }
 	}
 	if (TestStep >= NumSteps && Mode == 1)
+	{
+		HoldoverDebug::CVarTestShots->Set(0, ECVF_SetByConsole);
+		if (APlayerController* PC = Cast<APlayerController>(Controller))
+		{
+			PC->ConsoleCommand(TEXT("quit"));
+		}
+	}
+}
+
+void AHoldoverCharacter::UpdateActionTest()
+{
+	// holdover.TestShots 4: racking, mag check and a reload on the M9 and the AK (to check the slide and magazine
+	// moves), then a full-auto burst on the AK. Pictures: Saved/Screenshots/test/act_<gun>_*.png.
+	static const TCHAR* Names[] = { TEXT("m9"), TEXT("ak") };
+	enum EDo { Select, Ready, Aim, RackP, RackR, Close, Eyes, CheckP, CheckR, Drop, Insert, Auto, Trig, Release, Yaw, Shot };
+	struct FStep { float T; EDo Do; const TCHAR* Shot; };
+	static const FStep Seq[] = {
+		{ 0.0f, Select, nullptr }, { 0.1f, Ready, nullptr },
+		{ 1.0f, RackP, nullptr }, { 1.45f, Shot, TEXT("rack_held") }, { 1.5f, Close, nullptr }, { 1.75f, Shot, TEXT("rack_held_close") },
+		{ 1.9f, RackR, nullptr }, { 2.05f, Shot, TEXT("rack_released_close") }, { 2.3f, Eyes, nullptr },
+		{ 3.0f, CheckP, nullptr }, { 3.7f, Shot, TEXT("magcheck") }, { 3.9f, CheckR, nullptr },
+		{ 5.0f, Drop, nullptr }, { 5.25f, Shot, TEXT("magdrop") }, { 6.2f, Insert, nullptr }, { 6.6f, Shot, TEXT("maginsert") },
+		{ 7.6f, Shot, TEXT("after_reload") },
+		{ 8.5f, Aim, nullptr }, { 9.3f, Shot, TEXT("burst_before") }, { 9.3f, Yaw, nullptr }, { 9.4f, Auto, nullptr }, { 9.5f, Yaw, nullptr }, { 9.5f, Trig, nullptr },
+		{ 9.8f, Shot, TEXT("burst_1") }, { 9.8f, Yaw, nullptr }, { 10.1f, Shot, TEXT("burst_2") }, { 10.5f, Shot, TEXT("burst_3") },
+		{ 10.7f, Release, nullptr }, { 10.7f, Yaw, nullptr }, { 11.4f, Shot, TEXT("burst_after") }, { 11.4f, Yaw, nullptr },
+	};
+	constexpr int32 NumSeq = UE_ARRAY_COUNT(Seq);
+	constexpr float PerGun = 12.f;
+	constexpr int32 NumGuns = 2;
+	const float Start = 3.f;
+	while (TestStep < NumSeq * NumGuns)
+	{
+		const int32 GunIndex = TestStep / NumSeq;
+		const FStep& S = Seq[TestStep % NumSeq];
+		if (TestTime < Start + GunIndex * PerGun + S.T)
+		{
+			break;
+		}
+		++TestStep;
+		const bool bAuto = (GunIndex == 1);
+		switch (S.Do)
+		{
+		case Select:
+			SelectGun(GunIndex);
+			if (Gun)
+			{
+				for (int32 i = 0; i < 3 && Gun->GetFireMode() != EHoldoverFireMode::Semi; ++i)
+				{
+					Gun->CycleSelector();
+				}
+			}
+			break;
+		case Ready: HoldoverDebug::CVarForceAim->Set(0, ECVF_SetByConsole); HoldoverDebug::CVarDebugView->Set(0, ECVF_SetByConsole); break;
+		case Aim: HoldoverDebug::CVarForceAim->Set(1, ECVF_SetByConsole); break;
+		case RackP: OnRackPressed(); break;
+		case RackR: OnRackReleased(); break;
+		case Close: HoldoverDebug::CVarDebugView->Set(4, ECVF_SetByConsole); break;
+		case Eyes: HoldoverDebug::CVarDebugView->Set(0, ECVF_SetByConsole); break;
+		case CheckP: OnMagCheckPressed(); break;
+		case CheckR: OnMagCheckReleased(); break;
+		case Drop: OnMagDrop(); break;
+		case Insert: OnMagInsert(); break;
+		case Auto:
+			if (bAuto && Gun)
+			{
+				for (int32 i = 0; i < 3 && Gun->GetFireMode() != EHoldoverFireMode::Auto; ++i)
+				{
+					Gun->CycleSelector();
+				}
+			}
+			break;
+		case Trig: if (bAuto) { OnTriggerPressed(); } break;
+		case Release: if (bAuto) { OnTriggerReleased(); } break;
+		case Yaw:
+			if (bAuto && Gun)
+			{
+				UE_LOG(LogHoldover, Log, TEXT("[ActionTest] gun in eyes %s kick %.1f %.1f %.1f back %.1f rise %.1f control %s camera %s climb %.2f/%.2f mag %d"), *GunHold->GetRelativeLocation().ToCompactString(), Kick[0], Kick[1], Kick[2], Kick[3], Kick[4], *GetControlRotation().ToCompactString(),
+					*Camera->GetComponentRotation().ToCompactString(), Climb[0], Climb[1], Gun->HasMagazine() ? Gun->GetMagazine().Rounds : -1);
+			}
+			break;
+		case Shot:
+			if (!bAuto && FString(S.Shot).StartsWith(TEXT("burst")))
+			{
+				break;
+			}
+			FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir() / TEXT("Screenshots/test") / FString::Printf(TEXT("act_%s_%s.png"), Names[GunIndex], S.Shot), false, false);
+			break;
+		default: break;
+		}
+	}
+	if (TestStep >= NumSeq * NumGuns && TestTime > Start + NumGuns * PerGun)
 	{
 		HoldoverDebug::CVarTestShots->Set(0, ECVF_SetByConsole);
 		if (APlayerController* PC = Cast<APlayerController>(Controller))

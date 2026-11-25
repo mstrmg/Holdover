@@ -226,6 +226,7 @@ private:
 	void UpdateDebugView();
 	void UpdateTestShots(float DeltaSeconds);
 	void UpdateFireTest();
+	void UpdateActionTest();
 	void LogArmDiagnostics(const FString& Label) const;
 
 	UPROPERTY(Transient)

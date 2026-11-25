@@ -177,9 +177,9 @@ void UHoldoverGunData::ApplyPresetAK(UHoldoverGunData* D)
 	D->EjectFraction = 0.8f;
 	D->bLastRoundHoldOpen = false;
 	D->bHasSlideStop = false;
-	D->CycleTime = 0.1f;
+	D->CycleTime = 0.06f;         // back and home again in about a tenth of a second: 600 rounds a minute on auto
 	D->HandPullTime = 0.24f;
-	D->SpringReturnTime = 0.06f;
+	D->SpringReturnTime = 0.04f;
 	D->LockingMotion = MakeTurn(TEXT("Bolt"), FVector(1.f, 0.f, 0.f), 35.f);
 	D->LockingTravelFraction = 0.107f; // bolt unlocks in the first 8 mm of 75
 	D->HammerCockMotion = FHoldoverBoneMotion();
@@ -232,12 +232,13 @@ void UHoldoverGunData::ApplyPresetAK(UHoldoverGunData* D)
 
 	// Heavy rolling push that wanders: loose damping and a lot of sideways climb.
 	SetRecoil(D, /*Pitch*/ 150.f, 0.3f, /*Yaw*/ 70.f, 12.f, /*Roll*/ 40.f, 15.f, /*Back, rise, side*/ 75.f, 14.f, 10.f,
-		/*Stiffness, damping*/ 210.f, 20.f, /*Pivot*/ 6.f, /*Climb*/ 26.f, /*Wander*/ 16.f, 4.f, /*Recovery*/ 18.f, 7.5f,
+		/*Stiffness, damping*/ 210.f, 20.f, /*Pivot*/ 6.f, /*Climb*/ 18.f, /*Wander*/ 14.f, 4.f, /*Recovery*/ 25.f, 8.5f,
 		/*Head follow, push, shake*/ 0.85f, 0.85f, 0.18f);
 
 	SetFlash(D, EHoldoverMuzzleDevice::SlantBrake, /*Size*/ 13.f, /*Length*/ 24.f, /*Brightness*/ 1.1f, /*Fireball*/ 0.35f, /*Faint*/ 0.1f,
 		/*Light*/ 0.7f, /*Smoke*/ 1.4f);
 	D->BrassSoundSet = TEXT("Rifle");
+	D->ShotVolume = 0.9f; // the three layers together stay just under full scale
 
 	// Throws its brass hard, forward and to the right (lands 3 to 5 m away).
 	D->CaseEjectVelocity = FVector(170.f, 620.f, 130.f);
