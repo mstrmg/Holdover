@@ -37,6 +37,29 @@ namespace HoldoverDebug
 
 	TAutoConsoleVariable<int32> CVarTestShots(
 		TEXT("holdover.TestShots"), 0,
-		TEXT("1 = take screenshots of the pistol and rifle at ready and aimed (eyes and side views) into Saved/Screenshots/test, then quit."),
+		TEXT("1 = take screenshots of the pistol and rifle at ready and aimed (eyes and side views) into Saved/Screenshots/test, then quit. 2 = fire every gun and photograph the muzzle flash kinds, the case leaving the port in slow motion and the smoke (fire_*.png), then quit."),
+		ECVF_Default);
+}
+
+namespace HoldoverDebug
+{
+	TAutoConsoleVariable<int32> CVarFlashVariant(
+		TEXT("holdover.FlashVariant"), -1,
+		TEXT("Muzzle flash of the next shots: -1 = random (normal play), 0 = faint, 1 = normal, 2 = with a fireball."),
+		ECVF_Default);
+
+	TAutoConsoleVariable<int32> CVarFlashFreeze(
+		TEXT("holdover.FlashFreeze"), 0,
+		TEXT("1 = the muzzle flash stays lit as it looks in its first frame, so it can be looked at or photographed."),
+		ECVF_Default);
+
+	TAutoConsoleVariable<int32> CVarSelectGun(
+		TEXT("holdover.Gun"), -1,
+		TEXT("Switch guns: 0 = M9, 1 = AK, 2 = 1911, 3 = FAL, 4 = AR (test command until the number keys are decided)."),
+		ECVF_Default);
+
+	TAutoConsoleVariable<float> CVarCaseWithGun(
+		TEXT("holdover.CaseWithGun"), 0.15f,
+		TEXT("Seconds a fresh case is drawn together with the first-person gun and hands before it becomes a normal object (0 = never)."),
 		ECVF_Default);
 }

@@ -43,7 +43,10 @@ public:
 	 * Starts an action. If bHoldable, the action pauses at its holdAt time while SetHoldInput(true).
 	 * Returns false if the gun has no such timeline.
 	 */
-	bool Play(FName Action, bool bHoldable);
+	bool Play(FName Action, bool bHoldable, float StartTime = 0.f);
+
+	/** Time of the first event with this name in an action, or -1 if it has none. */
+	float GetEventTime(FName Action, FName EventName) const;
 
 	/** Stops the current action straight away (hands return to the grip). */
 	void Stop();

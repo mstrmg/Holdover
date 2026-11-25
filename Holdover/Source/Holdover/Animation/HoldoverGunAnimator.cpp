@@ -85,7 +85,23 @@ bool UHoldoverGunAnimator::IsBusy() const
 	return Current->Name != AnimFire && Current->Name != AnimFireDA && Current->Name != AnimDryFire;
 }
 
-bool UHoldoverGunAnimator::Play(FName Action, bool bInHoldable)
+float UHoldoverGunAnimator::GetEventTime(FName Action, FName EventName) const
+{
+	const FAction* A = Set.IsValid() ? Set->Find(Action) : nullptr;
+	if (A)
+	{
+		for (const FEventKey& E : A->Events)
+		{
+			if (E.Name == EventName)
+			{
+				return E.T;
+			}
+		}
+	}
+	return -1.f;
+}
+
+bool UHoldoverGunAnimator::Play(FName Action, bool bInHoldable, float StartTime)
 {
 	if (!Set.IsValid())
 	{
@@ -102,7 +118,7 @@ bool UHoldoverGunAnimator::Play(FName Action, bool bInHoldable)
 	}
 
 	Current = A;
-	Time = 0.f;
+	Time = FMath::Clamp(StartTime, 0.f, A->Duration);
 	bHoldable = bInHoldable;
 	bHoldInput = bInHoldable;
 	bPausedAtHold = false;
@@ -112,8 +128,8 @@ bool UHoldoverGunAnimator::Play(FName Action, bool bInHoldable)
 	AttachedBone = NAME_None;
 	bAttachOffsetValid = false;
 
-	// Events at time zero fire straight away.
-	FireEvents(-1.f, 0.f);
+	// Events at the start time fire straight away (earlier ones are skipped when starting part-way in).
+	FireEvents(Time > 0.f ? Time - KINDA_SMALL_NUMBER : -1.f, Time);
 	return true;
 }
 
