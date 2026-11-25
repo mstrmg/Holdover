@@ -712,6 +712,20 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		{ 23.2f, 1, 0, 0, nullptr, 4 },
 		{ 23.7f, 1, 0, 0, TEXT("rifle_down70_eyes") },
 		{ 23.8f, 1, 0, 0, nullptr, 5 },
+		// Rifle charging handle: the support hand leaving the handguard, on the handle, and held at the back.
+		{ 24.3f, 1, 0, 0, nullptr, 1 },
+		{ 24.42f, 1, 0, 0, TEXT("rifle_rack_reach_eyes") },
+		{ 24.62f, 1, 0, 0, TEXT("rifle_rack_grab_eyes") },
+		{ 25.0f, 1, 0, 0, TEXT("rifle_rack_pulled_eyes") },
+		{ 25.1f, 1, 0, 1, nullptr },
+		{ 25.3f, 1, 0, 1, TEXT("rifle_rack_pulled_side") },
+		{ 25.4f, 1, 0, 4, nullptr },
+		{ 25.6f, 1, 0, 4, TEXT("rifle_rack_pulled_closeR") },
+		{ 25.7f, 1, 0, 5, nullptr },
+		{ 25.9f, 1, 0, 5, TEXT("rifle_rack_pulled_closeL") },
+		{ 26.0f, 1, 0, 0, nullptr, 2 },
+		{ 26.15f, 1, 0, 0, TEXT("rifle_rack_return_eyes") },
+		{ 27.0f, 1, 0, 0, TEXT("rifle_rack_done_eyes") },
 	};
 	constexpr int32 NumSteps = UE_ARRAY_COUNT(Steps);
 	while (TestStep < NumSteps && TestTime >= Steps[TestStep].T)
