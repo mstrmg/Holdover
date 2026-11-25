@@ -193,11 +193,14 @@ void UHoldoverGunAnimator::Update(float DeltaSeconds, const FHoldoverAnimFrame& 
 	{
 		HandLInCamera = Current->HandL.Num() > 0 ? SampleHand(Current->HandL, true, Time, Final) : HoldTarget(true, Final);
 		HandRInCamera = Current->HandR.Num() > 0 ? SampleHand(Current->HandR, false, Time, Final) : HoldTarget(false, Final);
+		HandAwayL = SampleAway(Current->HandL, Time);
+		HandAwayR = SampleAway(Current->HandR, Time);
 	}
 	else
 	{
 		HandLInCamera = HoldTarget(true, Final);
 		HandRInCamera = HoldTarget(false, Final);
+		HandAwayL = HandAwayR = 0.f;
 	}
 	SampleFingers(Time);
 
@@ -288,6 +291,34 @@ FTransform UHoldoverGunAnimator::SampleHand(const TArray<FHandKey>& Keys, bool b
 	return KeyTM(Keys.Last());
 }
 
+float UHoldoverGunAnimator::SampleAway(const TArray<FHandKey>& Keys, float T)
+{
+	// Same timing and easing as SampleHand, with 0 for "hold" keys and 1 for real targets.
+	if (Keys.Num() == 0)
+	{
+		return 0.f;
+	}
+	auto W = [](const FHandKey& K) { return K.bHold ? 0.f : 1.f; };
+	if (T <= Keys[0].T)
+	{
+		if (Keys[0].T <= KINDA_SMALL_NUMBER)
+		{
+			return W(Keys[0]);
+		}
+		return W(Keys[0]) * ApplyEase(T / Keys[0].T, EEase::Smooth);
+	}
+	for (int32 i = 0; i < Keys.Num() - 1; ++i)
+	{
+		if (T < Keys[i + 1].T)
+		{
+			const float Span = FMath::Max(Keys[i + 1].T - Keys[i].T, KINDA_SMALL_NUMBER);
+			const float A = ApplyEase((T - Keys[i].T) / Span, Keys[i].Ease);
+			return FMath::Lerp(W(Keys[i]), W(Keys[i + 1]), A);
+		}
+	}
+	return W(Keys.Last());
+}
+
 void UHoldoverGunAnimator::SampleFingers(float T)
 {
 	const FHold& H = (Set.IsValid() && Set->Hold.bValid) ? Set->Hold : DefaultHold;
@@ -300,7 +331,7 @@ void UHoldoverGunAnimator::SampleFingers(float T)
 
 	static const FName Poses[] = {
 		TEXT("Grip"), TEXT("IndexTrigger"), TEXT("SupportWrap"), TEXT("PinchRack"),
-		TEXT("OverhandRack"), TEXT("PalmMag"), TEXT("ThumbPress"), TEXT("Relaxed") };
+		TEXT("OverhandRack"), TEXT("OverhandRake"), TEXT("PalmMag"), TEXT("ThumbPress"), TEXT("Relaxed") };
 
 	for (const FName& Pose : Poses)
 	{

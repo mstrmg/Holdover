@@ -69,6 +69,13 @@ public:
 	/** Hand target (palm centre; X = fingers, Z = out of the palm) relative to the camera. */
 	const FTransform& GetHandInCamera(bool bLeft) const { return bLeft ? HandLInCamera : HandRInCamera; }
 
+	/**
+	 * How far a hand has left its resting grip for the current action: 0 on the grip (no keys, or between two
+	 * "hold" keys), 1 on a key's own target, in between while it travels. Lets the body rig keep the hand-made
+	 * hold pose until the timeline actually moves that hand.
+	 */
+	float GetHandAway(bool bLeft) const { return bLeft ? HandAwayL : HandAwayR; }
+
 	/** Current finger pose weights for one hand. */
 	const TMap<FName, float>& GetFingerWeights(bool bLeft) const { return bLeft ? FingersL : FingersR; }
 
@@ -88,6 +95,7 @@ private:
 	FTransform ResolveTarget(const HoldoverAnim::FHandTarget& Target, const FHoldoverAnimFrame& Frame) const;
 	FTransform HoldTarget(bool bLeft, const FHoldoverAnimFrame& Frame) const;
 	FTransform SampleHand(const TArray<HoldoverAnim::FHandKey>& Keys, bool bLeft, float T, const FHoldoverAnimFrame& Frame) const;
+	static float SampleAway(const TArray<HoldoverAnim::FHandKey>& Keys, float T);
 	void SampleFingers(float T);
 	void ApplyBoneTracks(float T);
 	void ApplySlideHand(float T);
@@ -120,6 +128,8 @@ private:
 	FTransform GunInCamera = FTransform::Identity;
 	FTransform HandLInCamera = FTransform::Identity;
 	FTransform HandRInCamera = FTransform::Identity;
+	float HandAwayL = 0.f;
+	float HandAwayR = 0.f;
 	TMap<FName, float> FingersL;
 	TMap<FName, float> FingersR;
 

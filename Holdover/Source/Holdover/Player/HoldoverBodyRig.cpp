@@ -47,6 +47,8 @@ void UHoldoverBodyRig::InitDefaultPoses()
 	HandPoses.Add(TEXT("SupportWrap"), Pose({ C(15, 20, 10), C(60, 70, 40), C(65, 75, 45), C(68, 75, 45), C(70, 75, 45) }, 0x1F));
 	HandPoses.Add(TEXT("PinchRack"), Pose({ C(10, 25, 20), C(45, 60, 40), C(70, 80, 50), C(72, 80, 50), C(75, 80, 50) }, 0x1F));
 	HandPoses.Add(TEXT("OverhandRack"), Pose({ C(25, 30, 20), C(50, 55, 30), C(55, 60, 35), C(58, 60, 35), C(60, 60, 35) }, 0x1F));
+	// Overhand rake (AK charging handle): fingers nearly straight, lying flat down the right side of the receiver.
+	HandPoses.Add(TEXT("OverhandRake"), Pose({ C(10, 10, 5), C(25, 10, 5), C(25, 10, 5), C(25, 10, 5), C(25, 10, 5) }, 0x1F));
 	HandPoses.Add(TEXT("PalmMag"), Pose({ C(30, 30, 15), C(20, 25, 15), C(55, 60, 35), C(58, 60, 35), C(60, 60, 35) }, 0x1F));
 	HandPoses.Add(TEXT("ThumbPress"), Pose({ C(0, 0, 0), C(0, 0, 0), C(0, 0, 0), C(0, 0, 0), C(0, 0, 0) }, 0x01));
 }
@@ -379,7 +381,8 @@ void UHoldoverBodyRig::SolveArmTo(UPoseableMeshComponent* Mesh, const FArmBones&
 		const FVector ToElbow = WantedElbow - A;
 		if (!ToElbow.IsNearlyZero())
 		{
-			Hint = ToElbow;
+			const float W = FMath::Clamp(ElbowFromHandWeight, 0.f, 1.f);
+			Hint = W >= 1.f ? ToElbow : FMath::Lerp(Hint.GetSafeNormal(), ToElbow.GetSafeNormal(), W);
 		}
 	}
 	FVector N = Hint - U * FVector::DotProduct(Hint, U);
@@ -756,36 +759,58 @@ bool UHoldoverBodyRig::UpdateArmsFromHold(UPoseableMeshComponent* ArmsMesh, cons
 			ArmsLoc += ToHand.GetSafeNormal() * (ToHand.Size() - Limit);
 		}
 	};
+	// The support hand keeps its hand-made place on the gun until a gun action (racking, reloads, checks) moves it;
+	// then it blends to the timeline's target by how far the timeline has taken it away, so it never pops.
 	UHoldoverGunAnimator* Anim = Animator.Get();
-	const bool bLeftFromTimeline = Anim && Anim->IsBusy();
-	SlideToReach(RightArm, HandRWorld.GetLocation());
-	if (!bLeftFromTimeline)
+	const float Away = (Anim && Anim->IsBusy()) ? FMath::Clamp(Anim->GetHandAway(true), 0.f, 1.f) : 0.f;
+	FVector LeftWrist = HandLWorld.GetLocation();
+	FQuat LeftRot = HandLWorld.GetRotation();
+	FTransform LeftDebug = HandLWorld;
+	if (Away > 0.f)
 	{
-		SlideToReach(LeftArm, HandLWorld.GetLocation());
-		SlideToReach(RightArm, HandRWorld.GetLocation());
+		FTransform LeftTarget = Anim->GetHandInCamera(true) * CamTM;
+		LeftTarget.AddToTranslation(GunTM.GetRotation().RotateVector(Data->bIsPistol ? PistolLeftHandOffset : RifleLeftHandOffset));
+		const FQuat TargetBasis = LeftTarget.GetRotation();
+		const FQuat TimelineRot = TargetBasis * HoldoverAnim::HandBasis(LeftArm.LocalFingers, LeftArm.LocalPalm).Inverse();
+		const FVector TimelineWrist = LeftTarget.GetLocation() - TargetBasis.GetAxisX() * PalmToWrist - TargetBasis.GetAxisZ() * PalmDepth;
+		LeftWrist = FMath::Lerp(LeftWrist, TimelineWrist, Away);
+		LeftRot = FQuat::Slerp(LeftRot, TimelineRot, Away).GetNormalized();
+		LeftDebug = LeftTarget;
 	}
+
+	SlideToReach(RightArm, HandRWorld.GetLocation());
+	SlideToReach(LeftArm, LeftWrist);
+	SlideToReach(RightArm, HandRWorld.GetLocation());
 	ArmsMesh->SetWorldTransform(FTransform(ArmsRot, ArmsLoc));
 
 	bElbowFromHand = true;
 	SolveArmTo(ArmsMesh, RightArm, HandRWorld.GetLocation(), HandRWorld.GetRotation(), false, HandRWorld);
-	if (!bLeftFromTimeline)
-	{
-		SolveArmTo(ArmsMesh, LeftArm, HandLWorld.GetLocation(), HandLWorld.GetRotation(), true, HandLWorld);
-	}
+	const float SavedOutward = ElbowOutward;
+	ElbowOutward = ArmsLeftElbowOutward;
+	ElbowFromHandWeight = FMath::Lerp(1.f, TimelineElbowFromHand, Away);
+	SolveArmTo(ArmsMesh, LeftArm, LeftWrist, LeftRot, true, LeftDebug);
+	ElbowFromHandWeight = 1.f;
+	ElbowOutward = SavedOutward;
 	bElbowFromHand = false;
 
-	if (bLeftFromTimeline)
+	// Fingers: the hand-made grip, blended toward the timeline's finger pose as the hand leaves.
+	if (Away > 0.f && bLeftHandCurlFromTimeline && LeftArm.Fingers.Num() == 15)
 	{
-		// Reloads, racking and checks: the support hand follows the gun timelines.
-		const float SavedOutward = ElbowOutward;
-		ElbowOutward = ArmsLeftElbowOutward;
-		FTransform LeftTarget = Anim->GetHandInCamera(true) * CamTM;
-		LeftTarget.AddToTranslation(GunTM.GetRotation().RotateVector(Data->bIsPistol ? PistolLeftHandOffset : RifleLeftHandOffset));
-		SolveArm(ArmsMesh, LeftArm, LeftTarget, true);
-		ElbowOutward = SavedOutward;
-		if (bLeftHandCurlFromTimeline)
+		FQuat Held[15];
+		for (int32 i = 0; i < 15; ++i)
 		{
-			CurlFingers(ArmsMesh, LeftArm, Anim->GetFingerWeights(true), true);
+			const int32 Bone = LeftArm.Fingers[i];
+			Held[i] = ArmsMesh->BoneSpaceTransforms.IsValidIndex(Bone) ? ArmsMesh->BoneSpaceTransforms[Bone].GetRotation() : FQuat::Identity;
+		}
+		CurlFingers(ArmsMesh, LeftArm, Anim->GetFingerWeights(true), true);
+		for (int32 i = 0; i < 15; ++i)
+		{
+			const int32 Bone = LeftArm.Fingers[i];
+			if (ArmsMesh->BoneSpaceTransforms.IsValidIndex(Bone))
+			{
+				FTransform& L = ArmsMesh->BoneSpaceTransforms[Bone];
+				L.SetRotation(FQuat::Slerp(Held[i], L.GetRotation(), Away).GetNormalized());
+			}
 		}
 	}
 	ArmsMesh->MarkRefreshTransformDirty();
