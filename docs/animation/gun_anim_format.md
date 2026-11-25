@@ -53,6 +53,7 @@ Only these names are used. The game defines the curls; weights blend.
 | `SupportWrap` | Support hand wrapped over the shooting hand (pistol) or around a handguard (rifle). |
 | `PinchRack` | Thumb and the side of the index pinch the slide serrations or a charging handle. |
 | `OverhandRack` | Whole hand over the top of a pistol slide, fingers on one side, heel of the palm on the other. |
+| `OverhandRake` | Rifle charging handle (AK): hand over the top of the receiver, palm down, fingers nearly straight and flat down the right side, front finger ahead of the knob to rake it back. |
 | `PalmMag` | Hand cupped around a magazine body, index finger along the front. |
 | `ThumbPress` | Thumb extended to push a lever or button (safety, slide stop, mag release). |
 | `Relaxed` | Open hand. |

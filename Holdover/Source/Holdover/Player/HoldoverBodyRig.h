@@ -157,6 +157,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
 	FVector RifleLeftHandOffset = FVector::ZeroVector;
 
+	/** While the support hand is off its hand-made place for a gun action (racking, reloads), how much its elbow
+	 *  follows the hand so the wrist stays straight (1), versus pointing down and outward (0). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms", meta = (ClampMin = "0", ClampMax = "1"))
+	float TimelineElbowFromHand = 1.f;
+
 	/** Bone hidden on the body you see (hides the head and everything above it). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
 	FName HiddenBone = TEXT("neck_01");
@@ -234,6 +239,7 @@ private:
 	void ScaleBonesToNothing(UPoseableMeshComponent* Mesh, const TArray<FName>& Bones) const;
 
 	bool bElbowFromHand = false; // set while solving the first-person arms
+	float ElbowFromHandWeight = 1.f; // with bElbowFromHand: 1 = elbow fully from the hand, 0 = the down-and-out hint
 	TWeakObjectPtr<USkeletalMeshComponent> ArmsDriver;
 	TWeakObjectPtr<UPoseableMeshComponent> Arms;
 	TWeakObjectPtr<USkeletalMeshComponent> Driver;
