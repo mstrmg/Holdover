@@ -271,15 +271,22 @@ def pistol_actions(g):
     A["DryFire"] = a.out()
 
     # rack the slide, overhand (whatever is in the chamber comes out, the next round goes in)
-    def rack(lock_open=False, from_locked=False):
+    # reload workspace: the gun comes in closer and a little higher, muzzle tipped up and the magwell turned toward the
+    # support hand, so the eyes see the magazine leave and go in
+    WS = {"tX": -60.0, "tZ": 40.0, "rotY": -20.0, "rotX": -15.0}
+
+    def rack(lock_open=False, from_locked=False, start_pose=None):
         a = Action(0.85 if lock_open else 0.78)
+        sp = start_pose or {}
         tr, lk = g["slide_travel"], g["slide_lock"]
         top = [g["rear_serrations"][0], 0, g["slide_top_z"] + 4]          # palm centre over the rear of the slide
         # the gun comes in a little and drops into the workspace in front of the chest, canted, so the support arm
         # works it well below the eyes (brought close and high, the forearm crossed right in front of the face)
-        a.gun("tX", [K(0, 0), K(0.16, -40), K(0.58, -40), K(0.75, 0)], pivot=g["grip_socket"])
-        a.gun("tZ", [K(0, 0), K(0.16, -70), K(0.58, -70), K(0.75, 0)])
-        a.gun("rotX", [K(0, 0), K(0.16, -25), K(0.58, -25), K(0.75, 0)])
+        a.gun("tX", [K(0, sp.get("tX", 0)), K(0.16, -40), K(0.58, -40), K(0.75, 0)], pivot=g["grip_socket"])
+        a.gun("tZ", [K(0, sp.get("tZ", 0)), K(0.16, -70), K(0.58, -70), K(0.75, 0)])
+        a.gun("rotX", [K(0, sp.get("rotX", 0)), K(0.16, -25), K(0.58, -25), K(0.75, 0)])
+        if sp.get("rotY"):
+            a.gun("rotY", [K(0, sp["rotY"]), K(0.16, 0)])
         start = -lk if from_locked else 0
         grab, pulled = 0.22, 0.36
         a.bone(g["slide"], "tX", [K(grab, start, "easeIn"), K(pulled, -tr, "lin")] +
@@ -340,35 +347,59 @@ def pistol_actions(g):
     a.ev(0.20, "SlideRelease").ev(0.22, "InBattery").ev(0.225, "Sound:SlideForward")
     A["SlideRelease"] = a.out()
 
-    # magazine out: right thumb presses the release; drop (empty reload) or catch with the left hand (tactical)
-    mr = g["mag_release_pos"]
-    def mag_out(retain):
-        a = Action(0.95 if retain else 0.42)
-        a.fingers("R", "ThumbPress", [K(0, 0), K(0.10, 1), K(0.20, 1), K(0.28, 0)])
-        a.bone(g["mag_release"], g["mag_release_chan"], [K(0.08, 0, "lin"), K(0.11, g["mag_release_push"]), K(0.20, g["mag_release_push"]), K(0.24, 0)])
-        a.gun("rotX", [K(0, 0), K(0.10, -12), K(0.30, -8), K(0.42, 0)], pivot=g["grip_socket"])
-        a.ev(0.11, "MagDetach").ev(0.11, "Sound:MagRelease")
-        if retain:
-            mag_tracks_along(a, g, [(0.11, 0, "easeOut"), (0.16, 18, None), (0.30, 18, "easeIn"), (0.45, g["mag_clear"] + 10, None)])
-            a.hand("L", [hold(0), hand_on_mag(0.28, g, 18, interp="easeOut"), hand_on_mag(0.30, g, 18), hand_on_mag(0.45, g, g["mag_clear"] + 10),
-                         hand(0.80, "body", g["mag_pouch"], [0, 0, -1], [-1, 0, 0], interp="easeIn")])
-            a.fingers("L", "SupportWrap", [K(0, 1), K(0.12, 0)]).fingers("L", "PalmMag", [K(0.22, 0), K(0.30, 1)])
-            a.attach(0.45, "L", g["mag"]).ev(0.80, "MagStow").ev(0.82, "Sound:MagPouch")
-        else:
-            mag_tracks_along(a, g, [(0.11, 0, "easeIn"), (0.20, g["mag_clear"], None)])
-            a.ev(0.20, "MagDrop")
-            a.hand("L", [hold(0), hand(0.12, "gun", add(sh["pos"], [10, 60, -40]), sh["fwd"], sh["palm"], socket=sh["socket"]), hold(0.40)])
-            a.fingers("L", "SupportWrap", [K(0, 1), K(0.08, 0.3), K(0.34, 1)])
-        return a.out()
-    A["MagOut"] = mag_out(retain=True)
-    A["MagDrop"] = mag_out(retain=False)
+    # ---- magazine work
+    push = g["mag_release_push"]
+    def ws(a, keys):
+        """gun into / out of the reload workspace; keys: [(t, fraction of the workspace pose)]"""
+        for ch, v in WS.items():
+            a.gun(ch, [K(t, v * f) for t, f in keys], pivot=g["grip_socket"])
+    def ws_override(d, keys):
+        """same, on an already built (merged) action"""
+        for ch, v in WS.items():
+            d.setdefault("gun", {})[ch] = [K(t, v * f) for t, f in keys]
+        d["gun"]["pivot"] = g["grip_socket"]
+    # support hand off the grip: below and left of the gun, open, fingers forward and wrist low, so the magazine falls
+    # past it. (The old target reused the support grip's fingers-down direction away from the gun, which needs the wrist
+    # above the hand: the elbow flew up beside the face.)
+    peel = ([40, 95, -70], [0.85, -0.25, 0.45], [0, -1, 0])
+    def peel_key(t, interp=None):
+        return hand(t, "gun", peel[0], peel[1], peel[2], socket=g["grip_socket"], interp=interp)
+    def press_release(a, t):
+        """right thumb on the magazine release; the magazine comes free at t + 0.01"""
+        a.fingers("R", "ThumbPress", [K(max(t - 0.10, 0), 0), K(t, 1), K(t + 0.08, 1), K(t + 0.16, 0)])
+        a.bone(g["mag_release"], g["mag_release_chan"], [K(t - 0.02, 0, "lin"), K(t + 0.01, push), K(t + 0.08, push), K(t + 0.12, 0)])
+        a.ev(t + 0.01, "MagDetach").ev(t + 0.01, "Sound:MagRelease")
+    def drop_free(a, t):
+        """thumb at t, the empty magazine slides out under its own weight and falls"""
+        press_release(a, t)
+        mag_tracks_along(a, g, [(t + 0.01, 0, "easeIn"), (t + 0.10, g["mag_clear"], None)])
+        a.ev(t + 0.10, "MagDrop")
+
+    # drop the magazine: support hand peels off, gun into the workspace, thumb the release, the mag falls free,
+    # support hand back on
+    a = Action(0.75)
+    ws(a, [(0, 0), (0.15, 1), (0.45, 1), (0.70, 0)])
+    drop_free(a, 0.14)
+    a.hand("L", [hold(0), peel_key(0.12, interp="easeOut"), peel_key(0.46), hold(0.68)])
+    a.fingers("L", "SupportWrap", [K(0, 1), K(0.08, 0), K(0.56, 0), K(0.70, 1)]).fingers("L", "Relaxed", [K(0.04, 0), K(0.12, 1), K(0.50, 1), K(0.60, 0)])
+    A["MagDrop"] = a.out()
+
+    # magazine out and kept: the support hand catches it under the gun and stows it in the pouch
+    a = Action(1.0)
+    ws(a, [(0, 0), (0.15, 1), (0.50, 1), (0.92, 0)])
+    press_release(a, 0.14)
+    mag_tracks_along(a, g, [(0.15, 0, "easeOut"), (0.20, 18, None), (0.32, 18, "easeIn"), (0.48, g["mag_clear"] + 10, None)])
+    a.hand("L", [hold(0), hand_on_mag(0.30, g, 18, interp="easeOut"), hand_on_mag(0.33, g, 18), hand_on_mag(0.48, g, g["mag_clear"] + 10),
+                 hand(0.84, "body", g["mag_pouch"], [0, 0, -1], [-1, 0, 0], interp="easeIn")])
+    a.fingers("L", "SupportWrap", [K(0, 1), K(0.12, 0)]).fingers("L", "PalmMag", [K(0.22, 0), K(0.32, 1)])
+    a.attach(0.48, "L", g["mag"]).ev(0.84, "MagStow").ev(0.86, "Sound:MagPouch")
+    A["MagOut"] = a.out()
 
     # magazine in: from the pouch, line up with the well, push home, palm slap
-    def mag_in(t0=0.0):
+    def mag_in(t0=0.0, in_ws=False):
         a = Action(t0 + 0.95)
         a.attach(t0, "L", g["mag"]).ev(t0, "MagFromPouch").ev(t0, "Sound:MagPouch")
-        a.gun("rotX", [K(t0, CUR), K(t0 + 0.25, -10), K(t0 + 0.75, -10), K(t0 + 0.9, 0)], pivot=g["grip_socket"])
-        a.gun("rotY", [K(t0, CUR), K(t0 + 0.25, -10), K(t0 + 0.75, -10), K(t0 + 0.9, 0)])   # muzzle tips up so the well faces the mag
+        ws(a, [(t0, 1 if in_ws else 0), (t0 + 0.25, 1), (t0 + 0.72, 1), (t0 + 0.92, 0)])
         a.hand("L", [hand(t0, "body", g["mag_pouch"], [0, 0, -1], [-1, 0, 0]),
                      hand_on_mag(t0 + 0.42, g, 60, interp="easeOut"),
                      hand_on_mag(t0 + 0.48, g, 30, interp="lin"),
@@ -383,17 +414,29 @@ def pistol_actions(g):
 
     A["MagIn"] = mag_in().out()
 
-    # tactical reload = mag out (retained) + mag in
-    tac = Action(0.95 + 0.95)
-    mo, mi = A["MagOut"], mag_in(0.85).out()
-    merged = merge(mo, mi, 0.0)
+    # tactical reload = mag out (kept) + mag in, the gun staying in the workspace throughout
+    mi = mag_in(0.85, in_ws=True).out()
+    merged = merge(A["MagOut"], mi, 0.0)
     merged["duration"] = mi["duration"]
+    ws_override(merged, [(0, 0), (0.15, 1), (0.85 + 0.72, 1), (0.85 + 0.92, 0)])
     A["ReloadTactical"] = merged
 
-    # empty reload from slide lock = drop + mag in + slingshot
-    mi2 = mag_in(0.30).out()
-    sl = A["SlingshotRelease"]
-    A["ReloadEmpty"] = merge(merge(A["MagDrop"], mi2, 0.0), sl, 1.10)
+    # empty reload from slide lock: the mag drops free while the support hand is already on its way to the pouch,
+    # new mag in, then the support hand goes straight from the base of the mag over the slide and slingshots it
+    a = Action(0.45)
+    drop_free(a, 0.14)
+    a.hand("L", [hold(0), peel_key(0.14, interp="easeOut")])
+    a.fingers("L", "SupportWrap", [K(0, 1), K(0.08, 0)]).fingers("L", "Relaxed", [K(0.04, 0), K(0.12, 1), K(0.30, 1), K(0.40, 0)])
+    t_in = 0.42
+    t_rack = t_in + 0.70
+    re = merge(a.out(), mag_in(t_in, in_ws=True).out(), 0.0)
+    re = merge(re, rack(from_locked=True, start_pose=WS), t_rack)
+    re["handL"] = [k for k in re["handL"] if not (k.get("hold") and abs(k["t"] - t_rack) < 1e-6)]
+    g_ws = re["gun"]
+    for ch, v in WS.items():   # into the workspace as the thumb hits the release
+        keys = g_ws.get(ch, [])
+        g_ws[ch] = [K(0, 0), K(0.15, v)] + [k for k in keys if k[0] >= t_in - 1e-6]
+    A["ReloadEmpty"] = re
 
     # mag check: thumb the release, catch the mag, lift it into view to read the witness holes, put it back
     a = Action(1.6)
@@ -496,7 +539,8 @@ def pistol_actions(g):
 
     # look the gun over (idle flavour)
     a = Action(2.6)
-    a.gun("tX", [K(0, 0), K(0.4, -140), K(2.2, -140), K(2.6, 0)], pivot=g["grip_socket"])
+    a.gun("tX", [K(0, 0), K(0.4, -110), K(2.2, -110), K(2.6, 0)], pivot=g["grip_socket"])
+    a.gun("tZ", [K(0, 0), K(0.4, 50), K(2.2, 50), K(2.6, 0)])
     a.gun("rotX", [K(0, 0), K(0.5, -55), K(1.2, -55), K(1.6, 40), K(2.1, 40), K(2.6, 0)])
     a.gun("rotZ", [K(0, 0), K(0.5, 20), K(1.2, 20), K(1.6, -15), K(2.1, -15), K(2.6, 0)])
     # support hand off to the lower left and kept there while the gun turns (one key at each end of the stay, so it
