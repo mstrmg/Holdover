@@ -648,7 +648,10 @@ void AHoldoverGun::UpdateSlide(float Dt)
 	{
 		if (HandSlideTarget >= 0.f)
 		{
-			SlidePos = FMath::FInterpConstantTo(SlidePos, HandSlideTarget, Dt, 1.f / FMath::Max(Data->HandPullTime * 0.5f, 0.01f));
+			// The hand's timeline already moves at a hand's speed: the slide goes where the hand is. Following it with
+			// a speed limit left the slide short of the ejector when R was only tapped (the timeline then pulls back and
+			// lets go without pausing), so the pistols never chambered a round.
+			SlidePos = FMath::Max(SlidePos, FMath::Min(HandSlideTarget, 1.f));
 		}
 		else
 		{
