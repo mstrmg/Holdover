@@ -71,31 +71,6 @@
           ]
         }
       },
-      "gun": {
-        "pivot": "GripHand",
-        "loc": [
-          {"t": 0, "v": [0.0, 0.0, 0.0], "ease": "linear"},
-          {"t": 0.05, "v": [0.0, 0.0, 0.0], "ease": "linear"},
-          {"t": 0.072, "v": [-12.0, 0.0, 0.0], "ease": "smooth"},
-          {"t": 0.23, "v": [0.0, 0.0, 0.0], "ease": "smooth"}
-        ],
-        "rot": [
-          {"t": 0, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
-          {"t": 0.05, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "linear"},
-          {"t": 0.078, "v": {"axis": [0.0, -0.99, 0.11], "deg": 3.017}, "ease": "linear"},
-          {"t": 0.0815, "v": {"axis": [0.0, -0.99, 0.12], "deg": 3.017}, "ease": "linear"},
-          {"t": 0.085, "v": {"axis": [0.0, -0.99, 0.13], "deg": 3.008}, "ease": "linear"},
-          {"t": 0.1011, "v": {"axis": [0.0, -0.99, 0.14], "deg": 2.839}, "ease": "linear"},
-          {"t": 0.1172, "v": {"axis": [0.0, -0.99, 0.14], "deg": 2.528}, "ease": "linear"},
-          {"t": 0.1333, "v": {"axis": [0.0, -0.99, 0.14], "deg": 2.118}, "ease": "linear"},
-          {"t": 0.1494, "v": {"axis": [0.0, -0.99, 0.14], "deg": 1.651}, "ease": "linear"},
-          {"t": 0.1656, "v": {"axis": [0.0, -0.99, 0.14], "deg": 1.172}, "ease": "linear"},
-          {"t": 0.1817, "v": {"axis": [0.0, -0.99, 0.14], "deg": 0.725}, "ease": "linear"},
-          {"t": 0.1978, "v": {"axis": [0.0, -0.99, 0.14], "deg": 0.351}, "ease": "linear"},
-          {"t": 0.2139, "v": {"axis": [0.0, -0.99, 0.14], "deg": 0.095}, "ease": "linear"},
-          {"t": 0.23, "v": {"axis": [0, 0, 1], "deg": 0.0}, "ease": "smooth"}
-        ]
-      },
       "fingersR": [
         {"t": 0, "pose": "IndexTrigger", "weight": 0.7, "ease": "smooth"},
         {"t": 0.05, "pose": "IndexTrigger", "weight": 1, "ease": "smooth"},

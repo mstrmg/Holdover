@@ -10,6 +10,7 @@ class UPoseableMeshComponent;
 class USceneComponent;
 class USoundBase;
 class AHoldoverGun;
+class UHoldoverMuzzleFX;
 struct FHoldoverBoneMotion;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FHoldoverGunSignal, AHoldoverGun*);
@@ -114,6 +115,15 @@ public:
 	/** World transform of a socket or bone; falls back to gray-box marker points. */
 	FTransform GetSocketWorldTransform(FName Socket) const;
 
+	/** True when the gun shows its imported skeletal model (false for the gray-box stand-in). */
+	bool UsesSkeletalMesh() const { return bUseSkeletal; }
+
+	/** World transform of the gun model (the imported mesh's own frame), or the actor's for the gray box. */
+	FTransform GetMeshWorldTransform() const;
+
+	/** True if the gun has this socket (or a gray-box marker of that name). */
+	bool HasSocket(FName Socket) const;
+
 	/** Socket position in the gun's own space (cm, X forward). */
 	FVector GetSocketLocal(FName Socket) const;
 
@@ -147,6 +157,7 @@ private:
 	void LaunchBullet();
 	void EjectPiece(bool bLiveRound, float SpeedScale);
 	void PlayGunSound(USoundBase* Sound) const;
+	void PlayShotSounds();
 	bool ShouldLockOpen() const;
 
 	// Visuals
@@ -164,6 +175,10 @@ private:
 	/** The gun the player sees (First Person rendering). */
 	UPROPERTY(VisibleAnywhere, Category = "Gun")
 	TObjectPtr<UPoseableMeshComponent> Mesh;
+
+	/** Muzzle flash, smoke and the flash's light. */
+	UPROPERTY(VisibleAnywhere, Category = "Gun")
+	TObjectPtr<UHoldoverMuzzleFX> MuzzleFX;
 
 	/** Invisible copy that casts the gun's shadow into the world. */
 	UPROPERTY(VisibleAnywhere, Category = "Gun")
@@ -224,6 +239,9 @@ private:
 	bool bTriggerReset = true;
 	bool bRackHeld = false;
 	float LastShotTime = -100.f;
+	int32 LastShotVariant = -1;
+	int32 LastTailVariant = -1;
+	int32 LastMechVariant = -1;
 
 	EHoldoverFireMode FireMode = EHoldoverFireMode::Semi;
 	EHoldoverMalfunction Malfunction = EHoldoverMalfunction::None;

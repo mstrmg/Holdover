@@ -38,7 +38,7 @@ public:
 
 	AHoldoverGun* GetGun() const { return Gun; }
 
-	/** Switches to the gun in the given slot (0 = pistol, 1 = rifle). */
+	/** Switches to the gun in the given slot (0 = M9, 1 = AK, 2 = 1911, 3 = FAL, 4 = AR). */
 	void SelectGun(int32 Slot);
 
 	/** Refills the pouches, puts a full mag in the gun with an empty chamber, clears the range. */
@@ -139,6 +139,27 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Body")
 	TSoftObjectPtr<UAnimSequence> RifleArmsIdle;
 
+	/**
+	 * Hold the gun at the distance the first-person arms' animation holds it (closer to the eyes than the gun data's
+	 * ready offset and eye relief), so the arms keep their natural bent shape. Off = use the gun data's values.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	bool bHoldAtArmsDistance = true;
+
+	/** Shooting-hand grip point at the ready, relative to the eyes (cm, X forward, Y right, Z up). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	FVector PistolReadyGrip = FVector(32.f, 6.f, -18.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	FVector RifleReadyGrip = FVector(24.f, 10.f, -24.f);
+
+	/** How far ahead of the eyes the shooting hand is when aiming (cm); the sights still line up with the eye. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	float PistolAimGripForward = 40.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
+	float RifleAimGripForward = 22.f;
+
 	// ---------- Guns ----------
 
 	/** Gun data per slot. An empty slot uses the built-in preset (slot 0 M9-style pistol, slot 1 AK-style rifle). */
@@ -176,6 +197,9 @@ private:
 	void OnInteract();
 	void OnSelectPistol();
 	void OnSelectRifle();
+	void OnSelect1911();
+	void OnSelectFAL();
+	void OnSelectAR();
 	void OnResetRange();
 
 	// Gun and animation glue
@@ -201,6 +225,8 @@ private:
 	// Test tools (holdover.DebugView, holdover.TestShots)
 	void UpdateDebugView();
 	void UpdateTestShots(float DeltaSeconds);
+	void UpdateFireTest();
+	void UpdateActionTest();
 	void LogArmDiagnostics(const FString& Label) const;
 
 	UPROPERTY(Transient)
@@ -269,10 +295,21 @@ private:
 	float AimAlphaVel = 0.f;
 	FName HoldKey;
 
-	// Recoil spring state: pitch (deg), yaw (deg), back (cm), rise (cm), and their speeds.
-	FVector4 Recoil = FVector4(0, 0, 0, 0);
-	FVector4 RecoilVel = FVector4(0, 0, 0, 0);
-	float RecoilDrift = 0.f;
+	// Recoil. Kick: the gun jumping in the hands, a fast spring per channel (pitch, yaw, roll in degrees; back, rise,
+	// side in cm). Climb: the slower drift of the whole aim (pitch, yaw, degrees) that the shooter pulls back.
+	// Shake: the short tremor of the blast. Head: the share of all that the eyes take (cheek on the stock).
+	static constexpr int32 NumKick = 6;
+	float Kick[NumKick] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+	float KickVel[NumKick] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+	float Climb[2] = { 0.f, 0.f };
+	float ClimbVel[2] = { 0.f, 0.f };
+	float ShakeAmp = 0.f;
+	float ShakeTime = 10.f;
+	FVector ShakePhase = FVector::ZeroVector;
+	FRotator HeadKick = FRotator::ZeroRotator;
+	float HeadPush = 0.f;
+	void ResetRecoil();
+	void ApplyHeadKick();
 	float WalkPhase = 0.f;
 
 	// Gun lag state. SwayAngle is the gun's angle minus the view's (pitch, yaw, degrees); SwayGunVel is the gun's

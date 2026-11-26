@@ -20,8 +20,11 @@ The keys are built in code (`Player/HoldoverInputSet.cpp`). A rebinding menu com
 | X (hold) | Press check: look into the chamber |
 | V | Safety (pistol: safety/decocker on and off; rifle: steps the selector Safe, Auto, Semi) |
 | F | Pick up what you're looking at (a dropped magazine, a live round) |
-| 1 | Pistol (M9-style) |
-| 2 | Rifle (AK-style) |
+| 1 | M9-style pistol |
+| 2 | AK-style rifle |
+| 3 | 1911-style pistol |
+| 4 | FAL-style battle rifle |
+| 5 | AR-15-style carbine |
 | Backspace | Reset: refill pouches, fresh mag in each gun, clear targets and brass |
 
 Each gun starts with 4 full magazines in the pouch plus one in the gun.
@@ -39,3 +42,7 @@ Each gun starts with 4 full magazines in the pouch plus one in the gun.
 - `holdover.DebugGun 1`: the gun's state on screen (chamber, mag count, slide).
 - `holdover.DebugBullets 1`: draws each bullet's path.
 - `holdover.DebugShots 1`: score and distance for each hit.
+- `holdover.FlashVariant 0/1/2`: force the muzzle flash kind (faint, normal, with a fireball); `-1` is the normal random mix.
+- `holdover.FlashFreeze 1`: hold the muzzle flash on screen to look at it.
+- `holdover.Gun 0-4`: switch guns (same as keys 1 to 5).
+- `holdover.TestShots 2`: fires every gun and saves pictures of the flash kinds, the case leaving the port in slow motion and the smoke to `Saved/Screenshots/test/fire_*.png`, then quits (`3` = only the M9 and AK).

@@ -37,6 +37,9 @@ public:
 	UPROPERTY(Transient) TObjectPtr<UInputAction> Interact;
 	UPROPERTY(Transient) TObjectPtr<UInputAction> SelectPistol;
 	UPROPERTY(Transient) TObjectPtr<UInputAction> SelectRifle;
+	UPROPERTY(Transient) TObjectPtr<UInputAction> Select1911;
+	UPROPERTY(Transient) TObjectPtr<UInputAction> SelectFAL;
+	UPROPERTY(Transient) TObjectPtr<UInputAction> SelectAR;
 	UPROPERTY(Transient) TObjectPtr<UInputAction> ResetRange;
 	UPROPERTY(Transient) TObjectPtr<UInputAction> Reload; // assisted mode only
 

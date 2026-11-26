@@ -74,11 +74,11 @@ public:
 
 	/** Bones scaled to nothing on the full body you see when Hide Body Arms is on. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
-	TArray<FName> BodyArmBones = { TEXT("clavicle_l"), TEXT("clavicle_r") };
+	TArray<FName> BodyArmBones = { TEXT("spine_01") };
 
 	/** Bones scaled to nothing on the first-person arms (head, legs). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
-	TArray<FName> ArmsHiddenBones = { TEXT("neck_01"), TEXT("thigh_l"), TEXT("thigh_r") };
+	TArray<FName> ArmsHiddenBones = { TEXT("head"), TEXT("thigh_l"), TEXT("thigh_r") };
 
 	/** Bone (or socket) on the arms that is placed on the gun's grip. weapon_r is where the idle animations hold the gun. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
@@ -105,7 +105,26 @@ public:
 	 * from here and both hands are bent onto the gun; if the gun is out of reach the arms slide forward just enough.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
-	FVector ArmsHeadInCamera = FVector(-14.f, 0.f, -22.f);
+	FVector PistolArmsHeadInCamera = FVector(-14.f, 0.f, -18.f);
+
+	/** Same for the rifle (lower: the cheek rests on the stock, the shoulders sit well below the eye). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	FVector RifleArmsHeadInCamera = FVector(-16.f, 4.f, -22.f);
+
+	/** Place the arms so the animation's hand sits exactly on the grip (keeps the animation's arm shape) instead of hanging them from the anchor above. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bPistolArmsFollowGrip = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bRifleArmsFollowGrip = false;
+
+	/** Sideways pull of the support elbow on the first-person arms (0 = straight down). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	float ArmsLeftElbowOutward = 0.1f;
+
+	/** How much the first-person arms' body tilts with the view up and down (0 = stays upright like a real torso, 1 = tilts fully). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms", meta = (ClampMin = "0", ClampMax = "1"))
+	float ArmsBodyPitchFollow = 0.f;
 
 	/** Arms reach at most this fraction of their full length (1 = arm locked straight). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms", meta = (ClampMin = "0.8", ClampMax = "1"))
@@ -114,7 +133,7 @@ public:
 	/** Bend the left arm onto the gun's support-hand target with IK (pistol / rifle). Always on during gun actions.
 	 *  When off, the left hand keeps the place on the gun the idle animation gives it. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
-	bool bPistolLeftHandIK = false;
+	bool bPistolLeftHandIK = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
 	bool bRifleLeftHandIK = true;
@@ -126,6 +145,22 @@ public:
 	/** Also curl the left fingers from the gun timelines when the left hand IK is on. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
 	bool bLeftHandCurlFromTimeline = true;
+
+	/** Turn the left hand's palm the other way when bending it onto a hand target (fixes a palm facing away from the gun). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bFlipLeftPalm = false;
+
+	/** Nudge of the support hand from the gun's hand target, in the gun's frame (X along the barrel, Z up), cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	FVector PistolLeftHandOffset = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	FVector RifleLeftHandOffset = FVector::ZeroVector;
+
+	/** While the support hand is off its hand-made place for a gun action (racking, reloads), how much its elbow
+	 *  follows the hand so the wrist stays straight (1), versus pointing down and outward (0). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms", meta = (ClampMin = "0", ClampMax = "1"))
+	float TimelineElbowFromHand = 1.f;
 
 	/** Bone hidden on the body you see (hides the head and everything above it). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
@@ -148,7 +183,21 @@ public:
 	FVector FingerCurlAxisRight = FVector(0.f, 0.f, 1.f);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
-	FVector FingerCurlAxisLeft = FVector(0.f, 0.f, 1.f);
+	FVector FingerCurlAxisLeft = FVector(0.f, 0.f, -1.f);
+
+	/**
+	 * Hold the gun with the hand-made poses in Data/HoldPoses (both hands and fingers posed in Blender around each
+	 * gun model). The hands are locked to the gun; the elbows bend to reach it. Off = the old idle animation plus IK.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
+	bool bUseHoldPoses = true;
+
+	/** Test shots: the largest gap (cm) between where a wrist is drawn and where it should be on the gun since the
+	 *  last reset, both hands. Near zero means the drawn hands keep up with the gun. */
+	float MaxHandMiss = 0.f;
+
+	/** Eye relief (cm, eye to rear sight) of the hold pose for this kind of gun, or 0 when there is no hold pose. */
+	float GetHoldEyeRelief(bool bPistol) const;
 
 	/** Named finger poses used by the gun timelines. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Body")
@@ -166,7 +215,22 @@ private:
 		bool bValid = false;
 	};
 
+	/** A hold pose from Data/HoldPoses, turned into the arms mesh's bone transforms. */
+	struct FHoldPose
+	{
+		bool bValid = false;
+		TArray<FTransform> Local;   // parent-relative, one per bone of the arms mesh
+		FTransform HandRInGun;      // hand_r relative to the gun mesh
+		FTransform HandLInGun;      // hand_l relative to the gun mesh
+		FVector Eye = FVector::ZeroVector; // the eye, in the mesh's component space (cm)
+		float EyeRelief = 0.f;
+	};
+
 	void CacheBones();
+	void LoadHoldPoses();
+	bool LoadHoldPose(const FString& Name, FHoldPose& Out) const;
+	bool UpdateArmsFromHold(UPoseableMeshComponent* ArmsMesh, const class AHoldoverGun* Gun, const class UHoldoverGunData* Data,
+		const FTransform& CamTM);
 	void PoseCopy(UPoseableMeshComponent* Mesh, bool bHideHead);
 	void SolveArm(UPoseableMeshComponent* Mesh, const FArmBones& Arm, const FTransform& TargetWorld, bool bLeft);
 	/** Two-bone IK putting the hand bone at Wrist with rotation HandRot (world). */
@@ -178,6 +242,8 @@ private:
 	void UpdateArms(const FTransform& CamTM);
 	void ScaleBonesToNothing(UPoseableMeshComponent* Mesh, const TArray<FName>& Bones) const;
 
+	bool bElbowFromHand = false; // set while solving the first-person arms
+	float ElbowFromHandWeight = 1.f; // with bElbowFromHand: 1 = elbow fully from the hand, 0 = the down-and-out hint
 	TWeakObjectPtr<USkeletalMeshComponent> ArmsDriver;
 	TWeakObjectPtr<UPoseableMeshComponent> Arms;
 	TWeakObjectPtr<USkeletalMeshComponent> Driver;
@@ -191,4 +257,7 @@ private:
 	int32 HiddenIndex = INDEX_NONE;
 	const void* CachedFor = nullptr;
 	TArray<int32> Parents;
+	FHoldPose PistolHold;
+	FHoldPose RifleHold;
+	const void* HoldCachedFor = nullptr;
 };

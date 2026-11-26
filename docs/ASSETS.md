@@ -37,3 +37,11 @@ Every asset in the game, where it came from, and its license.
 Other ambientCG textures were downloaded to compare and are not used in any model (for example Planks040, Metal009, Wood094, Ground037). They sit in `art/textures/` and are also CC0.
 
 Downloaded copies are kept in `art/textures/<AssetId>/` on Miles's PC (binary files, added through Git LFS from his PC).
+
+## Generated effects and sounds (made for Holdover, no third-party material)
+
+| Asset | Made with | Notes |
+|---|---|---|
+| Muzzle flash atlas (`T_MuzzleFlash`: cores, plumes, end-on bursts, fireballs) and smoke atlas (`T_MuzzleSmoke`) | `tools/fx/gen_fx_textures.py` (Python + numpy, procedural noise) | Written to `art/fx/textures/` on Miles's PC, imported to `/Game/FX` by `tools/unreal/import_fx.py`. 2K. |
+| Every gun sound: shots, echo tails, action cycling, brass / live round / magazine landing per surface | `tools/audio/gen_gun_audio.py` (Python + numpy synthesis) | Written to `art/audio/` on Miles's PC, imported to `/Game/Audio` by `tools/unreal/import_fx.py`. |
+| `M_MuzzleFlash`, `M_MuzzleSmoke`, `M_Brass` materials | `tools/unreal/import_fx.py` | Built by script; `M_Brass` is assigned to the `SM_Casing_*` meshes. |
