@@ -192,6 +192,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arms")
 	bool bUseHoldPoses = true;
 
+	/** Test shots: the largest gap (cm) between where a wrist is drawn and where it should be on the gun since the
+	 *  last reset, both hands. Near zero means the drawn hands keep up with the gun. */
+	float MaxHandMiss = 0.f;
+
 	/** Eye relief (cm, eye to rear sight) of the hold pose for this kind of gun, or 0 when there is no hold pose. */
 	float GetHoldEyeRelief(bool bPistol) const;
 

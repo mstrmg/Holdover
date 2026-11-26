@@ -211,7 +211,9 @@ void UHoldoverBodyRig::UpdateArms(const FTransform& CamTM)
 			CurlFingers(ArmsMesh, LeftArm, Anim->GetFingerWeights(true), true);
 		}
 	}
-	ArmsMesh->MarkRefreshTransformDirty();
+	// Apply the new pose now. Only marking it dirty would leave it for the mesh's own tick, which ran earlier this
+	// frame, so the arms would show last frame's pose while the gun shows this frame's: the hands trail the gun.
+	ArmsMesh->RefreshBoneTransforms();
 }
 
 void UHoldoverBodyRig::CacheBones()
@@ -584,7 +586,7 @@ void UHoldoverBodyRig::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 				CurlFingers(Mesh, RightArm, Anim->GetFingerWeights(false), false);
 			}
 		}
-		Mesh->MarkRefreshTransformDirty();
+		Mesh->RefreshBoneTransforms(); // now, not at the mesh's next tick (one frame late)
 	}
 
 	UpdateArms(CamTM);
@@ -813,6 +815,15 @@ bool UHoldoverBodyRig::UpdateArmsFromHold(UPoseableMeshComponent* ArmsMesh, cons
 			}
 		}
 	}
-	ArmsMesh->MarkRefreshTransformDirty();
+	// Apply the new pose now. Only marking it dirty would leave it for the mesh's own tick, which ran earlier this
+	// frame, so the arms would show last frame's pose while the gun shows this frame's: the hands trail the gun.
+	ArmsMesh->RefreshBoneTransforms();
+	if (HoldoverDebug::TestShots() > 0)
+	{
+		// What the renderer gets this frame (the refreshed bones) against where the wrists belong now.
+		const float MissR = FVector::Dist(ArmsMesh->GetBoneLocation(ArmsMesh->GetBoneName(RightArm.Hand)), HandRWorld.GetLocation());
+		const float MissL = FVector::Dist(ArmsMesh->GetBoneLocation(ArmsMesh->GetBoneName(LeftArm.Hand)), LeftWrist);
+		MaxHandMiss = FMath::Max3(MaxHandMiss, MissR, MissL);
+	}
 	return true;
 }

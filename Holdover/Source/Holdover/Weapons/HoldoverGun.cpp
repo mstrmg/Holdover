@@ -1119,7 +1119,9 @@ void AHoldoverGun::ApplyBoneDeltas()
 				Local.SetScale3D(Local.GetScale3D() * FMath::Max(Pair.Value.Scale, 0.001f));
 				Comp->BoneSpaceTransforms[Index] = Local;
 			}
-			Comp->MarkRefreshTransformDirty();
+			// Apply now: the mesh's own tick already ran this frame, so a dirty mark would show the moving parts
+			// (slide, carrier, charging handle) a frame behind the hand working them.
+			Comp->RefreshBoneTransforms();
 		}
 	}
 	else
