@@ -240,6 +240,14 @@ private:
 	float SweepWorst = 0.f;
 	float SweepWorstT = 0.f;
 	FName SweepWorstBone;
+
+	/** holdover.TestShots 6: film strips (several pictures through each mag and inspect action) from the eye and the side. */
+	void UpdateAnimFilm(float DeltaSeconds);
+	int32 FilmIndex = 0;
+	int32 FilmFrame = 0;
+	int32 FilmPhase = 0;
+	int32 FilmView = 0;
+	float FilmWait = 0.f;
 	void LogArmDiagnostics(const FString& Label) const;
 
 	UPROPERTY(Transient)

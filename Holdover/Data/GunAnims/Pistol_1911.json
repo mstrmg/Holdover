@@ -1762,8 +1762,9 @@
       },
       "handL": [
         {"t": 0, "hold": true, "ease": "smooth"},
-        {"t": 0.35, "space": "camera", "pos": [380.0, 90.0, -150.0], "fingersDir": [0.4, -0.3, 0.86], "palmNormal": [-0.13, -0.95, -0.27], "ease": "smooth"},
-        {"t": 2.4, "hold": true, "ease": "smooth"}
+        {"t": 0.35, "space": "camera", "pos": [360.0, 110.0, -200.0], "fingersDir": [0.4, -0.3, 0.86], "palmNormal": [-0.13, -0.95, -0.27], "ease": "smooth"},
+        {"t": 2.15, "space": "camera", "pos": [360.0, 110.0, -200.0], "fingersDir": [0.4, -0.3, 0.86], "palmNormal": [-0.13, -0.95, -0.27], "ease": "smooth"},
+        {"t": 2.45, "hold": true, "ease": "smooth"}
       ],
       "fingersL": [
         {"t": 0, "pose": "SupportWrap", "weight": 1, "ease": "smooth"},

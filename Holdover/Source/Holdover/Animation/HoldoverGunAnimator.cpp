@@ -111,6 +111,11 @@ float UHoldoverGunAnimator::GetEventTime(FName Action, FName EventName) const
 	return -1.f;
 }
 
+float UHoldoverGunAnimator::GetCurrentDuration() const
+{
+	return Current ? Current->Duration : 0.f;
+}
+
 bool UHoldoverGunAnimator::Play(FName Action, bool bInHoldable, float StartTime)
 {
 	if (!Set.IsValid())

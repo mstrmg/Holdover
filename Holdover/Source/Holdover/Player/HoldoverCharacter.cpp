@@ -689,6 +689,11 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		UpdateAnimSweep(DeltaSeconds);
 		return;
 	}
+	if (Mode == 6)
+	{
+		UpdateAnimFilm(DeltaSeconds);
+		return;
+	}
 	if (Mode == 4)
 	{
 		UpdateActionTest();
@@ -1010,6 +1015,112 @@ void AHoldoverCharacter::UpdateAnimSweep(float DeltaSeconds)
 		ResetLoadout();
 		++SweepIndex;
 		SweepPhase = 0;
+		return;
+	}
+}
+
+void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
+{
+	// Plays each listed action in slow motion and takes evenly spaced pictures through it, first from the eyes and
+	// then from the side. Pictures go to Saved/Screenshots/film/<gun>_<action>_<eye|side>_<n>.png.
+	if (TestTime < 4.f)
+	{
+		return;
+	}
+	if (FilmWait > 0.f)
+	{
+		FilmWait -= DeltaSeconds;
+		return;
+	}
+	struct FShot { int32 Slot; const TCHAR* Action; };
+	static const FShot List[] = {
+		{ 0, TEXT("MagDrop") }, { 0, TEXT("MagOut") }, { 0, TEXT("MagIn") }, { 0, TEXT("ReloadEmpty") }, { 0, TEXT("ReloadTactical") },
+		{ 0, TEXT("MagCheck") }, { 0, TEXT("Inspect") },
+		{ 2, TEXT("MagDrop") }, { 2, TEXT("ReloadEmpty") }, { 2, TEXT("MagCheck") }, { 2, TEXT("Inspect") },
+	};
+	static const TCHAR* SlotNames[] = { TEXT("m9"), TEXT("ak"), TEXT("1911"), TEXT("fal"), TEXT("ar") };
+	constexpr int32 NumShots = UE_ARRAY_COUNT(List);
+	constexpr int32 Frames = 8;
+	constexpr float Slow = 0.25f;
+	if (FilmIndex >= NumShots)
+	{
+		UGameplayStatics::SetGlobalTimeDilation(this, 1.f);
+		UE_LOG(LogHoldover, Log, TEXT("[Film] done"));
+		HoldoverDebug::CVarTestShots->Set(0, ECVF_SetByConsole);
+		if (APlayerController* PC = Cast<APlayerController>(Controller))
+		{
+			PC->ConsoleCommand(TEXT("quit"));
+		}
+		return;
+	}
+	const FShot& S = List[FilmIndex];
+	switch (FilmPhase)
+	{
+	case 0:
+		Animator->Stop();
+		UGameplayStatics::SetGlobalTimeDilation(this, 1.f);
+		if (S.Slot != CurrentSlot)
+		{
+			SelectGun(S.Slot);
+		}
+		ResetLoadout();
+		HoldoverDebug::CVarForceAim->Set(0, ECVF_SetByConsole);
+		HoldoverDebug::CVarDebugView->Set(FilmView, ECVF_SetByConsole);
+		if (Controller)
+		{
+			FRotator R = Controller->GetControlRotation();
+			R.Pitch = 0.f;
+			Controller->SetControlRotation(R);
+		}
+		FilmWait = 0.6f;
+		FilmPhase = 1;
+		return;
+	case 1:
+		UGameplayStatics::SetGlobalTimeDilation(this, Slow);
+		if (!Animator->Play(FName(S.Action), false))
+		{
+			UE_LOG(LogHoldover, Log, TEXT("[Film] %s has no %s"), SlotNames[S.Slot], S.Action);
+			FilmPhase = 3;
+			return;
+		}
+		FilmFrame = 0;
+		FilmPhase = 2;
+		return;
+	case 2:
+	{
+		const bool bPlaying = Animator->IsPlaying();
+		const float D = bPlaying ? Animator->GetCurrentDuration() : 0.f;
+		const float Next = D * 0.97f * static_cast<float>(FilmFrame) / static_cast<float>(Frames - 1);
+		if (FilmFrame < Frames && (!bPlaying || Animator->GetTime() >= Next))
+		{
+			const FString File = FPaths::ProjectSavedDir() / TEXT("Screenshots/film") / FString::Printf(TEXT("%s_%s_%s_%d.png"),
+				SlotNames[S.Slot], S.Action, FilmView == 0 ? TEXT("eye") : TEXT("side"), FilmFrame);
+			FScreenshotRequest::RequestScreenshot(File, false, false);
+			UE_LOG(LogHoldover, Log, TEXT("[Film] %s %s %s %d at %.2f s"), SlotNames[S.Slot], S.Action, FilmView == 0 ? TEXT("eye") : TEXT("side"),
+				FilmFrame, Animator->GetTime());
+			++FilmFrame;
+			return;
+		}
+		if (bPlaying && FilmFrame < Frames)
+		{
+			return;
+		}
+		UGameplayStatics::SetGlobalTimeDilation(this, 1.f);
+		FilmWait = 0.2f;
+		FilmPhase = 3;
+		return;
+	}
+	default:
+		if (FilmView == 0)
+		{
+			FilmView = 1;
+		}
+		else
+		{
+			FilmView = 0;
+			++FilmIndex;
+		}
+		FilmPhase = 0;
 		return;
 	}
 }
