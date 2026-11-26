@@ -87,7 +87,7 @@ FINGER_POSES = {
     "SupportWrap":  {"thumb": [10, 10, 5],  "index": [55, 60, 35], "middle": [65, 70, 40], "ring": [70, 75, 40], "pinky": [75, 75, 35]},
     "PinchRack":    {"thumb": [35, 20, 15], "index": [60, 80, 40], "middle": [75, 90, 50], "ring": [80, 90, 50], "pinky": [80, 90, 45]},
     "OverhandRack": {"thumb": [5, 10, 10],  "index": [45, 50, 25], "middle": [50, 55, 30], "ring": [50, 55, 30], "pinky": [50, 55, 25]},
-    "OverhandRake": {"thumb": [-55, 0, 0],  "index": [10, 0, 5],   "middle": [10, 0, 5],  "ring": [10, 0, 5],   "pinky": [10, 0, 5]},
+    "OverhandRake": {"thumb": [-75, 0, 0],  "index": [10, 0, 5],   "middle": [10, 0, 5],  "ring": [10, 0, 5],   "pinky": [10, 0, 5]},
     "PalmMag":      {"thumb": [30, 20, 10], "index": [15, 10, 5],  "middle": [60, 70, 35], "ring": [65, 75, 35], "pinky": [70, 75, 30]},
     "ThumbPress":   {"thumb": [-10, 0, 0]},
     "Relaxed":      {"thumb": [5, 5, 5],    "index": [10, 15, 10], "middle": [15, 20, 10], "ring": [20, 20, 10], "pinky": [20, 25, 10]},
@@ -556,7 +556,8 @@ def rifle_actions(g):
             # overhand rake: the support hand comes over the top of the receiver, palm down on the dust cover just
             # behind the rear sight, fingers nearly straight across it and down the right side, the little finger
             # just in front of the knob, and rakes it back (palm height, finger curl and thumb checked in Blender
-            # against the gun mesh with the game's own hand placement: nothing inside the gun, closest 1.4 mm)
+            # against the gun mesh with the game's own hand placement: nothing inside the gun; the thumb is opened
+            # well out, at least 7 mm off the receiver, because a nearly-touching thumb showed inside it in the game)
             side, fingers_hold = "L", "OverhandRake"
             hf, hpalm = [0, -1, 0], [0, 0, -1]
             off = None
@@ -571,7 +572,7 @@ def rifle_actions(g):
             hf, hpalm = [0.2, -0.95, 0.1], [-0.25, 0, -1]
             off = [-6, 10, 14]
         shift = [start if g["handle_moves_with_carrier"] else 0, 0, 0]
-        p0 = add([-15, 15, 46], shift) if off is None else add(hp, add(off, shift))
+        p0 = add([-15, 15, 48], shift) if off is None else add(hp, add(off, shift))
         approach = [10, 40, 50] if off is None else [10, 15 if side == "L" else -25, 30]
         handle_bone = car if g["handle_moves_with_carrier"] else g["charging_handle"]
         # overhand rake: the hand leaves the handguard by dropping under it, comes up past its side, rises well
