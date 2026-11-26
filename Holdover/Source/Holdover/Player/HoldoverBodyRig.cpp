@@ -48,7 +48,7 @@ void UHoldoverBodyRig::InitDefaultPoses()
 	HandPoses.Add(TEXT("PinchRack"), Pose({ C(10, 25, 20), C(45, 60, 40), C(70, 80, 50), C(72, 80, 50), C(75, 80, 50) }, 0x1F));
 	HandPoses.Add(TEXT("OverhandRack"), Pose({ C(25, 30, 20), C(50, 55, 30), C(55, 60, 35), C(58, 60, 35), C(60, 60, 35) }, 0x1F));
 	// Overhand rake (AK charging handle): fingers nearly straight, lying flat down the right side of the receiver.
-	HandPoses.Add(TEXT("OverhandRake"), Pose({ C(10, 10, 5), C(25, 10, 5), C(25, 10, 5), C(25, 10, 5), C(25, 10, 5) }, 0x1F));
+	HandPoses.Add(TEXT("OverhandRake"), Pose({ C(-55, 0, 0), C(10, 0, 5), C(10, 0, 5), C(10, 0, 5), C(10, 0, 5) }, 0x1F));
 	HandPoses.Add(TEXT("PalmMag"), Pose({ C(30, 30, 15), C(20, 25, 15), C(55, 60, 35), C(58, 60, 35), C(60, 60, 35) }, 0x1F));
 	HandPoses.Add(TEXT("ThumbPress"), Pose({ C(0, 0, 0), C(0, 0, 0), C(0, 0, 0), C(0, 0, 0), C(0, 0, 0) }, 0x01));
 }

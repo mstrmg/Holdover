@@ -87,7 +87,7 @@ FINGER_POSES = {
     "SupportWrap":  {"thumb": [10, 10, 5],  "index": [55, 60, 35], "middle": [65, 70, 40], "ring": [70, 75, 40], "pinky": [75, 75, 35]},
     "PinchRack":    {"thumb": [35, 20, 15], "index": [60, 80, 40], "middle": [75, 90, 50], "ring": [80, 90, 50], "pinky": [80, 90, 45]},
     "OverhandRack": {"thumb": [5, 10, 10],  "index": [45, 50, 25], "middle": [50, 55, 30], "ring": [50, 55, 30], "pinky": [50, 55, 25]},
-    "OverhandRake": {"thumb": [10, 10, 5],  "index": [25, 10, 5],  "middle": [25, 10, 5], "ring": [25, 10, 5],  "pinky": [25, 10, 5]},
+    "OverhandRake": {"thumb": [-55, 0, 0],  "index": [10, 0, 5],   "middle": [10, 0, 5],  "ring": [10, 0, 5],   "pinky": [10, 0, 5]},
     "PalmMag":      {"thumb": [30, 20, 10], "index": [15, 10, 5],  "middle": [60, 70, 35], "ring": [65, 75, 35], "pinky": [70, 75, 30]},
     "ThumbPress":   {"thumb": [-10, 0, 0]},
     "Relaxed":      {"thumb": [5, 5, 5],    "index": [10, 15, 10], "middle": [15, 20, 10], "ring": [20, 20, 10], "pinky": [20, 25, 10]},
@@ -553,11 +553,12 @@ def rifle_actions(g):
         grab, pulled = 0.30, 0.48
         start = -(tr - 4) if from_locked else 0
         if g["style"] == "ak":
-            # overhand rake: the support hand comes over the top of the receiver behind the rear sight, palm down,
-            # fingers lying flat down the right side with the front finger just ahead of the knob, and rakes it back
-            # (pose checked in Blender against the gun mesh: fingers flat on the side, nothing inside the gun)
+            # overhand rake: the support hand comes over the top of the receiver, palm down on the dust cover just
+            # behind the rear sight, fingers nearly straight across it and down the right side, the little finger
+            # just in front of the knob, and rakes it back (palm height, finger curl and thumb checked in Blender
+            # against the gun mesh with the game's own hand placement: nothing inside the gun, closest 1.4 mm)
             side, fingers_hold = "L", "OverhandRake"
-            hf, hpalm = [0.15, -0.989, 0], [0, 0, -1]
+            hf, hpalm = [0, -1, 0], [0, 0, -1]
             off = None
         elif g["style"] == "fal":
             # support hand comes back to the left-side handle (the handle does not move when firing)
@@ -570,10 +571,21 @@ def rifle_actions(g):
             hf, hpalm = [0.2, -0.95, 0.1], [-0.25, 0, -1]
             off = [-6, 10, 14]
         shift = [start if g["handle_moves_with_carrier"] else 0, 0, 0]
-        p0 = add([-35, 25, 34], shift) if off is None else add(hp, add(off, shift))
+        p0 = add([-15, 15, 46], shift) if off is None else add(hp, add(off, shift))
         approach = [10, 40, 50] if off is None else [10, 15 if side == "L" else -25, 30]
         handle_bone = car if g["handle_moves_with_carrier"] else g["charging_handle"]
-        hk = [hold(0), hand(0.22, "gun", add(p0, approach), hf, hpalm, interp="easeOut"),
+        # overhand rake: the hand leaves the handguard by dropping under it, comes up past its side, rises well
+        # clear of the receiver and only then turns palm down over the top; it goes back the same way. Every
+        # waypoint and the moves between them were checked in Blender against the gun mesh (nothing inside it).
+        below, under_left, beside = [150, 0, -140], [150, 95, -120], [40, 95, -15]
+        up_f, up_p = [0.15, 0, 1], [0, -1, 0]            # fingers up, palm toward the gun
+        under_f, under_p = [0.3, -0.95, 0], [0, 0, 1]    # fingers across under the handguard, palm up
+        hk = [hold(0)]
+        if off is None:
+            hk += [hand(0.07, "gun", below, under_f, under_p), hand(0.12, "gun", under_left, under_f, under_p),
+                   hand(0.17, "gun", beside, up_f, up_p), hand(0.22, "gun", [-5, 125, 110], hf, hpalm)]
+            approach = [10, 0, 60]
+        hk += [hand(0.26 if off is None else 0.22, "gun", add(p0, approach), hf, hpalm, interp="easeOut"),
               hand(grab, "gun", p0, hf, hpalm), hand(pulled, "gun", add(p0, [-tr - (0 if g["handle_moves_with_carrier"] else 0), 0, 0]), hf, hpalm, interp="easeOut")]
         if g["handle_moves_with_carrier"]:
             a.bone(car, "tX", [K(grab, start, "easeIn"), K(pulled, -tr, "lin")] + ([K(pulled + 0.04, -tr)] if lock_open else [K(pulled + 0.035, 0)]))
@@ -585,8 +597,11 @@ def rifle_actions(g):
         if g["style"] == "ar":   # AR handle is ridden home by the hand
             hk += [hand(pulled + 0.10, "gun", p0, hf, hpalm)]
         else:
-            release = [-tr - 20, 40, 40] if off is None else [-tr - 20, 25 if side == "L" else -35, 20]
-            hk += [hand(pulled + 0.06, "gun", add(p0, release), hf, hpalm)]
+            release = [-tr, 0, 60] if off is None else [-tr - 20, 25 if side == "L" else -35, 20]
+            hk += [hand(pulled + (0.04 if off is None else 0.06), "gun", add(p0, release), hf, hpalm)]
+            if off is None:
+                hk += [hand(0.58, "gun", [-60, 125, 110], hf, hpalm), hand(0.66, "gun", beside, up_f, up_p),
+                       hand(0.73, "gun", under_left, under_f, under_p), hand(0.80, "gun", below, under_f, under_p)]
         if lock_open and g.get("bolt_catch"):
             a.bone(g["bolt_catch"], "rotY", [K(pulled - 0.02, 0), K(pulled + 0.02, g["bolt_catch_up"])])
             a.ev(pulled + 0.03, "BoltLock").ev(pulled + 0.03, "Sound:BoltLock")
