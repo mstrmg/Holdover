@@ -275,9 +275,11 @@ def pistol_actions(g):
         a = Action(0.85 if lock_open else 0.78)
         tr, lk = g["slide_travel"], g["slide_lock"]
         top = [g["rear_serrations"][0], 0, g["slide_top_z"] + 4]          # palm centre over the rear of the slide
-        a.gun("tX", [K(0, 0), K(0.16, -90), K(0.58, -90), K(0.75, 0)], pivot=g["grip_socket"])
-        a.gun("tZ", [K(0, 0), K(0.16, -35), K(0.58, -35), K(0.75, 0)])
-        a.gun("rotX", [K(0, 0), K(0.16, -18), K(0.58, -18), K(0.75, 0)])
+        # the gun comes in a little and drops into the workspace in front of the chest, canted, so the support arm
+        # works it well below the eyes (brought close and high, the forearm crossed right in front of the face)
+        a.gun("tX", [K(0, 0), K(0.16, -40), K(0.58, -40), K(0.75, 0)], pivot=g["grip_socket"])
+        a.gun("tZ", [K(0, 0), K(0.16, -70), K(0.58, -70), K(0.75, 0)])
+        a.gun("rotX", [K(0, 0), K(0.16, -25), K(0.58, -25), K(0.75, 0)])
         start = -lk if from_locked else 0
         grab, pulled = 0.22, 0.36
         a.bone(g["slide"], "tX", [K(grab, start, "easeIn"), K(pulled, -tr, "lin")] +
@@ -293,7 +295,7 @@ def pistol_actions(g):
             a.fingers("R", "ThumbPress", [K(0.30, 0), K(0.36, 1), K(0.44, 1), K(0.50, 0)])
             a.ev(0.43, "SlideLock").ev(0.43, "Sound:SlideLock")
         else:           # let go at the back: the slide flies forward on its own
-            hk += [hand(0.44, "gun", add(top, [-tr - 30, 45, 40]), fwd, palm)]
+            hk += [hand(0.44, "gun", add(top, [-tr - 20, 50, 0]), fwd, palm)]   # back and out to the side, not up at the face
         hk += [hold(0.72, "easeOut")]
         a.hand("L", hk)
         a.fingers("L", "SupportWrap", [K(0, 1), K(0.10, 0), K(0.62, 0), K(0.72, 1)])
