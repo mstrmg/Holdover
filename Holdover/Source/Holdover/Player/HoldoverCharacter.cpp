@@ -653,7 +653,7 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 	TestTime += DeltaSeconds;
 
 	// Each step happens at its time; a screenshot is taken one step after the view is set so the frame shows it.
-	struct FStep { float T; int32 Slot; int32 Aim; int32 View; const TCHAR* Shot; int32 Do = 0; }; // Do: 1/2 = press/release rack, 3/4/5 = look down 45/70/level, 6/7 = press/release trigger
+	struct FStep { float T; int32 Slot; int32 Aim; int32 View; const TCHAR* Shot; int32 Do = 0; }; // Do: 1/2 = press/release rack, 3/4/5 = look down 45/70/level, 8 = look down 30 (as when working the gun), 6/7 = press/release trigger
 	static const FStep Steps[] = {
 		{ 4.0f, 0, 0, 0, nullptr },
 		{ 4.5f, 0, 0, 0, TEXT("pistol_ready_eyes") },
@@ -713,6 +713,7 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		{ 23.7f, 1, 0, 0, TEXT("rifle_down70_eyes") },
 		{ 23.8f, 1, 0, 0, nullptr, 5 },
 		// Rifle charging handle: the support hand leaving the handguard, on the handle, and held at the back.
+		{ 24.2f, 1, 0, 0, nullptr, 8 },
 		{ 24.3f, 1, 0, 0, nullptr, 1 },
 		{ 24.42f, 1, 0, 0, TEXT("rifle_rack_reach_eyes") },
 		{ 24.62f, 1, 0, 0, TEXT("rifle_rack_grab_eyes") },
@@ -726,6 +727,7 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		{ 26.0f, 1, 0, 0, nullptr, 2 },
 		{ 26.15f, 1, 0, 0, TEXT("rifle_rack_return_eyes") },
 		{ 27.0f, 1, 0, 0, TEXT("rifle_rack_done_eyes") },
+		{ 27.1f, 1, 0, 0, nullptr, 5 },
 	};
 	constexpr int32 NumSteps = UE_ARRAY_COUNT(Steps);
 	while (TestStep < NumSteps && TestTime >= Steps[TestStep].T)
@@ -739,12 +741,12 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		}
 		if (S.Do == 1) { OnRackPressed(); }
 		if (S.Do == 6) { OnTriggerPressed(); }
-		if (S.Do >= 3 && S.Do <= 5)
+		if ((S.Do >= 3 && S.Do <= 5) || S.Do == 8)
 		{
 			if (Controller)
 			{
 				FRotator R = Controller->GetControlRotation();
-				R.Pitch = S.Do == 3 ? -45.f : (S.Do == 4 ? -70.f : 0.f);
+				R.Pitch = S.Do == 3 ? -45.f : (S.Do == 4 ? -70.f : (S.Do == 8 ? -30.f : 0.f));
 				Controller->SetControlRotation(R);
 			}
 		}
