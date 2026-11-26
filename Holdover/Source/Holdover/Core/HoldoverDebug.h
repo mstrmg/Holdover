@@ -28,3 +28,16 @@ namespace HoldoverDebug
 	inline int32 DebugView() { return CVarDebugView.GetValueOnGameThread(); }
 	inline int32 TestShots() { return CVarTestShots.GetValueOnGameThread(); }
 }
+
+/** Firing effects test switches. */
+namespace HoldoverDebug
+{
+	extern TAutoConsoleVariable<int32> CVarFlashVariant; // holdover.FlashVariant -1 random, 0 faint, 1 normal, 2 fireball
+	extern TAutoConsoleVariable<int32> CVarFlashFreeze;  // holdover.FlashFreeze 1: the flash stays lit on screen (for pictures)
+	extern TAutoConsoleVariable<int32> CVarSelectGun;
+	extern TAutoConsoleVariable<float> CVarCaseWithGun;  // holdover.CaseWithGun: seconds a new case is drawn with the first-person gun    // holdover.Gun 0-4: switch to M9, AK, 1911, FAL, AR
+
+	inline int32 FlashVariant() { return CVarFlashVariant.GetValueOnGameThread(); }
+	inline bool FlashFreeze() { return CVarFlashFreeze.GetValueOnGameThread() != 0; }
+	inline int32 SelectGun() { return CVarSelectGun.GetValueOnGameThread(); }
+}

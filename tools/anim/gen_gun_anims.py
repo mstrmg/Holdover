@@ -253,7 +253,7 @@ def pistol_actions(g):
             a.bone(trig, tch, [K(0, 0, "easeIn"), K(brk, pull, "easeOut"), K(brk + 0.10, 0)])
         if g["grip_safety"]:
             a.bone("GripSafety", "rotY", [K(0, -6)])
-        recoil(a, g, brk)
+        # no whole-gun kick here: recoil is physical and random per shot, done in code (Player/HoldoverCharacter)
         a.fingers("R", "IndexTrigger", [K(0, 0.7, "easeIn"), K(brk, 1), K(brk + 0.10, 0.7)])
         a.ev(brk - 0.002, "HammerDrop").ev(brk, "ShotBreak").ev(brk + 0.09, "TriggerReset")
         return a.out()
@@ -534,7 +534,7 @@ def rifle_actions(g):
         brk = 0.05
         a = Action(brk + g["recoil"]["settle"] + 0.08)
         a.bone(trig, "rotY", [K(0, 0, "easeIn"), K(brk, g["trigger_pull"], "easeOut"), K(brk + 0.10, 0)])
-        recoil(a, g, brk)
+        # no whole-gun kick here: recoil is physical and random per shot, done in code (Player/HoldoverCharacter)
         a.fingers("R", "IndexTrigger", [K(0, 0.7, "easeIn"), K(brk, 1), K(brk + 0.10, 0.7)])
         a.ev(brk - 0.002, "HammerDrop").ev(brk, "ShotBreak").ev(brk + 0.09, "TriggerReset")
         return a.out()

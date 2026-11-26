@@ -30,6 +30,9 @@ void UHoldoverInputSet::Build()
 	Interact = MakeAction(TEXT("IA_Interact"), false);
 	SelectPistol = MakeAction(TEXT("IA_SelectPistol"), false);
 	SelectRifle = MakeAction(TEXT("IA_SelectRifle"), false);
+	Select1911 = MakeAction(TEXT("IA_Select1911"), false);
+	SelectFAL = MakeAction(TEXT("IA_SelectFAL"), false);
+	SelectAR = MakeAction(TEXT("IA_SelectAR"), false);
 	ResetRange = MakeAction(TEXT("IA_ResetRange"), false);
 	Reload = MakeAction(TEXT("IA_Reload"), false);
 
@@ -86,5 +89,8 @@ void UHoldoverInputSet::MapCommon(UInputMappingContext* C)
 	C->MapKey(Interact, EKeys::F);
 	C->MapKey(SelectPistol, EKeys::One);
 	C->MapKey(SelectRifle, EKeys::Two);
+	C->MapKey(Select1911, EKeys::Three);
+	C->MapKey(SelectFAL, EKeys::Four);
+	C->MapKey(SelectAR, EKeys::Five);
 	C->MapKey(ResetRange, EKeys::BackSpace);
 }

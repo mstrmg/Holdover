@@ -18,6 +18,16 @@ enum class EHoldoverActionType : uint8
 	BoltCarrier    // AR, FAL: bolt catch locks open on empty mag
 };
 
+/** What sits on the end of the barrel. Each one shapes the flash differently. */
+UENUM(BlueprintType)
+enum class EHoldoverMuzzleDevice : uint8
+{
+	Bare,          // pistols: a round puff of flame straight out of the bore
+	SlantBrake,    // AK: the slanted cut vents gas up and to the right
+	Birdcage,      // AR: slotted flash hider, small star-shaped flash, closed at the bottom
+	SlottedHider   // FAL: long open-pronged flash hider, thin jets between the prongs
+};
+
 /** A bone motion in gun component space: move along an axis and/or turn about an axis through the bone's own pivot. */
 USTRUCT(BlueprintType)
 struct FHoldoverBoneMotion
@@ -313,17 +323,36 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Handling", meta = (ClampMin = "0.2", ClampMax = "4"))
 	float SwayWeight = 1.f;
 
-	// ---------- Recoil (procedural; M2 adds per-gun patterns) ----------
+	// ---------- Recoil ----------
+	// Two layers. The "kick" is the gun jumping in the hands (fast spring: flips, slams back, settles in a fraction of a
+	// second). The "climb" is the slower drift of the whole aim that the shooter pulls back down (it builds up in quick
+	// strings and full auto, which is what makes an AK wander). Every value below gets fresh randomness on every shot.
 
-	/** Upward muzzle flip, degrees per second added at the shot. */
+	/** Upward muzzle flip of the kick, degrees per second added at the shot. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
 	float RecoilPitchImpulse = 260.f;
 
-	/** Random left-right, degrees per second (plus or minus). */
+	/** Shot-to-shot spread of the flip, as a fraction (0.2 = each shot 80% to 120%). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil", meta = (ClampMin = "0", ClampMax = "0.8"))
+	float RecoilPitchVariance = 0.18f;
+
+	/** Random left-right of the kick, degrees per second (a bell curve with this spread). */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
 	float RecoilYawImpulse = 45.f;
 
-	/** Rearward push, cm per second. */
+	/** Steady left-right push of the kick, degrees per second (+ = right). Right-handed shooters push a little right. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilYawBias = 6.f;
+
+	/** Random roll (cant) of the kick, degrees per second. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilRollImpulse = 30.f;
+
+	/** Steady roll of the kick, degrees per second (+ = top of the gun turns right). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilRollBias = 8.f;
+
+	/** Rearward slam of the gun along the bore, cm per second. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
 	float RecoilBackImpulse = 90.f;
 
@@ -331,17 +360,87 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
 	float RecoilRiseImpulse = 25.f;
 
-	/** How hard the hands pull the gun back on target (spring stiffness). */
+	/** Random sideways push of the hands, cm per second. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilSideImpulse = 6.f;
+
+	/** How hard the hands pull the gun back after the kick (spring stiffness). Higher = snappier. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
 	float RecoilStiffness = 260.f;
 
-	/** How quickly the movement dies out (damping). */
+	/** How quickly the kick dies out (damping). Lower = the gun bounces past its rest point once. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
 	float RecoilDamping = 24.f;
 
-	/** Fraction of the muzzle flip the shooter does not fully recover (drifts the aim a little). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil", meta = (ClampMin = "0", ClampMax = "0.5"))
-	float RecoilResidual = 0.04f;
+	/** The kick turns the gun about a point this far behind the shooting hand (the wrist for pistols), cm. Rifles turn about the shoulder socket when the gun has one. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilPivotBehindGrip = 6.f;
+
+	/** Muzzle climb of the whole aim per shot, degrees per second (recovered by the shooter). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilClimbImpulse = 12.f;
+
+	/** Random sideways wander of the aim per shot, degrees per second (bell curve spread). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilWanderImpulse = 5.f;
+
+	/** Steady sideways wander per shot, degrees per second (+ = right). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilWanderBias = 1.f;
+
+	/** How hard the shooter brings the aim back down after the climb (spring stiffness). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilRecoveryStiffness = 30.f;
+
+	/** Damping of the recovery: about 2 x sqrt(stiffness) brings it back without overshoot. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil")
+	float RecoilRecoveryDamping = 11.f;
+
+	/** How much of the gun's turn the head (and so the view) shares: rifles push the cheek, pistols barely move the head. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil", meta = (ClampMin = "0", ClampMax = "1"))
+	float RecoilHeadFollow = 0.04f;
+
+	/** How far the stock (or the blast) pushes the eye back, as a fraction of the gun's rearward slam. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil", meta = (ClampMin = "0", ClampMax = "1"))
+	float RecoilHeadPush = 0.05f;
+
+	/** Short sharp tremor of the view from the blast, degrees. Dies out in about a tenth of a second. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Recoil", meta = (ClampMin = "0", ClampMax = "2"))
+	float RecoilShake = 0.08f;
+
+	// ---------- Muzzle flash and smoke ----------
+
+	/** What sits on the muzzle; it shapes the flash. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Muzzle Flash")
+	EHoldoverMuzzleDevice MuzzleDevice = EHoldoverMuzzleDevice::Bare;
+
+	/** Typical width of the main flash, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Muzzle Flash", meta = (ClampMin = "0"))
+	float FlashSize = 7.f;
+
+	/** Typical reach of the flame out of the muzzle, cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Muzzle Flash", meta = (ClampMin = "0"))
+	float FlashLength = 11.f;
+
+	/** Overall brightness of the flash (1 = normal). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Muzzle Flash", meta = (ClampMin = "0"))
+	float FlashBrightness = 1.f;
+
+	/** Chance per shot of a big fireball of gas igniting further out in front of the muzzle. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Muzzle Flash", meta = (ClampMin = "0", ClampMax = "1"))
+	float FlashFireballChance = 0.25f;
+
+	/** Chance per shot of a faint flash that barely leaves the barrel. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Muzzle Flash", meta = (ClampMin = "0", ClampMax = "1"))
+	float FlashFaintChance = 0.25f;
+
+	/** Peak light of the flash on the hands (about half a metre away), as a fraction of sunlight. Falls off with distance. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Muzzle Flash", meta = (ClampMin = "0", ClampMax = "5"))
+	float FlashLightIntensity = 0.45f;
+
+	/** Amount of smoke after each shot (1 = normal). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Muzzle Flash", meta = (ClampMin = "0", ClampMax = "4"))
+	float SmokeAmount = 1.f;
 
 	// ---------- Reliability (chances per shot, 0 to 1) ----------
 
@@ -380,6 +479,31 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sounds")
 	TObjectPtr<USoundBase> SafetySound;
 
+	/** The shot as the shooter hears it, one picked at random each time (blast and crack). Filled from /Game/Audio/Guns/<GunId>/ if empty. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sounds")
+	TArray<TObjectPtr<USoundBase>> ShotSounds;
+
+	/** The echo off the trees and the berm that follows the shot. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sounds")
+	TArray<TObjectPtr<USoundBase>> TailSounds;
+
+	/** The slide or bolt cycling under recoil (clack and slam home). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sounds")
+	TArray<TObjectPtr<USoundBase>> MechSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sounds", meta = (ClampMin = "0", ClampMax = "4"))
+	float ShotVolume = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sounds", meta = (ClampMin = "0", ClampMax = "4"))
+	float TailVolume = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sounds", meta = (ClampMin = "0", ClampMax = "4"))
+	float MechVolume = 1.f;
+
+	/** Size class of this gun's brass for the bouncing sounds ("Pistol" or "Rifle"). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sounds")
+	FName BrassSoundSet = TEXT("Pistol");
+
 	float GetSelectorFraction(EHoldoverFireMode Mode) const
 	{
 		switch (Mode)
@@ -396,7 +520,17 @@ public:
 	/** Built-in presets, used when no data asset is assigned. */
 	static void ApplyPresetM9(UHoldoverGunData* Data);
 	static void ApplyPresetAK(UHoldoverGunData* Data);
+	static void ApplyPreset1911(UHoldoverGunData* Data);
+	static void ApplyPresetFAL(UHoldoverGunData* Data);
+	static void ApplyPresetAR(UHoldoverGunData* Data);
 
-	/** Fills empty model slots from the imported Blender exports in /Game/Guns/<GunId>/, if they are there. */
+	/** Built-in preset for a gun slot: 0 M9, 1 AK, 2 1911, 3 FAL, 4 AR. Returns false for an unknown slot. */
+	static bool ApplyPresetForSlot(UHoldoverGunData* Data, int32 Slot);
+
+	/** Number of built-in gun slots. */
+	static constexpr int32 NumPresetSlots = 5;
+
+	/** Fills empty model slots from the imported Blender exports in /Game/Guns/<GunId>/, if they are there,
+	 *  and empty sound lists from /Game/Audio/Guns/<GunId>/. */
 	static void LoadImportedArt(UHoldoverGunData* Data);
 };

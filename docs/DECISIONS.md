@@ -37,3 +37,20 @@ On 2026-11-19 Miles asked for a big plan worked through without waiting for him.
 ## The test range
 20. Until the forest exists, the game builds a gray range by itself in an empty map: flat ground, 3 m side walls, a dirt berm at the back, a firing line, a bench and distance posts, with sun, sky and light fog.
 21. You start standing at the firing line.
+
+## Firing (2026-11-25)
+
+Miles asked for the whole firing experience on all five guns. These are the choices made along the way; all numbers are in the gun data and easy to change.
+
+22. Keys 3, 4 and 5 pick the 1911, FAL and AR (Miles's yes was passed on by the project coordinator).
+23. Muzzle flash: each shot is faint (barely out of the barrel), normal, or normal plus a fireball of gas lighting up further out. Chances per gun: M9 25% faint / 30% fireball (of the rest), 1911 35% / 20%, AK 10% / 35%, FAL 25% / 25%, AR 35% / 12%. Size, length, brightness, colour (yellow-white to deep orange) and how long it lingers (one frame, sometimes two or three dimmer ones) change every shot.
+24. Each muzzle shapes its flash: pistols puff evenly with an odd lick to one side, the AK's slant brake throws flame up and to the right, the FAL's slotted hider gives thin jets all round, the AR's birdcage gives a small star with nothing underneath (it is the most hidden, like the real one).
+25. The flash lights the hands, gun and ground for a frame: about 45% of sunlight on the hands for pistols, 70% for the AK and FAL, 50% for the AR, falling off with distance.
+26. Smoke: two to four puffs from the muzzle that shoot forward, stall, swell, rise and drift on a light breeze for one to two and a half seconds, plus a thin wisp from the ejection port. The 1911 and AK smoke the most.
+27. Recoil, pistols: a sharp flip about the wrist (about 6 to 10 degrees), a small push to the right and a slight roll, a 2 to 3 cm slam back, all back on target in about a quarter of a second. The 1911 lifts further and pushes slower than the M9. The head barely moves.
+28. Recoil, rifles: the head rides the stock, so most of the kick moves your view with the gun (85% for the AK and FAL, 80% for the AR) instead of the rifle jumping in front of your eye. AK: loose, rolling push that wanders right in strings; a one-second full-auto burst climbs about 6 to 9 degrees and settles back within about half a second after you let go. FAL: the hardest shove and the biggest climb. AR: light, short and straight.
+29. Strings and full auto stack up a slower climb and sideways wander of the whole aim that recovers in about half a second when you stop.
+30. A very short tremor of the view with each shot (strongest on the FAL). No other camera effects.
+31. Cases: M9 and 1911 throw right, up and slightly back (1 to 2 m); the AK throws hard right and forward (3 to 5 m); the FAL throws hardest, right and slightly forward; the AR throws right and slightly back (about 4 o'clock). They cartwheel, bounce off hard ground two or three times and clink, louder the harder they land.
+32. Sounds are generated, not recorded: the shot at your ears (blast, crack, supersonic snap for rifles, chest thump, ground bounce), the echo coming back off the trees, the berm and the far hill, the action cycling (the AR has its buffer-spring "sproing"), and brass, rounds and magazines landing on hard, soft, wood and metal surfaces. Real recordings (CC0) can replace them later without code changes.
+33. The trigger finger's press now starts at the moment the shot breaks, so the recoil, slide, flash and sound all start on the same frame (the old timeline started the kick 50 to 60 ms after the shot).

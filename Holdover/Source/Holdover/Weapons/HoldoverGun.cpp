@@ -1,5 +1,6 @@
 #include "Weapons/HoldoverGun.h"
 
+#include "Audio/HoldoverAudio.h"
 #include "Ballistics/HoldoverBallisticsSubsystem.h"
 #include "Components/PoseableMeshComponent.h"
 #include "Components/SceneComponent.h"
@@ -16,6 +17,7 @@
 #include "Weapons/HoldoverDebrisSubsystem.h"
 #include "Weapons/HoldoverGunData.h"
 #include "Weapons/HoldoverLoosePiece.h"
+#include "Weapons/HoldoverMuzzleFX.h"
 
 AHoldoverGun::AHoldoverGun()
 {
@@ -36,6 +38,8 @@ AHoldoverGun::AHoldoverGun()
 	ShadowMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ShadowMesh->SetCastShadow(true);
 	ShadowMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
+
+	MuzzleFX = CreateDefaultSubobject<UHoldoverMuzzleFX>(TEXT("MuzzleFX"));
 }
 
 void AHoldoverGun::BeginPlay()
@@ -550,7 +554,13 @@ void AHoldoverGun::Fire()
 	LastShotTime = GetWorld()->GetTimeSeconds();
 
 	LaunchBullet();
-	PlayGunSound(Data->FireSound);
+	PlayShotSounds();
+	if (MuzzleFX)
+	{
+		// Socket bones may be turned any way in the model; the bore is always the gun's own X axis.
+		const FTransform MuzzleTM(GetActorQuat(), GetSocketWorldTransform(Data->MuzzleSocket).GetLocation());
+		MuzzleFX->Fire(Data, MuzzleTM, GetSocketWorldTransform(Data->EjectionPortSocket).GetLocation());
+	}
 
 	// Recoil drives the slide or bolt back.
 	Motion = EHoldoverSlideMotion::Cycling;
@@ -852,8 +862,11 @@ void AHoldoverGun::EjectPiece(bool bLiveRound, float SpeedScale)
 	const FVector Inherit = GetOwner() ? GetOwner()->GetVelocity() : FVector::ZeroVector;
 	const FVector Vel = GunTM.TransformVectorNoScale(LocalVel) + Inherit;
 
-	const float Spin = Data->CaseSpinDegPerSec * SpeedScale;
-	const FVector AngVel = GunTM.TransformVectorNoScale(FVector(FMath::FRandRange(-0.3f, 0.3f), 0.f, 1.f) * Spin);
+	// The ejector kicks the case head out sideways while the extractor still holds the rim, so the case cartwheels
+	// mostly about the gun's up axis (head swinging out first), with a random wobble that makes it tumble.
+	const float Spin = Data->CaseSpinDegPerSec * SpeedScale * FMath::FRandRange(0.75f, 1.25f);
+	const FVector AngVel = GunTM.TransformVectorNoScale(
+		FVector(FMath::FRandRange(-0.35f, 0.35f), FMath::FRandRange(-0.4f, 0.4f), -1.f) * Spin);
 
 	// Cases leave lying along the bore; the gray-box cylinder's axis is Z, so turn it to lie along X.
 	const bool bHasMesh = bLiveRound ? (Data->RoundMesh != nullptr) : (Data->CasingMesh != nullptr);
@@ -866,11 +879,35 @@ void AHoldoverGun::EjectPiece(bool bLiveRound, float SpeedScale)
 		Size.Z = Data->FallbackRoundLength;
 	}
 
-	Debris->Eject(bLiveRound ? EHoldoverPieceKind::LiveRound : EHoldoverPieceKind::Casing,
+	AHoldoverLoosePiece* Piece = Debris->Eject(bLiveRound ? EHoldoverPieceKind::LiveRound : EHoldoverPieceKind::Casing,
 		bLiveRound ? Data->RoundMesh : Data->CasingMesh,
 		Size,
 		(bLiveRound ? Data->RoundMassGrams : Data->CaseMassGrams) * 0.001f,
 		Start, Vel, AngVel);
+	if (Piece)
+	{
+		Piece->SoundSet = Data->BrassSoundSet;
+		Piece->GunId = Data->GunId;
+		// Drawn with the first-person gun until it is clear of it, so it comes out of the port you see.
+		Piece->DrawWithGunFor(HoldoverDebug::CVarCaseWithGun.GetValueOnGameThread());
+	}
+	UE_LOG(LogHoldover, Verbose, TEXT("Eject %s at %s vel %s piece %s mesh %s radius %.2f visible %d hidden %d"), bLiveRound ? TEXT("round") : TEXT("case"), *Port.ToCompactString(), *Vel.ToCompactString(),
+		Piece ? *Piece->GetName() : TEXT("none"), (Piece && Piece->GetMesh()->GetStaticMesh()) ? *Piece->GetMesh()->GetStaticMesh()->GetName() : TEXT("-"),
+		Piece ? Piece->GetMesh()->Bounds.SphereRadius : -1.f, Piece ? (int32)Piece->GetMesh()->IsVisible() : -1, Piece ? (int32)Piece->IsHidden() : -1);
+
+}
+
+void AHoldoverGun::PlayShotSounds()
+{
+	// Three layers: the blast as the shooter hears it, the action cycling, and the echo rolling back off the
+	// trees and the berm. Each is one of several recordings, with a little pitch and volume change every shot.
+	if (Data->ShotSounds.Num() == 0 && Data->FireSound)
+	{
+		PlayGunSound(Data->FireSound);
+	}
+	HoldoverAudio::PlayAtEars(this, HoldoverAudio::PickVariant(Data->ShotSounds, LastShotVariant), Data->ShotVolume * FMath::FRandRange(0.92f, 1.f), 0.03f);
+	HoldoverAudio::PlayAtEars(this, HoldoverAudio::PickVariant(Data->MechSounds, LastMechVariant), Data->MechVolume * FMath::FRandRange(0.85f, 1.f), 0.04f);
+	HoldoverAudio::PlayAtEars(this, HoldoverAudio::PickVariant(Data->TailSounds, LastTailVariant), Data->TailVolume * FMath::FRandRange(0.85f, 1.f), 0.02f, HoldoverAudio::TailConcurrency());
 }
 
 void AHoldoverGun::PlayGunSound(USoundBase* Sound) const
@@ -1114,7 +1151,10 @@ void AHoldoverGun::ApplyBoneDeltas()
 				const FQuat InvParent = ParentRot.Inverse();
 
 				FTransform Local = RefLocal[Index];
-				Local.SetTranslation(Local.GetTranslation() + InvParent.RotateVector(Pair.Value.T));
+				// Into the parent's space with its scale too: the imported skeletons carry a scale on the root,
+				// and without dividing it out a 6 cm slide stroke sent the slide metres away (it vanished mid-cycle).
+				const FVector LocalT = (Parent == INDEX_NONE) ? Pair.Value.T : RefComponent[Parent].InverseTransformVector(Pair.Value.T);
+				Local.SetTranslation(Local.GetTranslation() + LocalT);
 				Local.SetRotation((InvParent * Pair.Value.R * ParentRot) * Local.GetRotation());
 				Local.SetScale3D(Local.GetScale3D() * FMath::Max(Pair.Value.Scale, 0.001f));
 				Comp->BoneSpaceTransforms[Index] = Local;
@@ -1176,6 +1216,15 @@ FTransform AHoldoverGun::GetSocketWorldTransform(FName Socket) const
 		}
 	}
 	return GetActorTransform();
+}
+
+bool AHoldoverGun::HasSocket(FName Socket) const
+{
+	if (bUseSkeletal && Mesh && Mesh->DoesSocketExist(Socket))
+	{
+		return true;
+	}
+	return FallbackSockets.Contains(Socket) || FallbackBones.Contains(Socket);
 }
 
 FTransform AHoldoverGun::GetMeshWorldTransform() const
