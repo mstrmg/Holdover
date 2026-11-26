@@ -422,8 +422,11 @@ void UHoldoverGunAnimator::ApplySlideHand(float T)
 
 	if (!bRackEngaged)
 	{
-		// The hand takes the slide when it starts moving back past where it already is.
-		if (Fraction > LastSlideFraction + 0.005f || (Fraction > 0.01f && Fraction >= G->GetSlidePosition()))
+		// The hand takes the slide when it starts moving back past where it already is. A slide locked open is only
+		// taken by a real pull off the stop: the release timelines start the slide at their own locked-back spot, which
+		// on the M9 sat a hair behind the gun's, so the slide release (T) turned into a rack that locked it open again.
+		const bool bOffTheStop = !G->IsSlideLocked() || Fraction > Data->LockedBackFraction + 0.015f;
+		if (bOffTheStop && (Fraction > LastSlideFraction + 0.005f || (Fraction > 0.01f && Fraction >= G->GetSlidePosition())))
 		{
 			G->BeginRack();
 			bRackEngaged = G->IsRackHeld();
