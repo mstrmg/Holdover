@@ -638,6 +638,8 @@ void AHoldoverCharacter::LogArmDiagnostics(const FString& Label) const
 	UE_LOG(LogHoldover, Log, TEXT("[Arms %s] eye-space cm (X fwd, Y right, Z up): head %s neck %s clav_r %s upperarm_r %s lowerarm_r %s hand_r %s | upperarm_l %s lowerarm_l %s hand_l %s"),
 		*Label, *Bone(TEXT("head")), *Bone(TEXT("neck_01")), *Bone(TEXT("clavicle_r")), *Bone(TEXT("upperarm_r")), *Bone(TEXT("lowerarm_r")),
 		*Bone(TEXT("hand_r")), *Bone(TEXT("upperarm_l")), *Bone(TEXT("lowerarm_l")), *Bone(TEXT("hand_l")));
+	UE_LOG(LogHoldover, Log, TEXT("[Arms %s] drawn wrist off its place on the gun, worst since last shot: %.2f cm"), *Label, BodyRig->MaxHandMiss);
+	BodyRig->MaxHandMiss = 0.f;
 	UE_LOG(LogHoldover, Log, TEXT("[Arms %s] targets: handR %s handL %s gun %s aim %.2f"), *Label,
 		*Animator->GetHandInCamera(false).GetLocation().ToCompactString(), *Animator->GetHandInCamera(true).GetLocation().ToCompactString(),
 		*GunHold->GetRelativeLocation().ToCompactString(), AimAlpha);
@@ -728,6 +730,12 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		{ 26.15f, 1, 0, 0, TEXT("rifle_rack_return_eyes") },
 		{ 27.0f, 1, 0, 0, TEXT("rifle_rack_done_eyes") },
 		{ 27.1f, 1, 0, 0, nullptr, 5 },
+		// Rifle shot (chambered by the rack above): the gun kicks fast, so a hand trailing the gun shows here and
+		// in the log's "drawn wrist off its place" line.
+		{ 27.2f, 1, 1, 0, nullptr },
+		{ 28.6f, 1, 1, 0, nullptr, 6 },
+		{ 28.65f, 1, 1, 0, TEXT("rifle_recoil_eyes"), 7 },
+		{ 29.0f, 1, 0, 0, TEXT("rifle_after_shot_eyes") },
 	};
 	constexpr int32 NumSteps = UE_ARRAY_COUNT(Steps);
 	while (TestStep < NumSteps && TestTime >= Steps[TestStep].T)
