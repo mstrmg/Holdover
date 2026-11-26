@@ -602,11 +602,13 @@ def rifle_actions(g):
         roll = 10 if (side == "R" or off is None) else -12
         a.gun("rotX", [K(0, 0), K(0.25, roll), K(0.75, roll), K(0.95, 0)], pivot=g["grip_socket"])
         if off is None:
-            # bring the rifle off the cheek, down and in front of the chest, muzzle a little down, so the arm
-            # reaching over the receiver passes below the eyes instead of across them
-            a.gun("tZ", [K(0, 0), K(0.25, -90), K(0.75, -90), K(0.95, 0)])
-            a.gun("tY", [K(0, 0), K(0.25, 60), K(0.75, 60), K(0.95, 0)])
-            a.gun("rotY", [K(0, 0), K(0.25, 8), K(0.75, 8), K(0.95, 0)])
+            # push the rifle out in front and in toward the middle of the view, a little lower, so the receiver and
+            # the hand raking it stay in sight below the eyes (on the cheek the arm crossed the eyes; dropped lower,
+            # the gun left the view and only the arm showed)
+            a.gun("tX", [K(0, 0), K(0.25, 100), K(0.75, 100), K(0.95, 0)])
+            a.gun("tY", [K(0, 0), K(0.25, 50), K(0.75, 50), K(0.95, 0)])
+            a.gun("tZ", [K(0, 0), K(0.25, -20), K(0.75, -20), K(0.95, 0)])
+            a.gun("rotY", [K(0, 0), K(0.25, 5), K(0.75, 5), K(0.95, 0)])
         f_unl = grab + (pulled - grab) * g["unlock_dist"] / tr
         if not from_locked:
             bolt_unlock(a, grab, f_unl, None if lock_open else pulled + 0.035, None if lock_open else pulled + 0.03)
