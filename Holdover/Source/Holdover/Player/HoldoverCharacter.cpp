@@ -684,6 +684,11 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		UpdateFireTest();
 		return;
 	}
+	if (Mode == 5)
+	{
+		UpdateAnimSweep(DeltaSeconds);
+		return;
+	}
 	if (Mode == 4)
 	{
 		UpdateActionTest();
@@ -902,6 +907,110 @@ void AHoldoverCharacter::UpdateActionTest()
 		{
 			PC->ConsoleCommand(TEXT("quit"));
 		}
+	}
+}
+
+void AHoldoverCharacter::UpdateAnimSweep(float DeltaSeconds)
+{
+	// Every action of every gun, at the low ready, looking level. Phase 0: start the next action. Phase 1: play it
+	// and track the arms' nearest approach to the eye. Phase 2: play it again and photograph that moment.
+	// Log lines start with [Sweep]; pictures go to Saved/Screenshots/sweep/<gun>_<action>.png.
+	if (TestTime < 4.f)
+	{
+		return;
+	}
+	if (SweepWait > 0.f)
+	{
+		SweepWait -= DeltaSeconds;
+		return;
+	}
+	auto Quit = [this]()
+	{
+		HoldoverDebug::CVarTestShots->Set(0, ECVF_SetByConsole);
+		if (APlayerController* PC = Cast<APlayerController>(Controller))
+		{
+			PC->ConsoleCommand(TEXT("quit"));
+		}
+	};
+	static const TCHAR* SlotNames[] = { TEXT("m9"), TEXT("ak"), TEXT("1911"), TEXT("fal"), TEXT("ar") };
+	const FString GunName = (SweepSlot >= 0 && SweepSlot < static_cast<int32>(UE_ARRAY_COUNT(SlotNames))) ? SlotNames[SweepSlot] : TEXT("gun");
+	switch (SweepPhase)
+	{
+	case 0:
+	{
+		if (SweepSlot < 0 || SweepIndex >= SweepActions.Num())
+		{
+			++SweepSlot;
+			if (SweepSlot >= UHoldoverGunData::NumPresetSlots)
+			{
+				UE_LOG(LogHoldover, Log, TEXT("[Sweep] done"));
+				Quit();
+				return;
+			}
+			Animator->Stop();
+			ResetLoadout();
+			HoldoverDebug::CVarForceAim->Set(0, ECVF_SetByConsole);
+			HoldoverDebug::CVarDebugView->Set(0, ECVF_SetByConsole);
+			if (Controller)
+			{
+				FRotator R = Controller->GetControlRotation();
+				R.Pitch = 0.f;
+				Controller->SetControlRotation(R);
+			}
+			SelectGun(SweepSlot);
+			Animator->GetActionNames(SweepActions);
+			SweepIndex = 0;
+			SweepWait = 1.f;
+			return;
+		}
+		Animator->Stop();
+		BodyRig->ClosestToEye = 1.e6f;
+		Animator->Play(SweepActions[SweepIndex], false);
+		SweepWorst = 1.e6f;
+		SweepWorstT = 0.f;
+		SweepPhase = 1;
+		return;
+	}
+	case 1:
+	{
+		// The rig measured last frame's arms against last frame's time; good enough at 60 fps.
+		if (BodyRig->ClosestToEye < SweepWorst)
+		{
+			SweepWorst = BodyRig->ClosestToEye;
+			SweepWorstBone = BodyRig->ClosestToEyeBone;
+			SweepWorstT = FMath::Max(Animator->GetTime() - DeltaSeconds, 0.f);
+		}
+		BodyRig->ClosestToEye = 1.e6f;
+		if (Animator->IsPlaying())
+		{
+			return;
+		}
+		UE_LOG(LogHoldover, Log, TEXT("[Sweep] %s %s closest %.1f cm (%s) at %.2f s"), *GunName, *SweepActions[SweepIndex].ToString(),
+			SweepWorst, *SweepWorstBone.ToString(), SweepWorstT);
+		ResetLoadout();
+		Animator->Play(SweepActions[SweepIndex], false);
+		SweepPhase = 2;
+		return;
+	}
+	case 2:
+	{
+		if (Animator->IsPlaying() && Animator->GetTime() < SweepWorstT)
+		{
+			return;
+		}
+		const FString File = FPaths::ProjectSavedDir() / TEXT("Screenshots/sweep") /
+			FString::Printf(TEXT("%s_%s.png"), *GunName, *SweepActions[SweepIndex].ToString());
+		FScreenshotRequest::RequestScreenshot(File, false, false);
+		// Leave this frame's pose alone until it is drawn, then reset.
+		SweepWait = 0.2f;
+		SweepPhase = 3;
+		return;
+	}
+	case 3:
+		ResetLoadout();
+		++SweepIndex;
+		SweepPhase = 0;
+		return;
 	}
 }
 

@@ -196,6 +196,11 @@ public:
 	 *  last reset, both hands. Near zero means the drawn hands keep up with the gun. */
 	float MaxHandMiss = 0.f;
 
+	/** Test shots: the nearest any part of the first-person arms came to the eye since the last reset (cm from the
+	 *  eye to the skin, roughly; below about 1 the arm is cut open or fills the view), and which bone it was. */
+	float ClosestToEye = 1.e6f;
+	FName ClosestToEyeBone;
+
 	/** Eye relief (cm, eye to rear sight) of the hold pose for this kind of gun, or 0 when there is no hold pose. */
 	float GetHoldEyeRelief(bool bPistol) const;
 

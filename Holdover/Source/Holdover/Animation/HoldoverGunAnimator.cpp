@@ -76,6 +76,16 @@ bool UHoldoverGunAnimator::HasAction(FName Action) const
 	return Set.IsValid() && Set->Has(Action);
 }
 
+void UHoldoverGunAnimator::GetActionNames(TArray<FName>& Out) const
+{
+	Out.Reset();
+	if (Set.IsValid())
+	{
+		Set->Actions.GetKeys(Out);
+		Out.Sort(FNameLexicalLess());
+	}
+}
+
 bool UHoldoverGunAnimator::IsBusy() const
 {
 	if (!Current)

@@ -229,6 +229,17 @@ private:
 	void UpdateTestShots(float DeltaSeconds);
 	void UpdateFireTest();
 	void UpdateActionTest();
+	/** holdover.TestShots 5: plays every action of every gun, logs how near the arms come to the eye, and takes an
+	 *  eye-view picture at the closest moment of each action. */
+	void UpdateAnimSweep(float DeltaSeconds);
+	TArray<FName> SweepActions;
+	int32 SweepSlot = -1;
+	int32 SweepIndex = 0;
+	int32 SweepPhase = 0;
+	float SweepWait = 0.f;
+	float SweepWorst = 0.f;
+	float SweepWorstT = 0.f;
+	FName SweepWorstBone;
 	void LogArmDiagnostics(const FString& Label) const;
 
 	UPROPERTY(Transient)
