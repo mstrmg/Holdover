@@ -63,6 +63,9 @@ public:
 	bool IsPlaying() const { return Current != nullptr; }
 	FName GetCurrentAction() const { return Current ? Current->Name : NAME_None; }
 
+	/** Length in seconds of the current action, or 0 when none is playing. */
+	float GetCurrentDuration() const;
+
 	/** True while an action other than a cosmetic one (fire, dry fire) is playing. */
 	bool IsBusy() const;
 

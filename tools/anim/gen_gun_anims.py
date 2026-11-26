@@ -499,7 +499,10 @@ def pistol_actions(g):
     a.gun("tX", [K(0, 0), K(0.4, -140), K(2.2, -140), K(2.6, 0)], pivot=g["grip_socket"])
     a.gun("rotX", [K(0, 0), K(0.5, -55), K(1.2, -55), K(1.6, 40), K(2.1, 40), K(2.6, 0)])
     a.gun("rotZ", [K(0, 0), K(0.5, 20), K(1.2, 20), K(1.6, -15), K(2.1, -15), K(2.6, 0)])
-    a.hand("L", [hold(0), hand(0.35, "camera", [380, 90, -150], [0.4, -0.3, 0.86], [0, -1, 0]), hold(2.4)])
+    # support hand off to the lower left and kept there while the gun turns (one key at each end of the stay, so it
+    # doesn't drift back toward the turning grip and swing the forearm up past the eye)
+    rest_l = ([360, 110, -200], [0.4, -0.3, 0.86], [0, -1, 0])
+    a.hand("L", [hold(0), hand(0.35, "camera", *rest_l, interp="easeOut"), hand(2.15, "camera", *rest_l), hold(2.45)])
     a.fingers("L", "SupportWrap", [K(0, 1), K(0.2, 0), K(2.3, 0), K(2.55, 1)]).fingers("L", "Relaxed", [K(0.15, 0), K(0.35, 1), K(2.3, 1), K(2.45, 0)])
     A["Inspect"] = a.out()
 

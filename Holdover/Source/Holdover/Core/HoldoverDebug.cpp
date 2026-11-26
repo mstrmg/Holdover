@@ -37,7 +37,7 @@ namespace HoldoverDebug
 
 	TAutoConsoleVariable<int32> CVarTestShots(
 		TEXT("holdover.TestShots"), 0,
-		TEXT("1 = take screenshots of the pistol and rifle at ready and aimed (eyes and side views) into Saved/Screenshots/test, then quit. 2 = fire every gun and photograph the muzzle flash kinds, the case leaving the port in slow motion and the smoke (fire_*.png), then quit."),
+		TEXT("1 = take screenshots of the pistol and rifle at ready and aimed (eyes and side views) into Saved/Screenshots/test, then quit. 2 = fire every gun and photograph the muzzle flash kinds, the case leaving the port in slow motion and the smoke (fire_*.png), then quit. 3 = the same for the M9 and AK only. 4 = action test. 5 = sweep every action for arms near the eyes (Saved/Screenshots/sweep). 6 = film strips of the pistol mag and inspect actions (Saved/Screenshots/film)."),
 		ECVF_Default);
 }
 
