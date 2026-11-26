@@ -25,6 +25,7 @@
 #include "InputMappingContext.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/HoldoverBodyRig.h"
+#include "Player/HoldoverCameraComponent.h"
 #include "Player/HoldoverInputSet.h"
 #include "Weapons/HoldoverGun.h"
 #include "Weapons/HoldoverGunData.h"
@@ -59,7 +60,7 @@ AHoldoverCharacter::AHoldoverCharacter()
 	Move->NavAgentProps.bCanCrouch = true;
 
 	// Eyes.
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Eyes"));
+	Camera = CreateDefaultSubobject<UHoldoverCameraComponent>(TEXT("Eyes"));
 	Camera->SetupAttachment(GetCapsuleComponent());
 	Camera->SetRelativeLocation(FVector(EyeForward, 0.f, EyeHeight - CapsuleHalf));
 	// The eyes follow the look direction every frame in Tick (plus the recoil's share), so the camera must not snap

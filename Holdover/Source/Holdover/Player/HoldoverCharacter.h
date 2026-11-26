@@ -58,9 +58,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Eye View")
 	float EyeForward = 12.f;
 
-	/** First Person rendering scale for the hands and gun (smaller keeps them out of walls; 1 = off). */
+	/** First Person rendering scale for the hands and gun: draws them this much nearer the eye (the picture is the
+	 *  same) so they never poke into walls. Below 1 it also pushes them into the near clipping distance, which cut
+	 *  the arms and gun open when they came close to the face, so it is off (1) on the open range. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Eye View", meta = (ClampMin = "0.1", ClampMax = "1"))
-	float FirstPersonScale = 0.7f;
+	float FirstPersonScale = 1.f;
 
 	/** Up-down head motion while walking, cm. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Eye View")
