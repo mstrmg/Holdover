@@ -824,6 +824,31 @@ bool UHoldoverBodyRig::UpdateArmsFromHold(UPoseableMeshComponent* ArmsMesh, cons
 		const float MissR = FVector::Dist(ArmsMesh->GetBoneLocation(ArmsMesh->GetBoneName(RightArm.Hand)), HandRWorld.GetLocation());
 		const float MissL = FVector::Dist(ArmsMesh->GetBoneLocation(ArmsMesh->GetBoneName(LeftArm.Hand)), LeftWrist);
 		MaxHandMiss = FMath::Max3(MaxHandMiss, MissR, MissL);
+
+		// How close the arms come to the eye: each limb as a rounded tube (radius = rough skin thickness).
+		struct FLimb { const TCHAR* A; const TCHAR* B; float Radius; };
+		static const FLimb Limbs[] = {
+			{ TEXT("upperarm_l"), TEXT("lowerarm_l"), 5.5f }, { TEXT("lowerarm_l"), TEXT("hand_l"), 4.f }, { TEXT("hand_l"), TEXT("middle_01_l"), 3.f },
+			{ TEXT("index_01_l"), TEXT("index_03_l"), 1.f }, { TEXT("middle_01_l"), TEXT("middle_03_l"), 1.f }, { TEXT("thumb_01_l"), TEXT("thumb_03_l"), 1.2f },
+			{ TEXT("upperarm_r"), TEXT("lowerarm_r"), 5.5f }, { TEXT("lowerarm_r"), TEXT("hand_r"), 4.f }, { TEXT("hand_r"), TEXT("middle_01_r"), 3.f },
+			{ TEXT("index_01_r"), TEXT("index_03_r"), 1.f }, { TEXT("middle_01_r"), TEXT("middle_03_r"), 1.f }, { TEXT("thumb_01_r"), TEXT("thumb_03_r"), 1.2f },
+		};
+		const FVector Eye = CamTM.GetLocation();
+		for (const FLimb& L : Limbs)
+		{
+			if (ArmsMesh->GetBoneIndex(L.A) == INDEX_NONE || ArmsMesh->GetBoneIndex(L.B) == INDEX_NONE)
+			{
+				continue;
+			}
+			const FVector A = ArmsMesh->GetBoneLocation(L.A);
+			const FVector B = ArmsMesh->GetBoneLocation(L.B);
+			const float D = FMath::PointDistToSegment(Eye, A, B) - L.Radius;
+			if (D < ClosestToEye)
+			{
+				ClosestToEye = D;
+				ClosestToEyeBone = L.A;
+			}
+		}
 	}
 	return true;
 }

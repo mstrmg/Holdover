@@ -39,6 +39,12 @@ public:
 
 	bool HasAction(FName Action) const;
 
+	/** Every action this gun has (empty before SetGun). */
+	void GetActionNames(TArray<FName>& Out) const;
+
+	/** Seconds into the current action. */
+	float GetTime() const { return Time; }
+
 	/**
 	 * Starts an action. If bHoldable, the action pauses at its holdAt time while SetHoldInput(true).
 	 * Returns false if the gun has no such timeline.
