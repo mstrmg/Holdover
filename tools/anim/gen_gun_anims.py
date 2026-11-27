@@ -428,10 +428,11 @@ def pistol_actions(g):
     a.hand("L", [hold(0), peel_key(0.14, interp="easeOut")])
     a.fingers("L", "SupportWrap", [K(0, 1), K(0.08, 0)]).fingers("L", "Relaxed", [K(0.04, 0), K(0.12, 1), K(0.30, 1), K(0.40, 0)])
     t_in = 0.42
-    t_rack = t_in + 0.70
+    t_rack = t_in + 0.74
     re = merge(a.out(), mag_in(t_in, in_ws=True).out(), 0.0)
+    # the rack starts with the support hand back on its grip for a moment: going straight from the base of the mag
+    # over the slide twisted the wrist half way and lifted the upper arm into the eyes
     re = merge(re, rack(from_locked=True, start_pose=WS), t_rack)
-    re["handL"] = [k for k in re["handL"] if not (k.get("hold") and abs(k["t"] - t_rack) < 1e-6)]
     g_ws = re["gun"]
     for ch, v in WS.items():   # into the workspace as the thumb hits the release
         keys = g_ws.get(ch, [])
@@ -537,17 +538,17 @@ def pistol_actions(g):
     A["Draw"] = draw(False)
     A["Holster"] = draw(True)
 
-    # look the gun over (idle flavour)
-    a = Action(2.6)
-    a.gun("tX", [K(0, 0), K(0.4, -110), K(2.2, -110), K(2.6, 0)], pivot=g["grip_socket"])
-    a.gun("tZ", [K(0, 0), K(0.4, 50), K(2.2, 50), K(2.6, 0)])
-    a.gun("rotX", [K(0, 0), K(0.5, -55), K(1.2, -55), K(1.6, 40), K(2.1, 40), K(2.6, 0)])
-    a.gun("rotZ", [K(0, 0), K(0.5, 20), K(1.2, 20), K(1.6, -15), K(2.1, -15), K(2.6, 0)])
-    # support hand off to the lower left and kept there while the gun turns (one key at each end of the stay, so it
-    # doesn't drift back toward the turning grip and swing the forearm up past the eye)
-    rest_l = ([360, 110, -200], [0.4, -0.3, 0.86], [0, -1, 0])
-    a.hand("L", [hold(0), hand(0.35, "camera", *rest_l, interp="easeOut"), hand(2.15, "camera", *rest_l), hold(2.45)])
-    a.fingers("L", "SupportWrap", [K(0, 1), K(0.2, 0), K(2.3, 0), K(2.55, 1)]).fingers("L", "Relaxed", [K(0.15, 0), K(0.35, 1), K(2.3, 1), K(2.45, 0)])
+    # look the gun over (idle flavour): brought in a little, turned to show one side then the other, while the support
+    # hand rests low on the left. The hand only goes back on the grip after the gun has turned square again (going
+    # back to a turned grip lifted the left elbow up past the eyes).
+    a = Action(2.8)
+    a.gun("tX", [K(0, 0), K(0.4, -70), K(2.3, -70), K(2.75, 0)], pivot=g["grip_socket"])
+    a.gun("tZ", [K(0, 0), K(0.4, 30), K(2.3, 30), K(2.75, 0)])
+    a.gun("rotX", [K(0, 0), K(0.5, -45), K(1.2, -45), K(1.6, 35), K(2.05, 35), K(2.35, 0)])
+    a.gun("rotZ", [K(0, 0), K(0.5, 20), K(1.2, 20), K(1.6, -15), K(2.05, -15), K(2.35, 0)])
+    rest_l = ([330, 130, -300], [0.5, -0.2, 0.85], [0, -1, 0])
+    a.hand("L", [hold(0), hand(0.35, "camera", *rest_l, interp="easeOut"), hand(2.35, "camera", *rest_l), hold(2.7)])
+    a.fingers("L", "SupportWrap", [K(0, 1), K(0.2, 0), K(2.45, 0), K(2.72, 1)]).fingers("L", "Relaxed", [K(0.15, 0), K(0.35, 1), K(2.4, 1), K(2.6, 0)])
     A["Inspect"] = a.out()
 
     states = {
