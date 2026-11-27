@@ -275,11 +275,13 @@ def pistol_actions(g):
     # support hand, so the eyes see the magazine leave and go in
     WS = {"tX": -60.0, "tZ": 40.0, "rotY": -20.0, "rotX": -15.0}
 
-    def rack(lock_open=False, from_locked=False, start_pose=None):
+    def rack(lock_open=False, from_locked=False, start_pose=None, pinch=False):
         a = Action(0.85 if lock_open else 0.78)
         sp = start_pose or {}
         tr, lk = g["slide_travel"], g["slide_lock"]
         top = [g["rear_serrations"][0], 0, g["slide_top_z"] + 4]          # palm centre over the rear of the slide
+        if pinch:   # thumb and index pinch the rear serrations from behind (the press check's grip), not the whole hand
+            top = [g["rear_serrations"][0] + 10, 0, g["slide_top_z"] + 6]
         # the gun comes in a little and drops into the workspace in front of the chest, canted, so the support arm
         # works it well below the eyes (brought close and high, the forearm crossed right in front of the face)
         a.gun("tX", [K(0, sp.get("tX", 0)), K(0.16, -40), K(0.58, -40), K(0.75, 0)], pivot=g["grip_socket"])
@@ -292,7 +294,7 @@ def pistol_actions(g):
         a.bone(g["slide"], "tX", [K(grab, start, "easeIn"), K(pulled, -tr, "lin")] +
                ([K(0.40, -tr, "lin"), K(0.43, -lk)] if lock_open else [K(0.385, 0)]))
         # hand rides on the slide: same X offset as the slide while gripping
-        fwd, palm = [0, -1, -0.15], [0, 0, -1]
+        fwd, palm = ([0, -1, -0.4] if pinch else [0, -1, -0.15]), [0, 0, -1]
         hk = [hold(0), hand(0.14, "gun", add(top, [0, 30, 25]), fwd, palm, interp="easeOut"),
               hand(grab, "gun", add(top, [start, 0, 0]), fwd, palm),
               hand(pulled, "gun", add(top, [-tr, 0, 0]), fwd, palm, interp="easeOut")]
@@ -301,12 +303,14 @@ def pistol_actions(g):
             a.bone(g["slide_stop"], "rotY", [K(0.36, 0), K(0.40, g["slide_stop_up"])])
             a.fingers("R", "ThumbPress", [K(0.30, 0), K(0.36, 1), K(0.44, 1), K(0.50, 0)])
             a.ev(0.43, "SlideLock").ev(0.43, "Sound:SlideLock")
+        elif pinch:     # slingshot: the fingers pull on past the slide's travel and open, the hand flies back toward the chest
+            hk += [hand(0.44, "gun", add(top, [-tr - 45, 35, -15]), fwd, palm)]
         else:           # let go at the back: the slide flies forward on its own
             hk += [hand(0.44, "gun", add(top, [-tr - 20, 50, 0]), fwd, palm)]   # back and out to the side, not up at the face
         hk += [hold(0.72, "easeOut")]
         a.hand("L", hk)
         a.fingers("L", "SupportWrap", [K(0, 1), K(0.10, 0), K(0.62, 0), K(0.72, 1)])
-        a.fingers("L", "OverhandRack", [K(0.10, 0), K(grab, 1), K(pulled + 0.02, 1), K(pulled + 0.08, 0)])
+        a.fingers("L", "PinchRack" if pinch else "OverhandRack", [K(0.10, 0), K(grab, 1), K(pulled + 0.02, 1), K(pulled + 0.08, 0)])
         b = g["barrel"]; f = grab + (pulled - grab) * b["follow"] / tr
         if not from_locked:
             a.bone("Barrel", "tX", [K(grab, 0, "easeIn"), K(f, -b["follow"])] + ([] if lock_open else [K(0.378, -b["follow"], "lin"), K(0.385, 0)]))
@@ -328,6 +332,7 @@ def pistol_actions(g):
         return a.out()
 
     A["RackSlide"] = rack()
+    A["RackSlide_v3"] = rack(pinch=True)   # another way of racking: the third version pinches the slide (styled in add_variants)
     A["LockOpen"] = rack(lock_open=True)
     A["SlingshotRelease"] = rack(from_locked=True)
 
@@ -1248,13 +1253,24 @@ def dump(o, ind=0):
 VARIANTS = 2                                  # extra versions per move
 NO_VARIANTS = ("Fire", "FireDA", "DryFire")   # recoil already varies shot to shot in code
 
+# Each extra version is its own way of doing the move, not a small random change of it (the first try only moved the
+# hands about 1 cm and the pace a few percent, and in play all three looked the same):
+#   v2 brisk: about a fifth quicker, the gun turned further into the work and a little lower, the free hand on a lower,
+#      wider path, and a clear turn of the gun toward the support hand
+#   v3 deliberate: about a fifth slower, the gun kept squarer and a bit higher, the free hand on a higher, closer path,
+#      and a small turn the other way
+# A move can also bring its own third version with a different technique (the pistol slingshot rack); it gets the v3
+# pace and gun handling on top.
+STYLES = {
+    2: {"pace": 0.82, "rot": 1.35, "move": 1.2, "turn": 7.0, "lift": -15.0, "free": [0, 30, -35], "lean": 0.15},
+    3: {"pace": 1.20, "rot": 0.65, "move": 0.8, "turn": -4.0, "lift": 12.0, "free": [-15, -15, 25], "lean": -0.15},
+}
+
 def make_variant(a, gun, name, n):
-    rng = random.Random(zlib.crc32(("%s:%s:%d" % (gun, name, n)).encode()))
-    sign = 1 if n % 2 == 0 else -1
+    st = STYLES[n]
     v = json.loads(json.dumps(a))
     d = v["duration"]
-    s = rng.uniform(0.94, 1.06)
-    lean = sign * rng.uniform(0.12, 0.25)
+    s, lean = st["pace"], st["lean"]
     def w(t): return round(s * (t + lean * d / math.pi * math.sin(math.pi * t / d)), 4)
     def wk(keys): return [[w(k[0])] + k[1:] for k in keys]
     v["duration"] = round(s * d, 4)
@@ -1264,10 +1280,9 @@ def make_variant(a, gun, name, n):
     for side in ("L", "R"):
         for pose in v.get("fingers" + side, {}):
             v["fingers" + side][pose] = wk(v["fingers" + side][pose])
-        off = [rng.uniform(-12, 12) for _ in range(3)]
         for k in v.get("hand" + side, []):
             k["t"] = w(k["t"])
-            if k.get("space") in ("camera", "body"): k["pos"] = r3(add(k["pos"], off))
+            if k.get("space") in ("camera", "body"): k["pos"] = r3(add(k["pos"], st["free"]))
     v["attach"] = [[w(t), sd, x] for t, sd, x in v.get("attach", [])] or None
     v["events"] = [[w(t), e] for t, e in v.get("events", [])] or None
     for key in ("attach", "events"):
@@ -1275,18 +1290,33 @@ def make_variant(a, gun, name, n):
     gch = v.get("gun", {})
     moving = [c for c in gch if c != "pivot" and any(k[1] for k in gch[c])]
     for c in moving:
-        f = rng.uniform(0.88, 1.12)
+        f = st["rot"] if c.startswith("rot") else st["move"]
         gch[c] = [[k[0], None if k[1] is None else round(k[1] * f, 3)] + k[2:] for k in gch[c]]
     for c in [c for c in gch if c != "pivot"]:
         gch[c] = wk(gch[c])
-    # a small extra turn of the gun while it is being worked, if the move doesn't turn it that way already
-    if moving and "rotZ" not in moving:
+    if moving:
+        # while the gun is being worked: a turn toward (or away from) the support hand and a little lower or higher
         ts = sorted({k[0] for c in moving for k in gch[c]})
         nz = sorted({k[0] for c in moving for k in gch[c] if k[1]})
         t0 = max([t for t in ts if t < nz[0]] or [0.0])
         t1 = min([t for t in ts if t > nz[-1]] or [v["duration"]])
-        amt = sign * rng.uniform(1.5, 3.0)
-        gch["rotZ"] = [K(t0, 0), K(t0 + 0.3 * (t1 - t0), amt), K(t0 + 0.7 * (t1 - t0), amt * 0.6), K(t1, 0)]
+        def env(amt): return [K(t0, 0), K(t0 + 0.3 * (t1 - t0), amt), K(t0 + 0.75 * (t1 - t0), amt * 0.8), K(t1, 0)]
+        def add_env(c, amt):
+            if c not in gch:
+                gch[c] = env(amt)
+                return
+            keys = gch[c]
+            times = sorted({k[0] for k in keys} | {k[0] for k in env(amt)})
+            e = env(amt)
+            first_cur = keys[0][1] is None      # starts from wherever the gun already is: keep that
+            ev = resolve_cur([[keys[0][0], 0.0] + keys[0][2:]] + keys[1:]) if first_cur else resolve_cur(keys)
+            out = []
+            for t in times:
+                val = round(ch_eval(ev, t) + ch_eval(e, t), 3)
+                out.append([t, None if (first_cur and t <= keys[0][0] and abs(ch_eval(e, t)) < 1e-6) else val])
+            gch[c] = out
+        add_env("rotZ", st["turn"])
+        add_env("tZ", st["lift"])
     return v
 
 # ---------------------------------------------------------------- finger poses that share the hand
@@ -1329,13 +1359,15 @@ def fix_fingers(a, holdd):
 def add_variants(acts, gun):
     out = {}
     for name, a in acts.items():
+        if "_v" in name: continue   # a move's own other technique: styled below with its base move
         out[name] = a
         if name in NO_VARIANTS: continue
         # the pistol press check sits right at the edge: even small changes swing the support arm past the eye, and
         # bringing the gun lower to make room hid the chamber the move is there to show, so it keeps its one version
         if name == "PressCheck" and gun.startswith("Pistol"): continue
         for n in range(2, 2 + VARIANTS):
-            out["%s_v%d" % (name, n)] = make_variant(a, gun, name, n)
+            key = "%s_v%d" % (name, n)
+            out[key] = make_variant(acts.get(key, a), gun, name, n)
     return out
 
 def main():
@@ -1343,7 +1375,7 @@ def main():
     all_errs = []
     for gun, g in GUNS.items():
         acts, states, holdd = (pistol_actions if g["kind"] == "pistol" else rifle_actions)(g)
-        base = list(acts)
+        base = [n for n in acts if "_v" not in n]
         for a in acts.values(): fix_fingers(a, holdd)
         acts = add_variants(acts, gun)
         all_errs += check(gun, {"actions": acts})
