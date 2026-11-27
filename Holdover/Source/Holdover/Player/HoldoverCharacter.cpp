@@ -1040,8 +1040,8 @@ void AHoldoverCharacter::UpdateAnimSweep(float DeltaSeconds)
 
 void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 {
-	// Plays each listed action (the versions of racks, reloads, mag checks and inspects) in slow motion and takes evenly spaced pictures through it, first from the eyes and
-	// then from the side. Pictures go to Saved/Screenshots/film/<gun>_<action>_<eye|side>_<n>.png.
+	// Plays each listed action in slow motion and takes evenly spaced pictures through it, first from the eyes and
+	// then from the side. Pictures go to Saved/Screenshots/film/<gun>_<action>_<eye|side|closeR|closeL>_<n>.png.
 	if (TestTime < 4.f)
 	{
 		return;
@@ -1051,17 +1051,12 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 		FilmWait -= DeltaSeconds;
 		return;
 	}
-	struct FShot { int32 Slot; const TCHAR* Action; };
+	// Close = also two close-ups of the hands and gun (from the right and from the left), for checking fingers.
+	struct FShot { int32 Slot; const TCHAR* Action; bool bClose; };
 	static const FShot List[] = {
-		// Each move next to its other versions, so they can be compared side by side.
-		{ 0, TEXT("RackSlide") }, { 0, TEXT("RackSlide_v2") }, { 0, TEXT("RackSlide_v3") },
-		{ 0, TEXT("ReloadEmpty") }, { 0, TEXT("ReloadEmpty_v2") }, { 0, TEXT("ReloadEmpty_v3") },
-		{ 0, TEXT("MagCheck_v2") }, { 0, TEXT("MagCheck_v3") }, { 0, TEXT("Inspect_v2") }, { 0, TEXT("Inspect_v3") },
-		{ 2, TEXT("ReloadEmpty_v2") }, { 2, TEXT("ReloadEmpty_v3") },
-		{ 1, TEXT("ChargeHandle") }, { 1, TEXT("ChargeHandle_v2") }, { 1, TEXT("ChargeHandle_v3") },
-		{ 1, TEXT("ReloadEmpty_v2") }, { 1, TEXT("ReloadEmpty_v3") }, { 1, TEXT("ReloadTactical_v2") }, { 1, TEXT("ReloadTactical_v3") },
-		{ 3, TEXT("ReloadEmpty_v2") }, { 3, TEXT("ReloadEmpty_v3") },
-		{ 4, TEXT("ReloadEmpty_v2") }, { 4, TEXT("ReloadEmpty_v3") }, { 4, TEXT("MagCheck_v2") }, { 4, TEXT("MagCheck_v3") },
+		{ 1, TEXT("ChargeHandle"), true }, { 1, TEXT("ChargeHandle_v2"), false }, { 1, TEXT("TapRack"), true }, { 1, TEXT("ReloadEmpty"), false },
+		{ 0, TEXT("PressCheck"), false }, { 0, TEXT("PressCheck_v2"), false }, { 0, TEXT("PressCheck_v3"), false },
+		{ 2, TEXT("PressCheck"), false }, { 0, TEXT("ReloadEmpty"), false },
 	};
 	static const TCHAR* SlotNames[] = { TEXT("m9"), TEXT("ak"), TEXT("1911"), TEXT("fal"), TEXT("ar") };
 	constexpr int32 NumShots = UE_ARRAY_COUNT(List);
@@ -1119,11 +1114,11 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 		const float Next = D * 0.97f * static_cast<float>(FilmFrame) / static_cast<float>(Frames - 1);
 		if (FilmFrame < Frames && (!bPlaying || Animator->GetTime() >= Next))
 		{
+			const TCHAR* ViewName = FilmView == 0 ? TEXT("eye") : FilmView == 1 ? TEXT("side") : FilmView == 4 ? TEXT("closeR") : TEXT("closeL");
 			const FString File = FPaths::ProjectSavedDir() / TEXT("Screenshots/film") / FString::Printf(TEXT("%s_%s_%s_%d.png"),
-				SlotNames[S.Slot], S.Action, FilmView == 0 ? TEXT("eye") : TEXT("side"), FilmFrame);
+				SlotNames[S.Slot], S.Action, ViewName, FilmFrame);
 			FScreenshotRequest::RequestScreenshot(File, false, false);
-			UE_LOG(LogHoldover, Log, TEXT("[Film] %s %s %s %d at %.2f s"), SlotNames[S.Slot], S.Action, FilmView == 0 ? TEXT("eye") : TEXT("side"),
-				FilmFrame, Animator->GetTime());
+			UE_LOG(LogHoldover, Log, TEXT("[Film] %s %s %s %d at %.2f s"), SlotNames[S.Slot], S.Action, ViewName, FilmFrame, Animator->GetTime());
 			++FilmFrame;
 			return;
 		}
@@ -1137,9 +1132,18 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 		return;
 	}
 	default:
+		// Views in turn: eyes (0), side (1), then for close shots the close-ups from the right (4) and the left (5).
 		if (FilmView == 0)
 		{
 			FilmView = 1;
+		}
+		else if (FilmView == 1 && S.bClose)
+		{
+			FilmView = 4;
+		}
+		else if (FilmView == 4)
+		{
+			FilmView = 5;
 		}
 		else
 		{
