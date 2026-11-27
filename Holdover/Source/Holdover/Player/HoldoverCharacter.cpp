@@ -1021,7 +1021,7 @@ void AHoldoverCharacter::UpdateAnimSweep(float DeltaSeconds)
 
 void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 {
-	// Plays each listed action in slow motion and takes evenly spaced pictures through it, first from the eyes and
+	// Plays each listed action (pistol and rifle magazine work, pistol inspect) in slow motion and takes evenly spaced pictures through it, first from the eyes and
 	// then from the side. Pictures go to Saved/Screenshots/film/<gun>_<action>_<eye|side>_<n>.png.
 	if (TestTime < 4.f)
 	{
@@ -1037,6 +1037,9 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 		{ 0, TEXT("MagDrop") }, { 0, TEXT("MagOut") }, { 0, TEXT("MagIn") }, { 0, TEXT("ReloadEmpty") }, { 0, TEXT("ReloadTactical") },
 		{ 0, TEXT("MagCheck") }, { 0, TEXT("Inspect") },
 		{ 2, TEXT("MagDrop") }, { 2, TEXT("ReloadEmpty") }, { 2, TEXT("MagCheck") }, { 2, TEXT("Inspect") },
+		{ 1, TEXT("MagDrop") }, { 1, TEXT("ReloadEmpty") }, { 1, TEXT("ReloadTactical") }, { 1, TEXT("MagCheck") },
+		{ 3, TEXT("MagDrop") }, { 3, TEXT("ReloadEmpty") }, { 3, TEXT("MagCheck") },
+		{ 4, TEXT("MagDrop") }, { 4, TEXT("ReloadEmpty") }, { 4, TEXT("MagCheck") },
 	};
 	static const TCHAR* SlotNames[] = { TEXT("m9"), TEXT("ak"), TEXT("1911"), TEXT("fal"), TEXT("ar") };
 	constexpr int32 NumShots = UE_ARRAY_COUNT(List);
