@@ -47,9 +47,14 @@ public:
 
 	/**
 	 * Starts an action. If bHoldable, the action pauses at its holdAt time while SetHoldInput(true).
+	 * When the move has several versions, one is picked at random (never the same one twice in a row);
+	 * a version key such as "RackSlide_v2" plays exactly that version.
 	 * Returns false if the gun has no such timeline.
 	 */
 	bool Play(FName Action, bool bHoldable, float StartTime = 0.f);
+
+	/** Plays exactly this timeline ("RackSlide" is then only the first version), with no random pick. For the test runs. */
+	bool PlayExact(FName Key, bool bHoldable, float StartTime = 0.f);
 
 	/** Time of the first event with this name in an action, or -1 if it has none. */
 	float GetEventTime(FName Action, FName EventName) const;
@@ -121,6 +126,9 @@ private:
 	HoldoverAnim::FHold DefaultHold;
 
 	const HoldoverAnim::FAction* Current = nullptr;
+	/** Key of the version playing now, and the last version picked per move. */
+	FName CurrentKey;
+	TMap<FName, FName> LastVersion;
 	float Time = 0.f;
 	bool bHoldable = false;
 	bool bHoldInput = false;

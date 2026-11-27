@@ -118,8 +118,17 @@ namespace HoldoverAnim
 		/** State poses ("SlideLocked", "HammerCocked"...), bone -> (loc, rot), already converted. */
 		TMap<FName, TMap<FName, TPair<FVector, FQuat>>> States;
 
+		/**
+		 * Other versions of the same move, so a rack or reload doesn't look identical every time:
+		 * base name -> every version's key ("RackSlide", "RackSlide_v2", ...). Only moves with more than one version.
+		 */
+		TMap<FName, TArray<FName>> Variants;
+
 		const FAction* Find(FName Action) const { return Actions.Find(Action); }
 		bool Has(FName Action) const { return Actions.Contains(Action); }
+
+		/** The move a version key belongs to: "RackSlide_v2" -> "RackSlide" (other names come back unchanged). */
+		static FName BaseName(FName Key);
 
 		/** Loads Holdover/Data/GunAnims/<GunId>.json. Returns null (and logs why) if missing or broken. */
 		static TSharedPtr<FGunAnimSet> Load(FName GunId);
