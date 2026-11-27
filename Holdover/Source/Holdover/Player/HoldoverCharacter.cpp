@@ -694,6 +694,11 @@ void AHoldoverCharacter::UpdateTestShots(float DeltaSeconds)
 		UpdateAnimFilm(DeltaSeconds);
 		return;
 	}
+	if (Mode == 7)
+	{
+		UpdateEmptyTest();
+		return;
+	}
 	if (Mode == 4)
 	{
 		UpdateActionTest();
@@ -915,6 +920,97 @@ void AHoldoverCharacter::UpdateActionTest()
 	}
 }
 
+void AHoldoverCharacter::UpdateEmptyTest()
+{
+	// One gun after another: select, rack, fire until the mag is empty and nothing fires, then check and photograph.
+	static const int32 Slots[] = { 0, 2, 3, 4 };
+	static const TCHAR* Names[] = { TEXT("m9"), TEXT("1911"), TEXT("fal"), TEXT("ar") };
+	constexpr int32 NumGuns = UE_ARRAY_COUNT(Slots);
+	if (TestTime < 3.f)
+	{
+		return;
+	}
+	if (EmptyGun < 0)
+	{
+		EmptyGun = 0;
+		EmptyPhase = 0;
+		EmptyNext = TestTime;
+	}
+	if (EmptyGun >= NumGuns)
+	{
+		if (TestTime > EmptyNext)
+		{
+			HoldoverDebug::CVarTestShots->Set(0, ECVF_SetByConsole);
+			if (APlayerController* PC = Cast<APlayerController>(Controller))
+			{
+				PC->ConsoleCommand(TEXT("quit"));
+			}
+		}
+		return;
+	}
+	if (TestTime < EmptyNext)
+	{
+		return;
+	}
+	const FString Prefix = FPaths::ProjectSavedDir() / TEXT("Screenshots/test") / FString::Printf(TEXT("empty_%s_"), Names[EmptyGun]);
+	auto Log = [this](const TCHAR* What)
+	{
+		if (Gun)
+		{
+			UE_LOG(LogHoldover, Log, TEXT("[EmptyTest] %s %s: locked %d slide %.3f mag %d | %s"), Gun->GetData() ? *Gun->GetData()->GunId.ToString() : TEXT("?"), What,
+				Gun->IsSlideLocked() ? 1 : 0, Gun->GetSlidePosition(), Gun->HasMagazine() ? Gun->GetMagazine().Rounds : -1, *Gun->DescribeState());
+		}
+	};
+	switch (EmptyPhase)
+	{
+	case 0:
+		HoldoverDebug::CVarDebugView->Set(0, ECVF_SetByConsole);
+		HoldoverDebug::CVarForceAim->Set(1, ECVF_SetByConsole);
+		SelectGun(Slots[EmptyGun]);
+		if (Gun)
+		{
+			for (int32 i = 0; i < 3 && Gun->GetFireMode() != EHoldoverFireMode::Semi; ++i)
+			{
+				Gun->CycleSelector();
+			}
+		}
+		EmptyShots = 0;
+		EmptyPhase = 1; EmptyNext = TestTime + 1.f; break;
+	case 1: OnRackPressed(); EmptyPhase = 2; EmptyNext = TestTime + 0.7f; break;
+	case 2: OnRackReleased(); EmptyPhase = 3; EmptyNext = TestTime + 1.5f; Log(TEXT("racked")); break;
+	case 3:
+		if (Controller)
+		{
+			Controller->SetControlRotation(FRotator::ZeroRotator);
+		}
+		OnTriggerPressed(); EmptyPhase = 4; EmptyNext = TestTime + 0.12f; break;
+	case 4:
+	{
+		OnTriggerReleased();
+		++EmptyShots;
+		const int32 Cap = (Gun && Gun->GetData()) ? Gun->GetData()->MagazineCapacity : 15;
+		EmptyPhase = (EmptyShots >= Cap + 2) ? 5 : 3;
+		EmptyNext = TestTime + (EmptyPhase == 5 ? 1.2f : 0.3f);
+		break;
+	}
+	case 5:
+		Log(TEXT("after the last shot"));
+		FScreenshotRequest::RequestScreenshot(Prefix + TEXT("eye.png"), false, false);
+		EmptyPhase = 6; EmptyNext = TestTime + 0.3f; break;
+	case 6: HoldoverDebug::CVarDebugView->Set(4, ECVF_SetByConsole); EmptyPhase = 7; EmptyNext = TestTime + 0.4f; break;
+	case 7: FScreenshotRequest::RequestScreenshot(Prefix + TEXT("closeR.png"), false, false); EmptyPhase = 8; EmptyNext = TestTime + 0.3f; break;
+	case 8: HoldoverDebug::CVarDebugView->Set(5, ECVF_SetByConsole); EmptyPhase = 9; EmptyNext = TestTime + 0.4f; break;
+	case 9: FScreenshotRequest::RequestScreenshot(Prefix + TEXT("closeL.png"), false, false); EmptyPhase = 10; EmptyNext = TestTime + 0.3f; break;
+	default:
+		HoldoverDebug::CVarDebugView->Set(0, ECVF_SetByConsole);
+		Log(TEXT("end"));
+		++EmptyGun;
+		EmptyPhase = 0;
+		EmptyNext = TestTime + 0.5f;
+		break;
+	}
+}
+
 void AHoldoverCharacter::ResetTestStand()
 {
 	if (!bTestStandSet)
@@ -1054,9 +1150,8 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 	// Close = also two close-ups of the hands and gun (from the right and from the left), for checking fingers.
 	struct FShot { int32 Slot; const TCHAR* Action; bool bClose; };
 	static const FShot List[] = {
-		{ 1, TEXT("ChargeHandle"), true }, { 1, TEXT("ChargeHandle_v2"), false }, { 1, TEXT("TapRack"), true }, { 1, TEXT("ReloadEmpty"), false },
-		{ 0, TEXT("PressCheck"), false },
-		{ 2, TEXT("PressCheck"), false }, { 0, TEXT("ReloadEmpty"), false },
+		{ 0, TEXT("RackSlide"), false }, { 0, TEXT("RackSlide_v2"), false }, { 0, TEXT("RackSlide_v3"), true },
+		{ 3, TEXT("ReloadEmpty"), false }, { 3, TEXT("ReloadEmpty_v2"), false }, { 3, TEXT("ReloadEmpty_v3"), false },
 	};
 	static const TCHAR* SlotNames[] = { TEXT("m9"), TEXT("ak"), TEXT("1911"), TEXT("fal"), TEXT("ar") };
 	constexpr int32 NumShots = UE_ARRAY_COUNT(List);

@@ -102,9 +102,18 @@ Bone poses for each mechanical state, so the game can put the gun straight into 
 An action named `<Move>_v<N>` (for example `RackSlide_v2`) is another version of `<Move>`. When the game asks for a move
 that has versions, it plays one of them at random, never the same one twice in a row; asking for `RackSlide_v2` by name
 plays exactly that one (the test sweep does this to check every version). `tools/anim/gen_gun_anims.py` makes two extra
-versions of every move except `Fire`, `FireDA`, `DryFire` and the pistol `PressCheck` (its support arm passes too close to the eye to vary safely): a slightly different rhythm (the whole move 6% quicker or
-slower at most, its pace leaning to the start or the end), the gun tilted, turned and pulled in a little more or less, and
-hands that leave the gun landing up to 1.2 cm off the exact spot. Events and part movements share the same rhythm.
+versions of every move except `Fire`, `FireDA`, `DryFire` and the pistol `PressCheck` (its support arm passes too close to the eye to vary safely), each its own way of doing the move:
+
+- `_v2`, brisk: about a fifth quicker, the gun turned further into the work and swung 8° toward one side, the free hand on
+  a lower, wider path.
+- `_v3`, deliberate: about a fifth slower, the gun kept squarer and swung 8° the other way, the free hand a little lower
+  and wider.
+
+Neither version raises the gun or the free hand, which brought the arms across the view and near the eyes.
+
+A move can bring its own `_v2` or `_v3` with a different technique; it gets that version's pace and gun handling on top.
+(A pinch-and-slingshot pistol rack was tried and dropped: the forearm filled the bottom of the view.) Events and part
+movements share each version's rhythm.
 
 ## Actions per gun
 

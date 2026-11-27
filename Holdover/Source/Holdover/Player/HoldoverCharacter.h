@@ -229,6 +229,13 @@ private:
 	void UpdateTestShots(float DeltaSeconds);
 	void UpdateFireTest();
 	void UpdateActionTest();
+	/** holdover.TestShots 7: fires each gun with a slide or bolt stop until the mag is empty, logs whether the slide or
+	 *  bolt stayed back, and photographs it from the eye and close beside the gun (Saved/Screenshots/test/empty_*.png). */
+	void UpdateEmptyTest();
+	int32 EmptyGun = -1;
+	int32 EmptyShots = 0;
+	float EmptyNext = 0.f;
+	int32 EmptyPhase = 0;
 	/** holdover.TestShots 5: plays every action of every gun, logs how near the arms come to the eye, and takes an
 	 *  eye-view picture at the closest moment of each action. */
 	void UpdateAnimSweep(float DeltaSeconds);
