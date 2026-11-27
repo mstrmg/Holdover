@@ -97,6 +97,15 @@ Bone poses for each mechanical state, so the game can put the gun straight into 
   - `HolsterOut`, `HolsterIn`, `Shouldered`, `LowReady`
   - `Sound:<Name>`, for example `Sound:SlideBack`, `Sound:SlideForward`, `Sound:MagRelease`, `Sound:MagIn`, `Sound:MagPouch`, `Sound:SafetyClick`, `Sound:DryFire`, `Sound:BoltForward`
 
+### Versions of a move
+
+An action named `<Move>_v<N>` (for example `RackSlide_v2`) is another version of `<Move>`. When the game asks for a move
+that has versions, it plays one of them at random, never the same one twice in a row; asking for `RackSlide_v2` by name
+plays exactly that one (the test sweep does this to check every version). `tools/anim/gen_gun_anims.py` makes two extra
+versions of every move except `Fire`, `FireDA` and `DryFire`: a slightly different rhythm (the whole move 6% quicker or
+slower at most, its pace leaning to the start or the end), the gun tilted, turned and pulled in a little more or less, and
+hands that leave the gun landing up to 1.2 cm off the exact spot. Events and part movements share the same rhythm.
+
 ## Actions per gun
 
 | Action | What it is |

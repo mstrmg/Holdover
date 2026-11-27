@@ -4,7 +4,7 @@ Format: docs/animation/gun_anim_format.md. Run from the repo root:  python tools
 Everything is in gun space (mm, degrees, seconds; X forward, Y left, Z up), using the bone pivots and sockets from
 docs/weapons/<gun>.md. Edit this file, not the JSON.
 """
-import json, math, os, sys
+import json, math, os, random, sys, zlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.join(ROOT, "Holdover", "Data", "GunAnims")
@@ -1238,11 +1238,73 @@ def dump(o, ind=0):
         return "[\n" + ",\n".join(pad + "  " + dump(v, ind + 1) for v in o) + "\n" + pad + "]"
     return json.dumps(o)
 
+# ---------------------------------------------------------------- versions of each move
+# Every move except firing gets extra versions ("RackSlide_v2", "RackSlide_v3"); the game picks one at random each time
+# (never the same twice in a row), so racks and reloads don't look identical. A version is the same move with:
+#   - a different rhythm: the whole move a little quicker or slower, and its pace leaning to the start or the end
+#   - the gun handled a little differently: how far it is tilted, turned and pulled in during the move
+#   - hands that leave the gun (to the pouch, to look at the mag) arriving a little off the exact spot
+# Everything that drives the gun's parts (slide, mag, hammer, events) moves with the same rhythm, so the mechanics stay in step.
+VARIANTS = 2                                  # extra versions per move
+NO_VARIANTS = ("Fire", "FireDA", "DryFire")   # recoil already varies shot to shot in code
+
+def make_variant(a, gun, name, n):
+    rng = random.Random(zlib.crc32(("%s:%s:%d" % (gun, name, n)).encode()))
+    sign = 1 if n % 2 == 0 else -1
+    v = json.loads(json.dumps(a))
+    d = v["duration"]
+    s = rng.uniform(0.94, 1.06)
+    lean = sign * rng.uniform(0.12, 0.25)
+    def w(t): return round(s * (t + lean * d / math.pi * math.sin(math.pi * t / d)), 4)
+    def wk(keys): return [[w(k[0])] + k[1:] for k in keys]
+    v["duration"] = round(s * d, 4)
+    if "holdAt" in v: v["holdAt"] = w(v["holdAt"])
+    for b, chans in v.get("bones", {}).items():
+        for c in chans: chans[c] = wk(chans[c])
+    for side in ("L", "R"):
+        for pose in v.get("fingers" + side, {}):
+            v["fingers" + side][pose] = wk(v["fingers" + side][pose])
+        off = [rng.uniform(-12, 12) for _ in range(3)]
+        for k in v.get("hand" + side, []):
+            k["t"] = w(k["t"])
+            if k.get("space") in ("camera", "body"): k["pos"] = r3(add(k["pos"], off))
+    v["attach"] = [[w(t), sd, x] for t, sd, x in v.get("attach", [])] or None
+    v["events"] = [[w(t), e] for t, e in v.get("events", [])] or None
+    for key in ("attach", "events"):
+        if v[key] is None: del v[key]
+    gch = v.get("gun", {})
+    moving = [c for c in gch if c != "pivot" and any(k[1] for k in gch[c])]
+    for c in moving:
+        f = rng.uniform(0.88, 1.12)
+        gch[c] = [[k[0], None if k[1] is None else round(k[1] * f, 3)] + k[2:] for k in gch[c]]
+    for c in [c for c in gch if c != "pivot"]:
+        gch[c] = wk(gch[c])
+    # a small extra turn of the gun while it is being worked, if the move doesn't turn it that way already
+    if moving and "rotZ" not in moving:
+        ts = sorted({k[0] for c in moving for k in gch[c]})
+        nz = sorted({k[0] for c in moving for k in gch[c] if k[1]})
+        t0 = max([t for t in ts if t < nz[0]] or [0.0])
+        t1 = min([t for t in ts if t > nz[-1]] or [v["duration"]])
+        amt = sign * rng.uniform(1.5, 3.0)
+        gch["rotZ"] = [K(t0, 0), K(t0 + 0.3 * (t1 - t0), amt), K(t0 + 0.7 * (t1 - t0), amt * 0.6), K(t1, 0)]
+    return v
+
+def add_variants(acts, gun):
+    out = {}
+    for name, a in acts.items():
+        out[name] = a
+        if name in NO_VARIANTS: continue
+        for n in range(2, 2 + VARIANTS):
+            out["%s_v%d" % (name, n)] = make_variant(a, gun, name, n)
+    return out
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     all_errs = []
     for gun, g in GUNS.items():
         acts, states, holdd = (pistol_actions if g["kind"] == "pistol" else rifle_actions)(g)
+        base = list(acts)
+        acts = add_variants(acts, gun)
         all_errs += check(gun, {"actions": acts})
         data = {"gun": gun, "version": 1, "hold": export_hold(holdd, gun),
                 "states": {k: export_state(v) for k, v in states.items()},
@@ -1250,7 +1312,7 @@ def main():
         all_errs += check_export(gun, data)
         with open(os.path.join(OUT, gun + ".json"), "w", newline="\n") as f:
             f.write(dump(data) + "\n")
-        print("%-12s %2d actions: %s" % (gun, len(acts), ", ".join(acts)))
+        print("%-12s %2d moves (%d timelines with versions): %s" % (gun, len(base), len(acts), ", ".join(base)))
     if all_errs:
         print("\n".join(all_errs)); sys.exit(1)
 

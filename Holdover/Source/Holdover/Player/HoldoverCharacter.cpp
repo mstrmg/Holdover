@@ -989,7 +989,7 @@ void AHoldoverCharacter::UpdateAnimSweep(float DeltaSeconds)
 		Animator->Stop();
 		ResetTestStand();
 		BodyRig->ClosestToEye = 1.e6f;
-		Animator->Play(SweepActions[SweepIndex], false);
+		Animator->PlayExact(SweepActions[SweepIndex], false);
 		SweepWorst = 1.e6f;
 		SweepWorstT = 0.f;
 		SweepPhase = 1;
@@ -1012,7 +1012,7 @@ void AHoldoverCharacter::UpdateAnimSweep(float DeltaSeconds)
 		UE_LOG(LogHoldover, Log, TEXT("[Sweep] %s %s closest %.1f cm (%s) at %.2f s"), *GunName, *SweepActions[SweepIndex].ToString(),
 			SweepWorst, *SweepWorstBone.ToString(), SweepWorstT);
 		ResetLoadout();
-		Animator->Play(SweepActions[SweepIndex], false);
+		Animator->PlayExact(SweepActions[SweepIndex], false);
 		SweepPhase = 2;
 		return;
 	}
@@ -1040,7 +1040,7 @@ void AHoldoverCharacter::UpdateAnimSweep(float DeltaSeconds)
 
 void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 {
-	// Plays each listed action (pistol and rifle magazine work, pistol inspect) in slow motion and takes evenly spaced pictures through it, first from the eyes and
+	// Plays each listed action (the versions of racks, reloads, mag checks and inspects) in slow motion and takes evenly spaced pictures through it, first from the eyes and
 	// then from the side. Pictures go to Saved/Screenshots/film/<gun>_<action>_<eye|side>_<n>.png.
 	if (TestTime < 4.f)
 	{
@@ -1053,12 +1053,15 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 	}
 	struct FShot { int32 Slot; const TCHAR* Action; };
 	static const FShot List[] = {
-		{ 0, TEXT("MagDrop") }, { 0, TEXT("MagOut") }, { 0, TEXT("MagIn") }, { 0, TEXT("ReloadEmpty") }, { 0, TEXT("ReloadTactical") },
-		{ 0, TEXT("MagCheck") }, { 0, TEXT("Inspect") },
-		{ 2, TEXT("MagDrop") }, { 2, TEXT("ReloadEmpty") }, { 2, TEXT("MagCheck") }, { 2, TEXT("Inspect") },
-		{ 1, TEXT("MagDrop") }, { 1, TEXT("ReloadEmpty") }, { 1, TEXT("ReloadTactical") }, { 1, TEXT("MagCheck") },
-		{ 3, TEXT("MagDrop") }, { 3, TEXT("ReloadEmpty") }, { 3, TEXT("MagCheck") },
-		{ 4, TEXT("MagDrop") }, { 4, TEXT("ReloadEmpty") }, { 4, TEXT("MagCheck") },
+		// Each move next to its other versions, so they can be compared side by side.
+		{ 0, TEXT("RackSlide") }, { 0, TEXT("RackSlide_v2") }, { 0, TEXT("RackSlide_v3") },
+		{ 0, TEXT("ReloadEmpty") }, { 0, TEXT("ReloadEmpty_v2") }, { 0, TEXT("ReloadEmpty_v3") },
+		{ 0, TEXT("MagCheck_v2") }, { 0, TEXT("MagCheck_v3") }, { 0, TEXT("Inspect_v2") }, { 0, TEXT("Inspect_v3") },
+		{ 2, TEXT("ReloadEmpty_v2") }, { 2, TEXT("ReloadEmpty_v3") },
+		{ 1, TEXT("ChargeHandle") }, { 1, TEXT("ChargeHandle_v2") }, { 1, TEXT("ChargeHandle_v3") },
+		{ 1, TEXT("ReloadEmpty_v2") }, { 1, TEXT("ReloadEmpty_v3") }, { 1, TEXT("ReloadTactical_v2") }, { 1, TEXT("ReloadTactical_v3") },
+		{ 3, TEXT("ReloadEmpty_v2") }, { 3, TEXT("ReloadEmpty_v3") },
+		{ 4, TEXT("ReloadEmpty_v2") }, { 4, TEXT("ReloadEmpty_v3") }, { 4, TEXT("MagCheck_v2") }, { 4, TEXT("MagCheck_v3") },
 	};
 	static const TCHAR* SlotNames[] = { TEXT("m9"), TEXT("ak"), TEXT("1911"), TEXT("fal"), TEXT("ar") };
 	constexpr int32 NumShots = UE_ARRAY_COUNT(List);
@@ -1100,7 +1103,7 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 		return;
 	case 1:
 		UGameplayStatics::SetGlobalTimeDilation(this, Slow);
-		if (!Animator->Play(FName(S.Action), false))
+		if (!Animator->PlayExact(FName(S.Action), false))
 		{
 			UE_LOG(LogHoldover, Log, TEXT("[Film] %s has no %s"), SlotNames[S.Slot], S.Action);
 			FilmPhase = 3;

@@ -122,11 +122,41 @@ bool UHoldoverGunAnimator::Play(FName Action, bool bInHoldable, float StartTime)
 	{
 		return false;
 	}
-	const FAction* A = Set->Find(Action);
+	FName Key = Action;
+	if (const TArray<FName>* Versions = Set->Variants.Find(Action))
+	{
+		if (Current && Current->Name == Action)
+		{
+			Key = CurrentKey;   // the same move asked for again keeps its version
+		}
+		else
+		{
+			const int32 N = Versions->Num();
+			int32 Pick = FMath::RandRange(0, N - 1);
+			const FName* Last = LastVersion.Find(Action);
+			if (Last && (*Versions)[Pick] == *Last)
+			{
+				Pick = (Pick + 1 + FMath::RandRange(0, N - 2)) % N;
+			}
+			Key = (*Versions)[Pick];
+			LastVersion.Add(Action, Key);
+		}
+	}
+	return PlayExact(Key, bInHoldable, StartTime);
+}
+
+bool UHoldoverGunAnimator::PlayExact(FName Key, bool bInHoldable, float StartTime)
+{
+	if (!Set.IsValid())
+	{
+		return false;
+	}
+	const FAction* A = Set->Find(Key);
 	if (!A)
 	{
 		return false;
 	}
+	CurrentKey = Key;
 	if (Current && Current != A)
 	{
 		FinishAction();

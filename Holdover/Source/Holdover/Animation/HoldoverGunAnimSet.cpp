@@ -323,7 +323,8 @@ namespace HoldoverAnim
 					continue;
 				}
 				FAction& Act = Set->Actions.Add(FName(*ActionPair.Key));
-				Act.Name = FName(*ActionPair.Key);
+				// Every version of a move answers to the move's own name.
+				Act.Name = FGunAnimSet::BaseName(FName(*ActionPair.Key));
 				Act.Duration = static_cast<float>(Num(A, TEXT("duration")));
 				Act.HoldAt = static_cast<float>(Num(A, TEXT("holdAt"), -1.0));
 
@@ -399,8 +400,41 @@ namespace HoldoverAnim
 			}
 		}
 
-		UE_LOG(LogHoldover, Log, TEXT("Loaded %d gun actions for %s."), Set->Actions.Num(), *GunId.ToString());
+		// Group the versions of each move.
+		for (const auto& Pair : Set->Actions)
+		{
+			Set->Variants.FindOrAdd(Pair.Value.Name).Add(Pair.Key);
+		}
+		for (auto It = Set->Variants.CreateIterator(); It; ++It)
+		{
+			if (It.Value().Num() < 2 || !Set->Actions.Contains(It.Key()))
+			{
+				It.RemoveCurrent();
+			}
+			else
+			{
+				It.Value().Sort(FNameLexicalLess());
+			}
+		}
+
+		UE_LOG(LogHoldover, Log, TEXT("Loaded %d gun actions for %s (%d moves with several versions)."),
+			Set->Actions.Num(), *GunId.ToString(), Set->Variants.Num());
 		return Set;
+	}
+
+	FName FGunAnimSet::BaseName(FName Key)
+	{
+		const FString S = Key.ToString();
+		int32 At = INDEX_NONE;
+		if (S.FindLastChar(TEXT('_'), At) && At > 0 && At + 2 < S.Len() && S[At + 1] == TEXT('v'))
+		{
+			const FString Digits = S.Mid(At + 2);
+			if (Digits.IsNumeric())
+			{
+				return FName(*S.Left(At));
+			}
+		}
+		return Key;
 	}
 
 	// ------------------------------------------------------------------
