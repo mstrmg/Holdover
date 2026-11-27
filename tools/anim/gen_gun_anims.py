@@ -463,17 +463,11 @@ def pistol_actions(g):
     # press check: pinch the front of the slide, open 12 mm, tilt to see brass, close
     a = Action(1.1)
     open_mm = 12.0
-    # the gun comes down in front of the chest like for a rack, and the hand comes over the slide from the side, so
-    # the support arm stays well below the eyes (pulled in level, the forearm swung up past the face)
-    # (same gun drop and hand approach as the rack, which stays clear of the eyes in every version)
-    a.gun("rotX", [K(0, 0), K(0.16, -25), K(0.8, -25), K(1.0, 0)], pivot=g["grip_socket"])
-    a.gun("tX", [K(0, 0), K(0.16, -40), K(0.8, -40), K(1.0, 0)])
-    a.gun("tZ", [K(0, 0), K(0.16, -70), K(0.8, -70), K(1.0, 0)])
+    a.gun("rotX", [K(0, 0), K(0.2, -25), K(0.8, -25), K(1.0, 0)], pivot=g["grip_socket"])
+    a.gun("tX", [K(0, 0), K(0.2, -70), K(0.8, -70), K(1.0, 0)])
     pinch = [g["rear_serrations"][0] + 10, 0, g["slide_top_z"] - 4]
     pf, pp = [0, -1, -0.4], [0, 0, -1]
-    top = [g["rear_serrations"][0], 0, g["slide_top_z"] + 4]
-    a.hand("L", [hold(0), hand(0.14, "gun", add(top, [0, 30, 25]), [0, -1, -0.15], pp, interp="easeOut"),
-                 hand(0.22, "gun", add(pinch, [0, 0, 10]), pf, pp),
+    a.hand("L", [hold(0), hand(0.22, "gun", add(pinch, [0, 0, 10]), pf, pp, interp="easeOut"),
                  hand(0.36, "gun", add(pinch, [-open_mm, 0, 10]), pf, pp), hand(0.70, "gun", add(pinch, [-open_mm, 0, 10]), pf, pp),
                  hand(0.78, "gun", add(pinch, [0, 0, 10]), pf, pp), hold(1.0)])
     a.fingers("L", "SupportWrap", [K(0, 1), K(0.12, 0), K(0.85, 0), K(1.0, 1)]).fingers("L", "PinchRack", [K(0.12, 0), K(0.22, 1), K(0.78, 1), K(0.88, 0)])
@@ -1337,6 +1331,9 @@ def add_variants(acts, gun):
     for name, a in acts.items():
         out[name] = a
         if name in NO_VARIANTS: continue
+        # the pistol press check sits right at the edge: even small changes swing the support arm past the eye, and
+        # bringing the gun lower to make room hid the chamber the move is there to show, so it keeps its one version
+        if name == "PressCheck" and gun.startswith("Pistol"): continue
         for n in range(2, 2 + VARIANTS):
             out["%s_v%d" % (name, n)] = make_variant(a, gun, name, n)
     return out
