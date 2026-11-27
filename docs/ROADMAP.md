@@ -65,6 +65,6 @@ Legend: [x] done and tested in the game, [~] code written but not yet built or t
 
 ## Phase F: forest and polish (M5, M6)
 
-44. [ ] Forest lane with Megaplants and Megascans via PCG (needs 32 GB RAM).
+44. [~] Forest range: built in code when you press Play (shaped ground with berms and paths, varied trees, saplings, ferns, rocks and logs, range furniture, summer light, haze, eye adaptation). Uses Megaplants, Megascans, the Blender props and a Blender terrain automatically once they are in the project; until then, stand-ins from simple shapes. `Range/HoldoverForestRange`, plan in [maps/FOREST_RANGE.md](maps/FOREST_RANGE.md). Next: Fab plants, import props, Blender terrain pass (steps in that doc).
 45. [ ] Assisted mode: one reload key, manual racking and jam clearing kept.
 46. [ ] Performance pass to 60 fps at 1080p on the RX 9070 XT and Ryzen 5 3600.

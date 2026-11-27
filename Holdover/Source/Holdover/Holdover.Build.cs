@@ -19,6 +19,8 @@ public class Holdover : ModuleRules
 			"PhysicsCore",
 			"Json",
 			"JsonUtilities",
+			"ProceduralMeshComponent", // the forest range's generated ground
+			"AssetRegistry",           // finds the trees and plants placed in the forest folders
 		});
 	}
 }

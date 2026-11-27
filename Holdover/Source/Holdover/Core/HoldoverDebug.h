@@ -27,6 +27,10 @@ namespace HoldoverDebug
 	inline bool ForceAim() { return CVarForceAim.GetValueOnGameThread() != 0; }
 	inline int32 DebugView() { return CVarDebugView.GetValueOnGameThread(); }
 	inline int32 TestShots() { return CVarTestShots.GetValueOnGameThread(); }
+
+	extern TAutoConsoleVariable<int32> CVarRangeShots; // holdover.RangeShots 1: screenshots of the range from set spots, then quit
+
+	inline int32 RangeShots() { return CVarRangeShots.GetValueOnGameThread(); }
 }
 
 /** Firing effects test switches. */

@@ -31,6 +31,13 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Range")
 	bool bAutoBuildRange = true;
 
+	/**
+	 * Which range to build when the level has none: the forest range, or the plain gray test range.
+	 * Can be switched per launch with the map option ?Range=Gray or ?Range=Forest.
+	 */
+	UPROPERTY(Config, EditAnywhere, Category = "Range")
+	bool bForestRange = true;
+
 private:
 	AHoldoverRangeBuilder* EnsureRange();
 

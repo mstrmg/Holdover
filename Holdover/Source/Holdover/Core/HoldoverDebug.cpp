@@ -62,4 +62,9 @@ namespace HoldoverDebug
 		TEXT("holdover.CaseWithGun"), 0.15f,
 		TEXT("Seconds a fresh case is drawn together with the first-person gun and hands before it becomes a normal object (0 = never)."),
 		ECVF_Default);
+
+	TAutoConsoleVariable<int32> CVarRangeShots(
+		TEXT("holdover.RangeShots"), 0,
+		TEXT("1 = take 1920x1080 screenshots of the range from eye height at set spots into Saved/Screenshots/range, then quit. 2 = same, but stay."),
+		ECVF_Default);
 }
