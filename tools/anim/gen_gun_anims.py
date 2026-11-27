@@ -714,9 +714,10 @@ def rifle_actions(g):
         a.bone(g["mag_release"], g["mag_release_chan"], [K(t - 0.04, 0, "lin"), K(t, g["mag_release_push"]), K(t + 0.08, g["mag_release_push"]), K(t + 0.12, 0)])
         a.ev(t, "MagDetach").ev(t, "Sound:MagRelease")
 
-    # reload workspace: the rifle comes down off the eye line a little (butt still at the shoulder), canted, so the
+    # reload workspace: the rifle comes down off the eye line a little (butt still at the shoulder; at 9 cm the whole
+    # rifle left the view), canted, so the
     # support hand works the magazine below the face instead of right in front of it
-    RWS = {"tX": -30.0, "tZ": -90.0, "rotY": 8.0, "rotX": 20.0}
+    RWS = {"tX": -30.0, "tZ": -55.0, "rotY": 4.0, "rotX": 20.0}
     def rws(a, keys):
         for ch, v in RWS.items():
             a.gun(ch, [K(t, v * f) for t, f in keys], pivot=g["grip_socket"])
