@@ -465,12 +465,14 @@ def pistol_actions(g):
     open_mm = 12.0
     # the gun comes down in front of the chest like for a rack, and the hand comes over the slide from the side, so
     # the support arm stays well below the eyes (pulled in level, the forearm swung up past the face)
-    a.gun("rotX", [K(0, 0), K(0.2, -25), K(0.8, -25), K(1.0, 0)], pivot=g["grip_socket"])
-    a.gun("tX", [K(0, 0), K(0.2, -40), K(0.8, -40), K(1.0, 0)])
-    a.gun("tZ", [K(0, 0), K(0.2, -50), K(0.8, -50), K(1.0, 0)])
+    # (same gun drop and hand approach as the rack, which stays clear of the eyes in every version)
+    a.gun("rotX", [K(0, 0), K(0.16, -25), K(0.8, -25), K(1.0, 0)], pivot=g["grip_socket"])
+    a.gun("tX", [K(0, 0), K(0.16, -40), K(0.8, -40), K(1.0, 0)])
+    a.gun("tZ", [K(0, 0), K(0.16, -70), K(0.8, -70), K(1.0, 0)])
     pinch = [g["rear_serrations"][0] + 10, 0, g["slide_top_z"] - 4]
     pf, pp = [0, -1, -0.4], [0, 0, -1]
-    a.hand("L", [hold(0), hand(0.13, "gun", add(pinch, [0, 30, 25]), pf, pp, interp="easeOut"),
+    top = [g["rear_serrations"][0], 0, g["slide_top_z"] + 4]
+    a.hand("L", [hold(0), hand(0.14, "gun", add(top, [0, 30, 25]), [0, -1, -0.15], pp, interp="easeOut"),
                  hand(0.22, "gun", add(pinch, [0, 0, 10]), pf, pp),
                  hand(0.36, "gun", add(pinch, [-open_mm, 0, 10]), pf, pp), hand(0.70, "gun", add(pinch, [-open_mm, 0, 10]), pf, pp),
                  hand(0.78, "gun", add(pinch, [0, 0, 10]), pf, pp), hold(1.0)])
