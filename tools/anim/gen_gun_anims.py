@@ -87,7 +87,7 @@ FINGER_POSES = {
     "SupportWrap":  {"thumb": [10, 10, 5],  "index": [55, 60, 35], "middle": [65, 70, 40], "ring": [70, 75, 40], "pinky": [75, 75, 35]},
     "PinchRack":    {"thumb": [35, 20, 15], "index": [60, 80, 40], "middle": [75, 90, 50], "ring": [80, 90, 50], "pinky": [80, 90, 45]},
     "OverhandRack": {"thumb": [5, 10, 10],  "index": [45, 50, 25], "middle": [50, 55, 30], "ring": [50, 55, 30], "pinky": [50, 55, 25]},
-    "OverhandRake": {"thumb": [-75, 0, 0],  "index": [10, 0, 5],   "middle": [10, 0, 5],  "ring": [10, 0, 5],   "pinky": [10, 0, 5]},
+    "OverhandRake": {"thumb": [-60, 0, 0],  "index": [45, 40, 20], "middle": [45, 40, 20], "ring": [30, 40, 20], "pinky": [25, 40, 20]},
     "PalmMag":      {"thumb": [30, 20, 10], "index": [15, 10, 5],  "middle": [60, 70, 35], "ring": [65, 75, 35], "pinky": [70, 75, 30]},
     "ThumbPress":   {"thumb": [-10, 0, 0]},
     "Relaxed":      {"thumb": [5, 5, 5],    "index": [10, 15, 10], "middle": [15, 20, 10], "ring": [20, 20, 10], "pinky": [20, 25, 10]},
@@ -463,11 +463,15 @@ def pistol_actions(g):
     # press check: pinch the front of the slide, open 12 mm, tilt to see brass, close
     a = Action(1.1)
     open_mm = 12.0
+    # the gun comes down in front of the chest like for a rack, and the hand comes over the slide from the side, so
+    # the support arm stays well below the eyes (pulled in level, the forearm swung up past the face)
     a.gun("rotX", [K(0, 0), K(0.2, -25), K(0.8, -25), K(1.0, 0)], pivot=g["grip_socket"])
-    a.gun("tX", [K(0, 0), K(0.2, -70), K(0.8, -70), K(1.0, 0)])
+    a.gun("tX", [K(0, 0), K(0.2, -40), K(0.8, -40), K(1.0, 0)])
+    a.gun("tZ", [K(0, 0), K(0.2, -50), K(0.8, -50), K(1.0, 0)])
     pinch = [g["rear_serrations"][0] + 10, 0, g["slide_top_z"] - 4]
     pf, pp = [0, -1, -0.4], [0, 0, -1]
-    a.hand("L", [hold(0), hand(0.22, "gun", add(pinch, [0, 0, 10]), pf, pp, interp="easeOut"),
+    a.hand("L", [hold(0), hand(0.13, "gun", add(pinch, [0, 30, 25]), pf, pp, interp="easeOut"),
+                 hand(0.22, "gun", add(pinch, [0, 0, 10]), pf, pp),
                  hand(0.36, "gun", add(pinch, [-open_mm, 0, 10]), pf, pp), hand(0.70, "gun", add(pinch, [-open_mm, 0, 10]), pf, pp),
                  hand(0.78, "gun", add(pinch, [0, 0, 10]), pf, pp), hold(1.0)])
     a.fingers("L", "SupportWrap", [K(0, 1), K(0.12, 0), K(0.85, 0), K(1.0, 1)]).fingers("L", "PinchRack", [K(0.12, 0), K(0.22, 1), K(0.78, 1), K(0.88, 0)])
@@ -1289,6 +1293,43 @@ def make_variant(a, gun, name, n):
         gch["rotZ"] = [K(t0, 0), K(t0 + 0.3 * (t1 - t0), amt), K(t0 + 0.7 * (t1 - t0), amt * 0.6), K(t1, 0)]
     return v
 
+# ---------------------------------------------------------------- finger poses that share the hand
+# The game averages every whole-hand finger pose that has weight. A pose a move doesn't key keeps its weight from the
+# resting grip, so a move that only keyed its own pose (the AK rake) got half the resting grip mixed in: the thumb
+# curled into the gun. Here the resting grip's poses give way to whatever the move keys, and a pose keyed only from
+# part-way in starts from nothing instead of being on from the start.
+FULL_POSES = ("Relaxed", "Grip", "SupportWrap", "PinchRack", "OverhandRack", "OverhandRake", "PalmMag")
+
+def finger_w(keys, t):
+    if t <= keys[0][0]: return keys[0][1]
+    for k0, k1 in zip(keys, keys[1:]):
+        if t < k1[0]:
+            return k0[1] + (k1[1] - k0[1]) * (t - k0[0]) / max(k1[0] - k0[0], 1e-6)
+    return keys[-1][1]
+
+def fix_fingers(a, holdd):
+    for side in ("L", "R"):
+        tr = a.get("fingers" + side)
+        if not tr: continue
+        rest = {p: w for p, w in holdd["fingers" + side].items() if p in FULL_POSES}
+        own = [p for p in tr if p in FULL_POSES and p not in rest]
+        if not own: continue
+        for p in own:
+            ks, out = tr[p], []
+            for i, k in enumerate(ks):
+                prev = ks[i - 1] if i else None
+                if k[1] > 0 and ((prev is None and k[0] > 1e-6) or (prev is not None and prev[1] == 0 and k[0] - prev[0] > 0.08)):
+                    out.append(K(max(0.0, k[0] - 0.06), 0))   # comes on just before it's needed, not over the whole gap
+                out.append(k)
+            tr[p] = out
+        for p, w0 in rest.items():
+            times = sorted({k[0] for q in own + [p] if q in tr for k in tr[q]})
+            new = []
+            for t in times:
+                w = finger_w(tr[p], t) if p in tr else w0
+                new.append(K(t, max(0.0, min(w, 1.0 - sum(finger_w(tr[q], t) for q in own)))))
+            tr[p] = new
+
 def add_variants(acts, gun):
     out = {}
     for name, a in acts.items():
@@ -1304,6 +1345,7 @@ def main():
     for gun, g in GUNS.items():
         acts, states, holdd = (pistol_actions if g["kind"] == "pistol" else rifle_actions)(g)
         base = list(acts)
+        for a in acts.values(): fix_fingers(a, holdd)
         acts = add_variants(acts, gun)
         all_errs += check(gun, {"actions": acts})
         data = {"gun": gun, "version": 1, "hold": export_hold(holdd, gun),

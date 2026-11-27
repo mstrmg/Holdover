@@ -47,8 +47,9 @@ void UHoldoverBodyRig::InitDefaultPoses()
 	HandPoses.Add(TEXT("SupportWrap"), Pose({ C(15, 20, 10), C(60, 70, 40), C(65, 75, 45), C(68, 75, 45), C(70, 75, 45) }, 0x1F));
 	HandPoses.Add(TEXT("PinchRack"), Pose({ C(10, 25, 20), C(45, 60, 40), C(70, 80, 50), C(72, 80, 50), C(75, 80, 50) }, 0x1F));
 	HandPoses.Add(TEXT("OverhandRack"), Pose({ C(25, 30, 20), C(50, 55, 30), C(55, 60, 35), C(58, 60, 35), C(60, 60, 35) }, 0x1F));
-	// Overhand rake (AK charging handle): fingers nearly straight, lying flat down the right side of the receiver.
-	HandPoses.Add(TEXT("OverhandRake"), Pose({ C(-75, 0, 0), C(10, 0, 5), C(10, 0, 5), C(10, 0, 5), C(10, 0, 5) }, 0x1F));
+	// Overhand rake (AK charging handle): palm on the top cover, fingers bent down the right side of the receiver about
+	// 4 mm off it, thumb spread back along the left side about 9 mm clear (measured in Blender against the AK model).
+	HandPoses.Add(TEXT("OverhandRake"), Pose({ C(-60, 0, 0), C(45, 40, 20), C(45, 40, 20), C(30, 40, 20), C(25, 40, 20) }, 0x1F));
 	HandPoses.Add(TEXT("PalmMag"), Pose({ C(30, 30, 15), C(20, 25, 15), C(55, 60, 35), C(58, 60, 35), C(60, 60, 35) }, 0x1F));
 	HandPoses.Add(TEXT("ThumbPress"), Pose({ C(0, 0, 0), C(0, 0, 0), C(0, 0, 0), C(0, 0, 0), C(0, 0, 0) }, 0x01));
 }
