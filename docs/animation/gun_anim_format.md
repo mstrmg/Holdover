@@ -104,9 +104,12 @@ that has versions, it plays one of them at random, never the same one twice in a
 plays exactly that one (the test sweep does this to check every version). `tools/anim/gen_gun_anims.py` makes two extra
 versions of every move except `Fire`, `FireDA`, `DryFire` and the pistol `PressCheck` (its support arm passes too close to the eye to vary safely), each its own way of doing the move:
 
-- `_v2`, brisk: about a fifth quicker, the gun turned further into the work and a little lower, the free hand on a lower,
-  wider path, and a clear turn of the gun toward one side.
-- `_v3`, deliberate: about a fifth slower, the gun kept squarer and a bit higher, the free hand on a higher, closer path.
+- `_v2`, brisk: about a fifth quicker, the gun turned further into the work and swung 8° toward one side, the free hand on
+  a lower, wider path.
+- `_v3`, deliberate: about a fifth slower, the gun kept squarer and swung 8° the other way, the free hand a little lower
+  and wider.
+
+Neither version raises the gun or the free hand, which brought the arms across the view and near the eyes.
 
 A move can bring its own `_v3` with a different technique (the pistols' `RackSlide_v3` pinches the rear of the slide and
 slingshots it instead of racking overhand); it gets the deliberate pace and gun handling on top. Events and part

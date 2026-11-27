@@ -1255,15 +1255,16 @@ NO_VARIANTS = ("Fire", "FireDA", "DryFire")   # recoil already varies shot to sh
 
 # Each extra version is its own way of doing the move, not a small random change of it (the first try only moved the
 # hands about 1 cm and the pace a few percent, and in play all three looked the same):
-#   v2 brisk: about a fifth quicker, the gun turned further into the work and a little lower, the free hand on a lower,
-#      wider path, and a clear turn of the gun toward the support hand
-#   v3 deliberate: about a fifth slower, the gun kept squarer and a bit higher, the free hand on a higher, closer path,
-#      and a small turn the other way
-# A move can also bring its own third version with a different technique (the pistol slingshot rack); it gets the v3
-# pace and gun handling on top.
+#   v2 brisk: about a fifth quicker, the gun turned further into the work and swung toward one side, the free hand
+#      on a lower, wider path
+#   v3 deliberate: about a fifth slower, the gun kept squarer and swung the other way, the free hand a little lower
+#      and wider too
+# Neither raises the gun or the free hand: the first try lifted v3 and its arms crossed the view and came within 4 cm
+# of the eyes. A move can also bring its own third version with a different technique (the pistol slingshot rack); it
+# gets the v3 pace and gun handling on top.
 STYLES = {
-    2: {"pace": 0.82, "rot": 1.35, "move": 1.2, "turn": 7.0, "lift": -15.0, "free": [0, 30, -35], "lean": 0.15},
-    3: {"pace": 1.20, "rot": 0.65, "move": 0.8, "turn": -4.0, "lift": 12.0, "free": [-15, -15, 25], "lean": -0.15},
+    2: {"pace": 0.82, "rot": 1.25, "move": 1.0, "turn": 8.0, "lift": 0.0, "free": [0, 30, -30], "lean": 0.15},
+    3: {"pace": 1.20, "rot": 0.8, "move": 1.0, "turn": -8.0, "lift": 0.0, "free": [10, 20, -15], "lean": -0.15},
 }
 
 def make_variant(a, gun, name, n):
@@ -1316,7 +1317,7 @@ def make_variant(a, gun, name, n):
                 out.append([t, None if (first_cur and t <= keys[0][0] and abs(ch_eval(e, t)) < 1e-6) else val])
             gch[c] = out
         add_env("rotZ", st["turn"])
-        add_env("tZ", st["lift"])
+        if st["lift"]: add_env("tZ", st["lift"])
     return v
 
 # ---------------------------------------------------------------- finger poses that share the hand
