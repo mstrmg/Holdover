@@ -111,8 +111,8 @@ versions of every move except `Fire`, `FireDA`, `DryFire` and the pistol `PressC
 
 Neither version raises the gun or the free hand, which brought the arms across the view and near the eyes.
 
-A move can bring its own `_v3` with a different technique (the pistols' `RackSlide_v3` pinches the rear of the slide and
-slingshots it instead of racking overhand); it gets the deliberate pace and gun handling on top. Events and part
+A move can bring its own `_v2` or `_v3` with a different technique; it gets that version's pace and gun handling on top.
+(A pinch-and-slingshot pistol rack was tried and dropped: the forearm filled the bottom of the view.) Events and part
 movements share each version's rhythm.
 
 ## Actions per gun

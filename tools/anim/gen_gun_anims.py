@@ -332,7 +332,8 @@ def pistol_actions(g):
         return a.out()
 
     A["RackSlide"] = rack()
-    A["RackSlide_v3"] = rack(pinch=True)   # another way of racking: the third version pinches the slide (styled in add_variants)
+    # (a pinch-and-slingshot third version was tried: from behind the slide the forearm filled the bottom of the view,
+    # like the press check, so the rack keeps its overhand grip in every version)
     A["LockOpen"] = rack(lock_open=True)
     A["SlingshotRelease"] = rack(from_locked=True)
 
@@ -1260,8 +1261,8 @@ NO_VARIANTS = ("Fire", "FireDA", "DryFire")   # recoil already varies shot to sh
 #   v3 deliberate: about a fifth slower, the gun kept squarer and swung the other way, the free hand a little lower
 #      and wider too
 # Neither raises the gun or the free hand: the first try lifted v3 and its arms crossed the view and came within 4 cm
-# of the eyes. A move can also bring its own third version with a different technique (the pistol slingshot rack); it
-# gets the v3 pace and gun handling on top.
+# of the eyes. A move can also bring its own _v2/_v3 with a different technique; it gets that version's pace and gun
+# handling on top.
 STYLES = {
     2: {"pace": 0.82, "rot": 1.25, "move": 1.0, "turn": 8.0, "lift": 0.0, "free": [0, 30, -30], "lean": 0.15},
     3: {"pace": 1.20, "rot": 0.8, "move": 1.0, "turn": -8.0, "lift": 0.0, "free": [10, 20, -15], "lean": -0.15},
