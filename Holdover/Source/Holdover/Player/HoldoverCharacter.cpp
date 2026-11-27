@@ -1055,7 +1055,7 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 	struct FShot { int32 Slot; const TCHAR* Action; bool bClose; };
 	static const FShot List[] = {
 		{ 1, TEXT("ChargeHandle"), true }, { 1, TEXT("ChargeHandle_v2"), false }, { 1, TEXT("TapRack"), true }, { 1, TEXT("ReloadEmpty"), false },
-		{ 0, TEXT("PressCheck"), false }, { 0, TEXT("PressCheck_v2"), false }, { 0, TEXT("PressCheck_v3"), false },
+		{ 0, TEXT("PressCheck"), false },
 		{ 2, TEXT("PressCheck"), false }, { 0, TEXT("ReloadEmpty"), false },
 	};
 	static const TCHAR* SlotNames[] = { TEXT("m9"), TEXT("ak"), TEXT("1911"), TEXT("fal"), TEXT("ar") };
