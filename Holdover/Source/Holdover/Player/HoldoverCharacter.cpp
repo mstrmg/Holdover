@@ -915,6 +915,24 @@ void AHoldoverCharacter::UpdateActionTest()
 	}
 }
 
+void AHoldoverCharacter::ResetTestStand()
+{
+	if (!bTestStandSet)
+	{
+		TestStandLocation = GetActorLocation();
+		TestStandRotation = Controller ? Controller->GetControlRotation() : GetActorRotation();
+		TestStandRotation.Pitch = 0.f;
+		bTestStandSet = true;
+		return;
+	}
+	GetCharacterMovement()->StopMovementImmediately();
+	SetActorLocation(TestStandLocation, false, nullptr, ETeleportType::TeleportPhysics);
+	if (Controller)
+	{
+		Controller->SetControlRotation(TestStandRotation);
+	}
+}
+
 void AHoldoverCharacter::UpdateAnimSweep(float DeltaSeconds)
 {
 	// Every action of every gun, at the low ready, looking level. Phase 0: start the next action. Phase 1: play it
@@ -969,6 +987,7 @@ void AHoldoverCharacter::UpdateAnimSweep(float DeltaSeconds)
 			return;
 		}
 		Animator->Stop();
+		ResetTestStand();
 		BodyRig->ClosestToEye = 1.e6f;
 		Animator->Play(SweepActions[SweepIndex], false);
 		SweepWorst = 1.e6f;
@@ -1067,6 +1086,7 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 			SelectGun(S.Slot);
 		}
 		ResetLoadout();
+		ResetTestStand();
 		HoldoverDebug::CVarForceAim->Set(0, ECVF_SetByConsole);
 		HoldoverDebug::CVarDebugView->Set(FilmView, ECVF_SetByConsole);
 		if (Controller)

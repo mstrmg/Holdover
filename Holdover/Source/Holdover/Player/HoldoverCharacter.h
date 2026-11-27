@@ -241,6 +241,12 @@ private:
 	float SweepWorstT = 0.f;
 	FName SweepWorstBone;
 
+	/** Test runs: put the player back where the run started (a pile of dropped mags underfoot once moved them mid-run). */
+	void ResetTestStand();
+	bool bTestStandSet = false;
+	FVector TestStandLocation = FVector::ZeroVector;
+	FRotator TestStandRotation = FRotator::ZeroRotator;
+
 	/** holdover.TestShots 6: film strips (several pictures through each mag and inspect action) from the eye and the side. */
 	void UpdateAnimFilm(float DeltaSeconds);
 	int32 FilmIndex = 0;
