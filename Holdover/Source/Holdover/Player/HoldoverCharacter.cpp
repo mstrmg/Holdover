@@ -1150,9 +1150,8 @@ void AHoldoverCharacter::UpdateAnimFilm(float DeltaSeconds)
 	// Close = also two close-ups of the hands and gun (from the right and from the left), for checking fingers.
 	struct FShot { int32 Slot; const TCHAR* Action; bool bClose; };
 	static const FShot List[] = {
-		{ 1, TEXT("ChargeHandle"), true }, { 1, TEXT("ChargeHandle_v2"), false }, { 1, TEXT("TapRack"), true }, { 1, TEXT("ReloadEmpty"), false },
-		{ 0, TEXT("PressCheck"), false },
-		{ 2, TEXT("PressCheck"), false }, { 0, TEXT("ReloadEmpty"), false },
+		{ 0, TEXT("RackSlide"), false }, { 0, TEXT("RackSlide_v2"), false }, { 0, TEXT("RackSlide_v3"), true },
+		{ 3, TEXT("ReloadEmpty"), false }, { 3, TEXT("ReloadEmpty_v2"), false }, { 3, TEXT("ReloadEmpty_v3"), false },
 	};
 	static const TCHAR* SlotNames[] = { TEXT("m9"), TEXT("ak"), TEXT("1911"), TEXT("fal"), TEXT("ar") };
 	constexpr int32 NumShots = UE_ARRAY_COUNT(List);
