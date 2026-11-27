@@ -714,10 +714,25 @@ def rifle_actions(g):
         a.bone(g["mag_release"], g["mag_release_chan"], [K(t - 0.04, 0, "lin"), K(t, g["mag_release_push"]), K(t + 0.08, g["mag_release_push"]), K(t + 0.12, 0)])
         a.ev(t, "MagDetach").ev(t, "Sound:MagRelease")
 
+    # reload workspace: the rifle comes down off the eye line a little (butt still at the shoulder), canted, so the
+    # support hand works the magazine below the face instead of right in front of it
+    RWS = {"tX": -30.0, "tZ": -90.0, "rotY": 8.0, "rotX": 20.0}
+    def rws(a, keys):
+        for ch, v in RWS.items():
+            a.gun(ch, [K(t, v * f) for t, f in keys], pivot=g["grip_socket"])
+    def rws_override(d, keys, until=None):
+        """workspace keys on a built action; with until, the later keys of each channel (a charge after the reload) stay"""
+        gd = d.setdefault("gun", {})
+        for ch, v in RWS.items():
+            later = [k for k in gd.get(ch, []) if until is not None and k[0] >= until - 1e-6]
+            mine = [K(t, v * f) for t, f in keys if not (later and t >= later[0][0] - 1e-6)]
+            gd[ch] = mine + later
+        gd["pivot"] = g["grip_socket"]
+
     def mag_out(retain):
         a = Action(1.0 if retain else 0.6)
         t_rel = 0.25
-        a.gun("rotX", [K(0, 0), K(0.2, 20), K(0.6 if retain else 0.4, 20), K(0.85 if retain else 0.58, 0)], pivot=g["grip_socket"])
+        rws(a, [(0, 0), (0.2, 1), (0.6 if retain else 0.4, 1), (0.85 if retain else 0.58, 0)])
         if rock:
             a.hand("L", [hold(0), hand_on_mag(0.20, g, rock=0, interp="easeOut"), hand_on_mag(0.32, g, rock=g["mag_rock"]),
                          hand_on_mag(0.42, g, rock=g["mag_rock"], extra=[25, 0, -g["mag_clear"]])] +
@@ -747,10 +762,10 @@ def rifle_actions(g):
     A["MagOut"] = mag_out(True)
     A["MagDrop"] = mag_out(False)
 
-    def mag_in(t0=0.0):
+    def mag_in(t0=0.0, in_ws=False):
         a = Action(t0 + 1.1)
         a.attach(t0, "L", g["mag"]).ev(t0, "MagFromPouch").ev(t0, "Sound:MagPouch")
-        a.gun("rotX", [K(t0, CUR), K(t0 + 0.3, 18), K(t0 + 0.85, 18), K(t0 + 1.05, 0)], pivot=g["grip_socket"])
+        rws(a, [(t0, 1 if in_ws else 0), (t0 + 0.3, 1), (t0 + 0.85, 1), (t0 + 1.05, 0)])
         hk = [hand(t0, "body", g["mag_pouch"], [0, 0, -1], [-1, 0, 0])]
         if rock:   # hook the front lug, then rock the back up until it clicks
             hk += [hand_on_mag(t0 + 0.45, g, rock=g["mag_rock"], extra=[25, 0, -40], interp="easeOut"),
@@ -771,11 +786,14 @@ def rifle_actions(g):
         a.ev(seat, "MagAttach").ev(seat, "MagSeat").ev(seat, "Sound:MagIn")
         return a
     A["MagIn"] = mag_in().out()
-    A["ReloadTactical"] = merge(A["MagOut"], mag_in(0.9).out(), 0.0)
-    if g["hold_open"]:
-        A["ReloadEmpty"] = merge(merge(A["MagDrop"], mag_in(0.45).out(), 0.0), A["BoltRelease"], 1.5)
-    else:   # AK: no hold-open, so drop, insert, then charge
-        A["ReloadEmpty"] = merge(merge(A["MagDrop"], mag_in(0.45).out(), 0.0), A["ChargeHandle"], 1.5)
+    # the reloads keep the rifle in the workspace from the first mag move to the seat
+    tac = merge(A["MagOut"], mag_in(0.9, in_ws=True).out(), 0.0)
+    rws_override(tac, [(0, 0), (0.2, 1), (0.9 + 0.85, 1), (0.9 + 1.05, 0)])
+    A["ReloadTactical"] = tac
+    # empty: drop, insert, then the bolt release (FAL, AR) or a charge (AK, no hold-open)
+    re = merge(merge(A["MagDrop"], mag_in(0.45, in_ws=True).out(), 0.0), A["BoltRelease"] if g["hold_open"] else A["ChargeHandle"], 1.5)
+    rws_override(re, [(0, 0), (0.2, 1), (0.45 + 0.85, 1), (1.5, 0)], until=1.5)
+    A["ReloadEmpty"] = re
 
     # mag check: take the mag out, lift it to the eye with its top tipped back to show the top round, put it back
     a = Action(1.8)
