@@ -65,6 +65,6 @@ Legend: [x] done and tested in the game, [~] code written but not yet built or t
 
 ## Phase F: forest and polish (M5, M6)
 
-44. [~] Forest range: built in code when you press Play (shaped ground with berms and paths, varied trees, saplings, ferns, rocks and logs, range furniture, summer light, haze, eye adaptation). Uses Megaplants, Megascans, the Blender props and a Blender terrain automatically once they are in the project; until then, stand-ins from simple shapes. `Range/HoldoverForestRange`, plan in [maps/FOREST_RANGE.md](maps/FOREST_RANGE.md). Next: Fab plants, import props, Blender terrain pass (steps in that doc).
+44. [~] Forest map, rebuilt 2026-11-27 as the woods range to match Miles's reference photo: baked Nanite ground in a valley, layered Megaplant forest with saplings, ferns, low plants, scanned logs, stumps, roots and rocks, timber shelter over the firing line, haze and grading; 60 fps. `Range/HoldoverWoodsRange`, see [maps/WOODS_RANGE.md](maps/WOODS_RANGE.md). The first forest range was removed.
 45. [ ] Assisted mode: one reload key, manual racking and jam clearing kept.
 46. [ ] Performance pass to 60 fps at 1080p on the RX 9070 XT and Ryzen 5 3600.

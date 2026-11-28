@@ -1,4 +1,4 @@
-"""Give the imported range props, forest kit and Blender terrain real materials.
+"""Give the imported range props real materials (the woods range ground and plants: make_woods_materials.py).
 
 Run after import_range.py (editor closed), with forward slashes in the script path:
   UnrealEditor-Cmd.exe <Holdover.uproject> -run=pythonscript -script="D:/Claude area/Holdover/Holdover-forest/tools/unreal/make_range_materials.py" -unattended -nop4 -nosplash -NullRHI
@@ -465,12 +465,8 @@ def main():
         by_slot[name] = textured_instance("MI_" + name, MAT_DIR, surface, acg, tint, tiling, metal)
     for name, (color, rough, metal) in FLAT.items():
         by_slot[name] = flat_instance("MI_" + name, MAT_DIR, flat, color, rough, metal)
-    for name, (acg, tint, tiling) in GROUND.items():
-        by_slot[name] = textured_instance("MI_" + name, GROUND_DIR, surface, acg, tint, tiling, 0.0)
-    if all(texture(GROUND[k][0], kind) for _, k, _ in GROUND_LAYERS for kind in ("Color", "Roughness", "NormalGL")):
-        by_slot["RangeGround"] = ground_instance(make_ground_master())
-    else:
-        log("ERROR missing ground textures, MI_RangeGround not made")
+    # The first forest range's ground materials (GROUND, make_ground_master) were retired with that map on
+    # 2026-11-27: the woods range's ground uses M_WoodsGround (make_woods_materials.py).
     log("made %d material instances" % len(by_slot))
 
     unmatched = set()

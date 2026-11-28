@@ -14,8 +14,8 @@ Every asset in the game, where it came from, and its license.
 | Paper target on wooden stand, steel plate on post, popper, shooting bench, stool, shooting mat, distance marker signs (5, 10, 25, 50 m) | Blender (Claude, Python) | Original low-poly models in `art/props/` (source `range_props.blend`, FBX per prop). Bullseye paper texture and sign lettering are generated in Blender. Wood and steel use the third-party textures below. |
 | Plate rack, no-shoot target on stand, barricade, sandbag rest (lumpy, redone), ammo can | Blender (Claude, Python) | Original low-poly models in `art/props/`, same source file. The no-shoot paper (red border and X) is generated in Blender. Sandbags and the ammo can use plain procedural colours; the rest use the textures below. |
 | Target frame, cardboard silhouette on stake, lane divider, spent-brass bin, steel gong on frame, bench seat, "FIRING LINE" and "CEASE FIRE" signs | Blender (Claude, Python) | Original low-poly models in `art/props/`, same source file. Sign lettering uses Blender's built-in font converted to mesh. |
-| Forest range ground (`SM_ForestTerrain`): berms, pad, walkway, paths, rolling forest floor | Blender (Claude, Python, `tools/blender/build_forest_terrain.py`) | Original, generated from the layout numbers; textures below. |
-| Forest kit: rocks (S, M, L), logs (short, long, thick), stumps (S, L), fallen branches, 4x4 m ground patch | Blender (Claude, Python) | Original models in `art/props/forest/`, same source file. Rocks, logs and stumps include a LOD1 mesh in the same FBX. Shapes are generated from noise in Blender; textures are the ambientCG ones below. |
+| Woods range ground (`SM_WoodsGround_*`): valley, lane, pad, walkway, paths, forest floor | Unreal (Claude, C++ `Range/HoldoverWoodsGround`) | Original, baked from the range's own layout functions; textures below. |
+| Firing-line shelter, rules board | Unreal (Claude, C++, built from engine cubes) | Original; world-projected Wood049 and Ground068 textures. |
 
 ## Third-party assets
 
@@ -45,3 +45,16 @@ Downloaded copies are kept in `art/textures/<AssetId>/` on Miles's PC (binary fi
 | Muzzle flash atlas (`T_MuzzleFlash`: cores, plumes, end-on bursts, fireballs) and smoke atlas (`T_MuzzleSmoke`) | `tools/fx/gen_fx_textures.py` (Python + numpy, procedural noise) | Written to `art/fx/textures/` on Miles's PC, imported to `/Game/FX` by `tools/unreal/import_fx.py`. 2K. |
 | Every gun sound: shots, echo tails, action cycling, brass / live round / magazine landing per surface | `tools/audio/gen_gun_audio.py` (Python + numpy synthesis) | Written to `art/audio/` on Miles's PC, imported to `/Game/Audio` by `tools/unreal/import_fx.py`. |
 | `M_MuzzleFlash`, `M_MuzzleSmoke`, `M_Brass` materials | `tools/unreal/import_fx.py` | Built by script; `M_Brass` is assigned to the `SM_Casing_*` meshes. |
+
+## Poly Haven (woods range, downloaded 2026-11-27 with Miles's OK)
+
+All from https://polyhaven.com, license CC0 1.0 (public domain), 2K glTF/JPG, fetched by `tools/range/fetch_polyhaven.py` into `art/polyhaven/`, imported to `/Game/Range/Woods/PolyHaven` and `/Game/Range/Woods/Textures`.
+
+| Assets | Used for |
+|---|---|
+| Models: boulder_01, rock_07, rock_09, rock_moss_set_01, rock_moss_set_02, stone_01 | Rock outcrops, stones, boulders at the lane edge |
+| Models: dead_tree_trunk, dead_tree_trunk_02, tree_stump_01, tree_stump_02, root_cluster_01, root_cluster_02, single_root, dry_branches_medium_01 | Fallen trunks, stumps, root plates, fallen branches and twigs, brush heaps |
+| Models: fern_02, moss_01, shrub_01 to shrub_04, nettle_plant, celandine_01, grass_medium_01, grass_medium_02 (with their alpha masks) | Ferns, low plants, moss and grass |
+| Models: old_military_crate, Barrel_02, hatchet | Ammo crates at the firing line, rubbish barrel, hatchet in a stump |
+| Textures: forest_leaves_02, forest_leaves_04, leaves_forest_ground, forest_ground_05, dirt_floor, leafy_grass, mossy_rock, gravel, moss_wood, bark_brown_02 | Ground layers (leaf litter, worn soil, lane grass, gravel) |
+
