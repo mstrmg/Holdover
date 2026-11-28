@@ -1,4 +1,4 @@
-"""Import the Blender range props, forest kit and (later) forest terrain for the forest range.
+"""Import the Blender range props (benches, stools, signs, ammo can...) used by the woods range.
 
 Run headless:
   UnrealEditor-Cmd.exe <Holdover.uproject> -run=pythonscript -script="<path>/import_range.py" -unattended -nop4 -nosplash -NullRHI
@@ -6,14 +6,12 @@ or from the editor: Tools > Execute Python Script.
 
 Source files (on Miles's PC, next to the repo):
   art/props/<prop>/*.fbx             -> /Game/Range/Props/        (benches, stools, signs, ammo can...)
-  art/props/forest/*.fbx             -> /Game/Range/Forest/Kit/   (rocks, logs, stumps, branches)
-  art/range/forest/SM_ForestTerrain.fbx (Blender terrain, optional) -> /Game/Range/Forest/Ground/
 
-It also makes the empty folders the forest range looks in for Fab plants:
-  /Game/Range/Forest/Trees, Saplings, Plants, Grass  (see docs/maps/FOREST_RANGE.md)
+The first forest range's home-made kit (art/props/forest) and Blender terrain were retired on 2026-11-27 with that
+map; the woods range uses scanned Poly Haven models (import_woods_assets.py) and bakes its own ground.
 
 Each asset keeps its FBX file name. The script prints every imported name at the end, so the
-names the game looks for (HoldoverForestRange.cpp, PlaceRangeProps) can be checked.
+names the game looks for (HoldoverWoodsRange.cpp, PlaceRangeProps) can be checked.
 """
 import glob
 import os
@@ -30,11 +28,7 @@ if not os.path.isdir(ART):
 # (glob pattern, destination, is terrain). Props sit one folder deep (art/props/shooting_bench/SM_ShootingBench.fbx).
 SOURCES = [
     (os.path.join(ART, "props", "*", "*.fbx"), "/Game/Range/Props", False),
-    (os.path.join(ART, "props", "forest", "*.fbx"), "/Game/Range/Forest/Kit", False),
-    (os.path.join(ART, "range", "forest", "*.fbx"), "/Game/Range/Forest/Ground", True),
 ]
-PLANT_FOLDERS = ["/Game/Range/Forest/Trees", "/Game/Range/Forest/Saplings",
-                 "/Game/Range/Forest/Plants", "/Game/Range/Forest/Grass"]
 
 assets = unreal.AssetToolsHelpers.get_asset_tools()
 eal = unreal.EditorAssetLibrary
@@ -127,11 +121,6 @@ def finish_mesh(obj_path, is_terrain):
 
 def main():
     use_legacy_fbx()
-    for folder in PLANT_FOLDERS:
-        if not eal.does_directory_exist(folder):
-            eal.make_directory(folder)
-            log("made folder " + folder)
-
     imported = []
     for pattern, dest, is_terrain in SOURCES:
         files = sorted(f for f in glob.glob(pattern)

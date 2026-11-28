@@ -1427,11 +1427,11 @@ void AHoldoverWoodsRange::DressLaneEdges(FRandomStream& R)
 		for (const float Side : { -1.f, 1.f })
 		{
 			const float PX = X + R.FRandRange(0.f, 7.f);
-			const float In = R.FRandRange(0.3f, 3.2f);
+			const float In = R.FRandRange(-1.8f, 1.2f); // just inside or just outside the edge
 			const float PY = Side * (LaneEdge(PX, Side) - In);
 			const float Kind = R.FRand();
 			const float Roll = R.FRand();
-			if (Roll > 0.55f || KeepClear(PX, PY, 2.2f) || OnWalkway(PX, PY, 1.5f))
+			if (Roll > 0.6f || KeepClear(PX, PY, 1.6f) || OnWalkway(PX, PY, 1.5f))
 			{
 				continue;
 			}
