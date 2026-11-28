@@ -21,6 +21,8 @@ public class Holdover : ModuleRules
 			"JsonUtilities",
 			"ProceduralMeshComponent", // the forest range's generated ground
 			"AssetRegistry",           // finds the trees and plants placed in the forest folders
+			"MeshDescription",         // the woods range bakes its ground into mesh tiles in the editor
+			"StaticMeshDescription",
 		});
 	}
 }

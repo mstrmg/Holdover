@@ -6,7 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Player/HoldoverCharacter.h"
 #include "Player/HoldoverPlayerController.h"
-#include "Range/HoldoverForestRange.h"
+#include "Range/HoldoverWoodsRange.h"
 #include "Range/HoldoverRangeBuilder.h"
 #include "Weapons/HoldoverDebrisSubsystem.h"
 #include "Weapons/HoldoverLoosePiece.h"
@@ -55,7 +55,7 @@ AHoldoverRangeBuilder* AHoldoverGameMode::EnsureRange()
 	}
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	UClass* RangeClass = bForestRange ? AHoldoverForestRange::StaticClass() : AHoldoverRangeBuilder::StaticClass();
+	UClass* RangeClass = bForestRange ? AHoldoverWoodsRange::StaticClass() : AHoldoverRangeBuilder::StaticClass();
 	Range = World->SpawnActor<AHoldoverRangeBuilder>(RangeClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
 	return Range;
 }
